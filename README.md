@@ -43,3 +43,24 @@ Bitte die Nutzungsbedingungen und Bildrechte der jeweiligen Anbieter beachten. A
 ## Roadmap
 
 Die Roadmap in der App zeigt den aktuellen Funktionsstand und weitere geplante Ideen. Ein Roadmap-Eintrag ist nicht automatisch eine bereits implementierte Funktion. Neue Kameraquellen werden nur dann als direkte Live-Player dargestellt, wenn dafür ein geeigneter öffentlicher Einbettungslink vorhanden ist.
+
+## Automatische Prüfungen
+
+Bei jedem Push und Pull Request führt GitHub Actions diese Prüfungen aus:
+
+- Python-Syntaxprüfung
+- Backend-Tests für Startseite, Health-Check, SEO-Endpunkte und API-Proxys
+- JavaScript-Syntaxprüfung und JSON-LD-Validierung
+- Prüfung aller festen DOM-Referenzen
+- Prüfung von Kamera-Links, Koordinaten und Player-Links
+- Kontrolle der 30 bisherigen und 50 neuen Roadmap-Einträge
+
+Lokal ausführbar:
+
+```bash
+python -m compileall -q atlas_server.py tests
+python -m unittest discover -s tests -v
+node scripts/check_frontend.mjs
+```
+
+Die automatischen Prüfungen ersetzen keinen echten Browser-Test mit externen Kameraanbietern. Ob ein Anbieter einen Player zulässt und ob ein Feed gerade online ist, hängt weiterhin vom jeweiligen Betreiber ab.
