@@ -303,8 +303,8 @@ function esc(s){return String(s??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&
 function val(o,...paths){for(const p of paths){let x=o;for(const k of p.split('.'))x=x?.[k];if(x!==undefined&&x!==null)return x}return ''}
 function setMessage(t){$('message').textContent=t}
 function abSetMessage(t){$('abmessage').textContent=t}
-function clearMarkers(arr){arr.forEach(m=>map.removeLayer(m));arr.length=0}
-function clearList(){ clearMarkers(windyMarkers); $('autobahnList').innerHTML=''; $('count').textContent='0'; $('cameraFilter').value=''; $('categoryFilter').value='all';favoritesOnly=false;activeFolder='all';renderFolderBar();$('favoritesOnly').classList.remove('selected');$('favoritesOnly').setAttribute('aria-pressed','false');$('favoritesOnly').textContent='☆ Nur Favoriten'; }
+function clearMarkers(arr){arr.forEach(m=>{if(map.hasLayer(m))map.removeLayer(m);Object.values(pointLayers).forEach(group=>group.removeLayer(m));});arr.length=0}
+function clearList(){ $('autobahnList').innerHTML=''; $('count').textContent='0'; $('cameraFilter').value=''; $('categoryFilter').value='all';favoritesOnly=false;activeFolder='all';renderFolderBar();$('favoritesOnly').classList.remove('selected');$('favoritesOnly').setAttribute('aria-pressed','false');$('favoritesOnly').textContent='☆ Nur Favoriten'; }
 function filterCameraCards(){const q=$('cameraFilter').value.trim().toLocaleLowerCase('de'),cat=$('categoryFilter').value;let visible=0;document.querySelectorAll('#autobahnList .camera').forEach(card=>{const id=card.dataset.id,assigned=folderAssignments[id]||[],showText=!q||card.dataset.search.includes(q),showCat=cat==='all'||card.dataset.category===cat,showFav=(!favoritesOnly||favorites.has(id))&&(activeFolder!=='favorites'||favorites.has(id)),showFolder=activeFolder==='all'||activeFolder==='favorites'||assigned.includes(activeFolder);card.hidden=!(showText&&showCat&&showFav&&showFolder);if(!card.hidden)visible++;});$('count').textContent=String(visible);}
 $('cameraFilter').addEventListener('input',filterCameraCards);$('categoryFilter').addEventListener('change',filterCameraCards);
 $('favoritesOnly').onclick=()=>{favoritesOnly=!favoritesOnly;$('favoritesOnly').classList.toggle('selected',favoritesOnly);$('favoritesOnly').setAttribute('aria-pressed',String(favoritesOnly));$('favoritesOnly').textContent=favoritesOnly?'★ Favoriten aktiv':'☆ Nur Favoriten';filterCameraCards();};
@@ -329,12 +329,12 @@ function addCameraCard(container,name,meta,onClick,image='',tag='Quelle'){
  body.append(title,detail,badge);el.append(img,body,fav,pick);el.onclick=onClick;container.appendChild(el);
 }
 function renderAutobahn(list){
- updateListStamp();clearMarkers(abMarkers);clearMarkers(finMarkers);clearMarkers(cityMarkers);clearList();
+ updateListStamp();clearMarkers(abMarkers);clearList();
  const container=$('autobahnList');
  const head=document.createElement('div');head.className='note';head.style.cssText='margin:10px 0 6px;color:#ffb020;font-weight:700';head.textContent='AUTOBAHN GMBH · '+list.length;container.appendChild(head);
  $('count').textContent=String(list.length);
  list.forEach(c=>{
-  const marker=L.circleMarker([c._lat,c._lon],{radius:6,color:'#ffd27f',weight:2,fillColor:'#c97a1a',fillOpacity:.9}).addTo(map);
+  const marker=L.circleMarker([c._lat,c._lon],{radius:6,color:'#ffd27f',weight:2,fillColor:'#c97a1a',fillOpacity:.9}).addTo(pointLayers.autobahn);
   marker.bindPopup('<b>'+esc(c._name)+'</b><br>Autobahn '+esc(c._road)+(c._image?'<a href="'+esc(c._image)+'" target="_blank" rel="noopener"><img class="popupimg" src="'+esc(c._image)+'" alt="Aktuelles Kamerabild"></a>':'')+(c._url?'<br><a href="'+esc(c._url)+'" target="_blank" rel="noopener">Kamera / Live-Ansicht öffnen ↗</a>':'')+'<p style="font-size:10px;color:#9aacc2">Quelle: Autobahn GmbH / zuständiger Landesanbieter</p>');
   abMarkers.push(marker);
   addCameraCard(container,c._name,'Autobahn '+c._road,()=>{
@@ -500,12 +500,12 @@ async function loadWindyCams(){
    const title=c.title||('Windy-Webcam '+(i+1)),detail=[loc.city,loc.region,loc.country].filter(Boolean).join(' · ')||'Windy-Webcam';
    const image=c.images?.current?.icon||'',detailUrl=c.urls?.detail||'https://www.windy.com/webcams';
    const live=c.player?.live,embed=typeof live==='string'?live:(live?.embed||detailUrl);
-   const marker=L.circleMarker([lat,lon],{radius:7,color:'#65d7ef',weight:2,fillColor:'#087eaa',fillOpacity:.95}).addTo(map);
+   const marker=L.circleMarker([lat,lon],{radius:7,color:'#65d7ef',weight:2,fillColor:'#087eaa',fillOpacity:.95}).addTo(pointLayers.windy);
    marker.bindPopup('<b>'+esc(title)+'</b><br>'+esc(detail)+(image?'<img class="popupimg" src="'+esc(image)+'" alt="Windy-Kameravorschau">':'')+'<br><a href="'+esc(detailUrl)+'" target="_blank" rel="noopener">Windy-Kamera öffnen ↗</a>');
    windyMarkers.push(marker);
    addCameraCard(container,title,detail,()=>{map.setView([lat,lon],Math.max(map.getZoom(),10));marker.openPopup();openCameraView({name:title,url:detailUrl,embedUrl:embed||detailUrl,source:'Windy Webcams API · öffentlicher Kameraeintrag'})},image,'Windy-Webcam');
   });
-  $('count').textContent=String(cams.length);filterCameraCards();
+  $('count').textContent=String(cams.length);loadedPointLayers.add('windy');filterCameraCards();
   $('windyMessage').textContent=cams.length+' Windy-Einträge für diesen Kartenausschnitt geladen. Beim Verschieben der Karte erneut auf „laden“ klicken.';
   setMessage(cams.length+' Windy-Kameras geladen. Marker anklicken oder links einen Eintrag öffnen.');
   if(!cams.length)setMessage('In diesem Kartenausschnitt wurden keine Windy-Kameras zurückgegeben. Zoome heraus oder verschiebe die Karte.');
@@ -600,40 +600,60 @@ async function getFintrafficCameraSources(){
   return sources;
  }catch(error){$('citymessage').textContent='Fintraffic/Finnland ist gerade nicht erreichbar; die übrigen Kameras werden trotzdem geladen.';return [];}
 }
+let cameraSourceCache=[];
 async function loadCityCams(){
- updateListStamp();clearMarkers(cityMarkers);clearMarkers(abMarkers);clearMarkers(finMarkers);clearList();
+ updateListStamp();clearMarkers(cityMarkers);clearList();
  const fintrafficSources=await getFintrafficCameraSources();
- const allSources=[...citySources,...regionalSources,...worldSources,...fintrafficSources];
- const container=$('autobahnList'),head=document.createElement('div');head.className='note';head.style.cssText='margin:10px 0 6px;color:#7be0f4;font-weight:700';head.textContent='KAMERAS & QUELLEN · '+allSources.length+' EINTRÄGE';container.appendChild(head);
- $('count').textContent=String(allSources.length);
- allSources.forEach(c=>{
-  let marker=null;
-  if(c.local!==false && Number.isFinite(Number(c.lat)) && Number.isFinite(Number(c.lon)) && Math.abs(Number(c.lat))<=90 && Math.abs(Number(c.lon))<=180){
-   marker=L.circleMarker([c.lat,c.lon],{radius:7,color:'#7be0f4',weight:2,fillColor:'#1689aa',fillOpacity:.9}).addTo(map);
-   marker.bindPopup('<b>'+esc(c.name)+'</b><br>'+esc(c.place)+'<br><small>'+esc(c.source)+'</small><br><a href="'+esc(c.url)+'" target="_blank" rel="noopener">Betreiberseite ↗</a><br><small>Zum eingebetteten Player: Eintrag links anklicken.</small>');cityMarkers.push(marker);
-  }
-  addCameraCard(container,c.name,c.place+' · '+c.source,()=>{if(marker){map.setView([c.lat,c.lon],Math.max(map.getZoom(),8));marker.openPopup()}else if(c.local!==false)map.setView([44.18,-75.93],9);openCameraView(c)},c.imageUrl||'',(c.embedUrl?'Player-Link vorhanden':c.imageUrl?'Aktuelles Standbild':(c.category==='traffic'?'Verkehrsportal':c.category==='resort'?'Resort / Landschaft':c.category==='still'?'Standbild / Wetter':'Betreiberseite / Quelle')));
+ cameraSourceCache=[...citySources,...regionalSources,...worldSources,...fintrafficSources];
+ const keys=['webcams','germany','northsea','usa','harbors'];
+ keys.forEach(key=>{pointLayers[key].clearLayers();loadedPointLayers.add(key);});
+ const valid=cameraSourceCache.filter(c=>{
+  const lat=Number(c.lat),lon=Number(c.lon);
+  return Number.isFinite(lat)&&Number.isFinite(lon)&&Math.abs(lat)<=90&&Math.abs(lon)<=180&&(lat!==0||lon!==0)&&(c.embedUrl||c.imageUrl);
  });
- window.dispatchEvent(new CustomEvent('atlas-camera-list-loaded',{detail:allSources.length}));
- const localPoints=allSources.filter(c=>c.local!==false&&c.lat>=43.7&&c.lat<=44.5&&c.lon>=-76.35&&c.lon<=-75.65).map(c=>[c.lat,c.lon]),sharedView=getSharedMapView();if(sharedView)map.setView(sharedView.center,sharedView.zoom);else if(localPoints.length)map.fitBounds(L.latLngBounds(localPoints).pad(0.12),{maxZoom:9});else map.setView([44.18,-75.93],9);filterCameraCards();
- $('citymessage').textContent=allSources.length+' Kamera- und Portal-Einträge geladen, einschließlich '+fintrafficSources.length+' öffentlicher Finnland-Standbilder. Finnische Bilder werden ungefähr alle 10 Minuten aktualisiert; nicht jeder andere Eintrag ist ein direkter Livestream.';
- filterCameraCards();setMessage('Kameraliste geladen. Favoriten mit ☆ speichern; bestätigte Streams öffnen im Player, Portale direkt beim Betreiber.');
+ const matches={
+  webcams:()=>true,
+  germany:c=>/Deutschland|Germany|Berlin|Hamburg|Husum|Kiel|Büsum|Borkum|Norddeich|Langeoog|Nordstrand|St\. Peter/i.test([c.name,c.place].join(' ')),
+  northsea:c=>/Nordsee|Husum|Büsum|Borkum|Norddeich|Langeoog|Nordstrand|St\. Peter|Amrum|Helgoland|Sylt|Föhr/i.test([c.name,c.place].join(' ')),
+  usa:c=>/USA|New York|NY\b|Watertown|Alexandria Bay|Clayton|Lake George|Albany|Thousand Islands|Adirondack|La Fargeville|California/i.test([c.name,c.place].join(' ')),
+  harbors:c=>/Hafen|Harbor|Harbour|River|Dock|Marina|Port|Pier|Waterfront|Kiel|Büsum|Norddeich|Alexandria Bay|Clayton/i.test([c.name,c.place].join(' '))
+ };
+ const styles={webcams:['#7be0f4','#1689aa'],germany:['#a9d6ff','#2876b4'],northsea:['#6ee7d0','#0b9b8b'],usa:['#f0c76a','#b88725'],harbors:['#c6a7ff','#7653bd']};
+ keys.forEach(key=>{
+  valid.filter(matches[key]).forEach(c=>{
+   const lat=Number(c.lat),lon=Number(c.lon),style=styles[key];
+   const marker=L.circleMarker([lat,lon],{radius:7,color:style[0],weight:2,fillColor:style[1],fillOpacity:.94}).addTo(pointLayers[key]);
+   marker.bindPopup('<b>'+esc(c.name)+'</b><br>'+esc(c.place)+'<br><small>'+esc(c.source)+'</small><br><small>Die Kamera öffnet sich direkt in ATLAS LIVE.</small>');
+   marker.on('click',()=>openCameraView(c));
+   cityMarkers.push(marker);
+  });
+ });
+ const container=$('autobahnList'),head=document.createElement('div');
+ head.className='note';head.textContent='EINGEBETTETE KAMERAS · '+valid.length+' MIT DIREKTEM PLAYER ODER BILDBILD';
+ container.appendChild(head);
+ valid.forEach(c=>addCameraCard(container,c.name,c.place+' · '+c.source,()=>openCameraView(c),c.imageUrl||'',c.embedUrl?'Live-Player':'Aktuelles Standbild'));
+ $('count').textContent=String(valid.length);
+ $('citymessage').textContent=valid.length+' direkt eingebettete Kameras mit Koordinaten geladen. Quellen ohne echten Player oder Bild werden nicht als Kamera-Punkt ausgegeben.';
+ filterCameraCards();
+ $('citymessage').textContent+=' Finnland: '+fintrafficSources.length+' aktualisierte öffentliche Standbilder.';
+ setMessage('Kameradaten bereit. Schalte links einzelne Kamera-Ebenen ein; nur deren Punkte erscheinen auf der Karte.');
 }
+
 window.addEventListener('atlas-open-camera',e=>openCameraView(e.detail));
 
 function loadFlights(){
- updateListStamp();clearMarkers(cityMarkers);clearMarkers(abMarkers);clearMarkers(finMarkers);clearList();
+ updateListStamp();clearMarkers(flightMarkers);clearList();
  const container=$('autobahnList'),head=document.createElement('div');
  head.className='note';head.style.cssText='margin:10px 0 6px;color:#7be0f4;font-weight:700';
  head.textContent='FLUGHÄFEN · OFFIZIELLE FLUGTAFELN';container.appendChild(head);
  $('count').textContent=String(flightSources.length);
  flightSources.forEach(a=>{
-  const marker=L.circleMarker([a.lat,a.lon],{radius:8,color:'#b5a2ff',weight:2,fillColor:'#7157c8',fillOpacity:.9}).addTo(map);
+  const marker=L.circleMarker([a.lat,a.lon],{radius:8,color:'#b5a2ff',weight:2,fillColor:'#7157c8',fillOpacity:.9}).addTo(pointLayers.airports);
   marker.bindPopup('<b>'+esc(a.name)+'</b><br>'+esc(a.place)+'<br><small>'+esc(a.source)+'</small><br><a href="'+esc(a.url)+'" target="_blank" rel="noopener">Ankünfte und Abflüge öffnen ↗</a><p style="font-size:10px;color:#9aacc2">Hier werden Flugnummern und Status auf der offiziellen Flughafenseite angezeigt. Keine Live-Verfolgung einzelner Personen.</p>');
-  cityMarkers.push(marker);
+  flightMarkers.push(marker);
   addCameraCard(container,a.name,a.place+' · Flugstatus',()=>{map.setView([a.lat,a.lon],Math.max(map.getZoom(),8));marker.openPopup()},'','Offizielle Flugtafel');
  });
- filterCameraCards();map.fitBounds(L.latLngBounds(flightSources.map(a=>[a.lat,a.lon])).pad(0.18),{maxZoom:5});
+ filterCameraCards();loadedPointLayers.add('airports');
  $('flightmessage').textContent='Zwei offizielle Flugtafeln geladen: BER und Albany. Aktuelle Statusdaten stehen auf den Flughafenseiten.';
  setMessage('Flughäfen angezeigt. Öffne einen Eintrag für die offizielle Ankunfts- und Abflugtafel.');
 }
@@ -707,7 +727,7 @@ async function searchRadio(){
    card.append(title,details,play);$('radioResults').appendChild(card);
     const lat=Number(station.geo_lat),lon=Number(station.geo_long);
     if(Number.isFinite(lat)&&Number.isFinite(lon)&&Math.abs(lat)<=90&&Math.abs(lon)<=180&&(lat!==0||lon!==0)){
-     const marker=L.circleMarker([lat,lon],{radius:7,color:'#f0c76a',weight:2,fillColor:'#b88725',fillOpacity:.95}).addTo(map);
+     const marker=L.circleMarker([lat,lon],{radius:7,color:'#f0c76a',weight:2,fillColor:'#b88725',fillOpacity:.95}).addTo(pointLayers.radio);
      marker.bindPopup('<b>'+esc(station.name)+'</b><br>'+esc(station.country||'Land unbekannt')+'<br><span style="font-size:11px;color:#9aacc2">Öffentlicher Radiosender · Radio Browser</span>');
      marker.on('click',()=>{$('radioOverlay').classList.add('open');});
      radioMarkers.push(marker);
@@ -745,7 +765,7 @@ function showAutobahnFallback(reason){
  abSetMessage(reason+' Die öffentliche Autobahn-API liefert gerade keine direkt nutzbaren Kamera-Feeds. Als Ersatz sind ein Kamera-Index und das offizielle Verkehrsportal hinterlegt.');
 }
 async function loadAutobahn(){
- const button=$('autobahn');button.disabled=true;clearMarkers(finMarkers);clearMarkers(cityMarkers);clearMarkers(abMarkers);clearList();abSetMessage('Prüfe die offiziellen Autobahn-Kameradaten …');
+ const button=document.querySelector('[data-layer="autobahn"]');if(button)button.disabled=true;clearMarkers(abMarkers);clearList();abSetMessage('Prüfe die offiziellen Autobahn-Kameradaten …');
  try{
   const data=await fetchJsonSafe('/api/autobahn/webcams',35000),raw=Array.isArray(data.webcam)?data.webcam:[];
   const found=raw.map(c=>{
@@ -759,7 +779,7 @@ async function loadAutobahn(){
   if(found.length){map.fitBounds(L.latLngBounds(found.map(c=>[c._lat,c._lon])).pad(0.06),{maxZoom:7});renderAutobahn(found);abSetMessage(found.length+' verfügbare Autobahn-Kameras gefunden. Anbieterbilder werden direkt geöffnet.')}
   else{showAutobahnFallback(data.checked+' Straßen geprüft, aber 0 Kameras erhalten.');}
  }catch(e){showAutobahnFallback('Autobahn-Daten konnten nicht geladen werden: '+e.message)}
- finally{button.disabled=false}
+ finally{if(button)button.disabled=false}
 }
 $('autobahn').onclick=loadAutobahn;
 window.addEventListener('load',()=>setTimeout(()=>{if(!getSharedMapView())map.setView([44.18,-75.93],9);loadCityCams()},650));
