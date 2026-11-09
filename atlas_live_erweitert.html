@@ -1,0 +1,309 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ATLAS LIVE</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<style>
+:root{color-scheme:dark;--bg:#080d16;--panel:#111a29;--line:#26354a;--muted:#8fa2bb;--cyan:#58c7e8;--green:#48d6a0}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:#eaf1fb;font:14px/1.45 Inter,system-ui,Arial,sans-serif}
+header{height:64px;display:flex;align-items:center;gap:12px;padding:0 20px;border-bottom:1px solid var(--line);background:#0b1220}
+.logo{width:34px;height:34px;border:1px solid #3a6680;border-radius:10px;display:grid;place-items:center;color:var(--cyan);font-size:19px}
+h1{font-size:16px;letter-spacing:2px;margin:0;font-weight:800}.sub{color:var(--muted);font-size:11px;letter-spacing:1px}
+.status{margin-left:auto;color:var(--green);font-size:11px;letter-spacing:1px}
+main{display:grid;grid-template-columns:340px 1fr;height:calc(100vh - 64px);min-height:560px}
+aside{background:var(--panel);border-right:1px solid var(--line);display:flex;flex-direction:column;min-height:0}
+.tools{padding:16px;border-bottom:1px solid var(--line)}
+.label{display:block;color:var(--muted);font-size:10px;letter-spacing:1.4px;text-transform:uppercase;margin:0 0 7px}
+input,select,button{font:inherit;border-radius:9px;border:1px solid var(--line);background:#0b1422;color:#eaf1fb;padding:11px;width:100%;outline:none}
+input:focus,select:focus{border-color:var(--cyan)}
+button{background:#12364a;border-color:#1c6078;color:#dff8ff;font-weight:700;cursor:pointer}
+button:hover{background:#17465e}
+.row{display:flex;gap:8px;margin-top:9px}.row button{width:auto;flex:1}
+.note{font-size:11px;color:var(--muted);margin:9px 0 0}
+.listhead{display:flex;justify-content:space-between;padding:14px 16px 8px;color:var(--muted);font-size:10px;letter-spacing:1.4px;text-transform:uppercase}
+#cameraList{overflow:auto;padding:0 10px 12px}
+.camera{padding:11px;border:1px solid transparent;border-radius:11px;display:grid;grid-template-columns:82px 1fr;gap:11px;cursor:pointer;margin-bottom:6px}
+.camera:hover,.camera.active{background:#17263a;border-color:#2e526b}
+.thumb{width:82px;height:62px;border-radius:7px;background:#202f43;object-fit:cover}
+.camname{font-weight:700;font-size:12px;margin:2px 0 4px}.cammeta{font-size:11px;color:var(--muted)}
+.empty{padding:20px;color:var(--muted);font-size:12px}
+#map{height:100%;background:#0b1422}
+.leaflet-tile-pane{filter:invert(1) hue-rotate(180deg) brightness(.85) contrast(.9) saturate(.7)}
+.mapwrap{position:relative;min-width:0}
+.mapbadge{position:absolute;z-index:500;top:14px;left:14px;background:#0b1422dd;border:1px solid var(--line);border-radius:9px;padding:9px 12px;font-size:11px;color:#b9c8dc;backdrop-filter:blur(8px)}
+.leaflet-popup-content-wrapper,.leaflet-popup-tip{background:#111a29;color:#eaf1fb}.leaflet-popup-content{margin:12px;min-width:180px}
+.popupimg{width:100%;max-height:120px;object-fit:cover;border-radius:6px;margin:7px 0}
+.popup a{color:var(--cyan)}
+footer{padding:10px 16px;border-top:1px solid var(--line);font-size:10px;color:var(--muted)}
+@media(max-width:760px){main{grid-template-columns:1fr;grid-template-rows:42vh 1fr;height:auto;min-height:calc(100vh - 64px)}aside{grid-row:2;min-height:420px;border-right:0} .mapwrap{grid-row:1}#map{height:42vh}.status{display:none}}
+</style>
+</head>
+<body>
+<header><div class="logo">◎</div><div><h1>ATLAS LIVE</h1><div class="sub">PUBLIC CAMERA EXPLORER</div></div><div class="status">● PUBLIC SOURCES ONLY</div></header>
+<main>
+<aside>
+  <section class="tools">
+    <label class="label" for="key">Windy Webcams API-Key</label>
+    <input id="key" type="password" placeholder="API-Key hier einfügen" autocomplete="off">
+    <p class="note">Der Schlüssel bleibt nur in diesem Browser-Tab und wird nicht gespeichert. Er ist nicht dein TypeSafe-Key.</p>
+    <div style="height:12px"></div>
+    <label class="label" for="search">Ort / Land suchen</label>
+    <input id="search" placeholder="z. B. Berlin, Paris, Japan">
+    <div class="row"><button id="go">Kameras laden</button><button id="locate" type="button">Weltkarte</button></div>
+    <div class="row"><button id="worldwide" type="button">Weltweit: Länder-Kameras laden</button></div>
+    <div class="row"><button id="worldMore" type="button" disabled>Weitere Kameras weltweit nachladen</button></div>
+    <p class="note" id="message">Autobahnkameras werden beim Start automatisch geladen. Für weltweite Windy-Webcams: API-Key eingeben und „Weltweit“ wählen.</p>
+    <div style="height:14px"></div>
+    <label class="label">Zusätzliche Quelle (kein Key nötig)</label>
+    <button id="autobahn" type="button">Autobahn-Kameras (DE) laden</button>
+    <p class="note" id="abmessage">Verkehrskameras der Autobahn GmbH, offene Daten. Nur im aktuellen Kartenausschnitt.</p>
+  </section>
+  <div class="listhead"><span>Kameras im Kartenausschnitt</span><span id="count">0</span></div>
+  <div id="cameraList">
+   <div id="windyList"><div class="empty">Noch keine Kameras geladen.</div></div>
+   <div id="autobahnList"></div>
+  </div>
+  <footer>Quellen: Windy Webcams API · Autobahn GmbH (offene Verkehrsdaten) · Kartendaten © OpenStreetMap-Mitwirkende</footer>
+</aside>
+<div class="mapwrap"><div class="mapbadge">WELTKARTE · öffentliche Webcams</div><div id="map"></div></div>
+</main>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+const map=L.map('map',{worldCopyJump:true}).setView([25,8],2);
+L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'&copy; OpenStreetMap-Mitwirkende',maxZoom:19}).addTo(map);
+let markers=[], cameras=[], active=null;
+const $=id=>document.getElementById(id);
+function setMessage(t){$('message').textContent=t}
+function clear(){markers.forEach(m=>map.removeLayer(m));markers=[];cameras=[];$('windyList').innerHTML='';$('count').textContent='0'}
+function val(o,...paths){for(const p of paths){let x=o;for(const k of p.split('.'))x=x?.[k];if(x!==undefined&&x!==null)return x}return ''}
+function normalize(raw){
+ const arr=Array.isArray(raw)?raw:(raw.webcams||raw.data||raw.result?.webcams||raw.result||[]);
+ return arr.map(c=>{
+  const lat=Number(val(c,'location.latitude','location.lat','latitude','lat'));
+  const lon=Number(val(c,'location.longitude','location.lon','location.lng','longitude','lon','lng'));
+  return {...c,_lat:lat,_lon:lon,_name:val(c,'title','name')||'Öffentliche Webcam',
+   _place:[val(c,'location.city','city'),val(c,'location.region','region'),val(c,'location.country','country')].filter(Boolean).join(', '),
+   _image:val(c,'images.current.preview','images.current.thumbnail','image.preview','image','thumbnail'),
+   _url:val(c,'urls.detail','urls.webcam','url','webcamUrl'),
+   _player:val(c,'player.live','player.url','player')};
+ }).filter(c=>Number.isFinite(c._lat)&&Number.isFinite(c._lon)&&Math.abs(c._lat)<=90&&Math.abs(c._lon)<=180);
+}
+function render(list){
+ clear();cameras=list;
+ if(!list.length){$('windyList').innerHTML='<div class="empty">Keine Kameras im aktuellen Ausschnitt gefunden. Zoome heraus oder verschiebe die Karte.</div>';return}
+ list.forEach((c,i)=>{
+  const marker=L.circleMarker([c._lat,c._lon],{radius:6,color:'#7be0f4',weight:2,fillColor:'#1689aa',fillOpacity:.9}).addTo(map);
+  marker.bindPopup(`<b>${esc(c._name)}</b><br>${esc(c._place)}${c._image?`<img class="popupimg" src="${esc(c._image)}" alt="">`:''}${c._url?`<br><a href="${esc(c._url)}" target="_blank" rel="noopener">Kamera beim Anbieter öffnen ↗</a>`:''}<p style="font-size:10px;color:#9aacc2">Webcams provided by <a href="https://www.windy.com/" target="_blank" rel="noopener">windy.com</a> — <a href="https://www.windy.com/webcams/add" target="_blank" rel="noopener">add a webcam</a></p>`);
+  marker.on('click',()=>select(i));markers.push(marker);
+  const el=document.createElement('div');el.className='camera';el.innerHTML=`<img class="thumb" src="${esc(c._image||'')}" alt="" onerror="this.style.visibility='hidden'"><div><div class="camname">${esc(c._name)}</div><div class="cammeta">${esc(c._place||'Standort verfügbar')}</div></div>`;
+  el.onclick=()=>{map.setView([c._lat,c._lon],Math.max(map.getZoom(),8));marker.openPopup();select(i)};
+  $('windyList').appendChild(el);
+ });
+ $('count').textContent=String(list.length);
+}
+function select(i){active=i;document.querySelectorAll('.camera').forEach((e,n)=>e.classList.toggle('active',n===i))}
+function esc(s){return String(s??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]))}
+const WINDY_BASE='https://api.windy.com/webcams/api/v3';
+let worldwideCountryPages=[];
+let worldwideLoaded=[];
+let worldwideBusy=false;
+
+function uniqueCameras(items){
+ const seen=new Set(),out=[];
+ items.forEach(c=>{
+  const id=val(c,'webcamId','id','webcam_id')||[c._lat,c._lon,c._name].join('|');
+  if(!seen.has(String(id))){seen.add(String(id));out.push(c)}
+ });
+ return out;
+}
+function extractCountries(raw){
+ const arr=Array.isArray(raw)?raw:(raw.countries||raw.data||raw.result?.countries||raw.result||[]);
+ return arr.map(c=>({
+  code:String(val(c,'code','countryCode','iso2','id')).trim(),
+  name:String(val(c,'name','title','label')).trim()
+ })).filter(c=>/^[A-Za-z]{2,3}$/.test(c.code));
+}
+async function windyFetch(path,params,key){
+ const url=WINDY_BASE+path+(params&&params.toString()?'?'+params.toString():'');
+ const res=await fetch(url,{headers:{'x-windy-api-key':key}});
+ if(!res.ok){
+  let body='';try{body=(await res.text()).slice(0,180)}catch{}
+  throw new Error('Windy HTTP '+res.status+(body?': '+body:''));
+ }
+ return res.json();
+}
+function renderWindyCombined(items){
+ worldwideLoaded=uniqueCameras(items);
+ render(worldwideLoaded);
+}
+async function load(){
+ const key=$('key').value.trim();if(!key){setMessage('Bitte zuerst einen Windy-Webcams-API-Key eingeben.');$('key').focus();return}
+ const b=map.getBounds();
+ const params=new URLSearchParams({bbox:[b.getNorth(),b.getEast(),b.getSouth(),b.getWest()].join(','),include:'categories,images,location,player,urls',lang:'en',limit:'50',offset:'0'});
+ setMessage('Lade Kameras im Kartenausschnitt …');
+ try{
+  let all=[];
+  for(let off=0;off<=1000;off+=50){
+   params.set('offset',String(off));
+   const raw=await windyFetch('/webcams',params,key);
+   const part=normalize(raw);
+   all=all.concat(part);
+   if(part.length<50)break;
+  }
+  render(all);
+  setMessage(all.length+' Kamera-Einträge im Kartenausschnitt geladen.');
+ }catch(e){setMessage(e.message+' Prüfe den Key und die Windy-API-Freigabe.');}
+}
+async function loadWorldwide(){
+ const key=$('key').value.trim();
+ if(!key){setMessage('Bitte zuerst einen Windy-Webcams-API-Key eingeben.');$('key').focus();return}
+ if(worldwideBusy)return;
+ worldwideBusy=true;
+ $('worldwide').disabled=true;
+ $('worldMore').disabled=true;
+ worldwideCountryPages=[];
+ worldwideLoaded=[];
+ setMessage('Lade Liste der verfügbaren Länder …');
+ try{
+  const countriesRaw=await windyFetch('/countries',new URLSearchParams({lang:'en'}),key);
+  const countries=extractCountries(countriesRaw);
+  if(!countries.length)throw new Error('Windy hat keine auswertbare Länderliste geliefert.');
+  let done=0,failed=0,all=[];
+  for(const country of countries){
+   setMessage('Lade alle verfügbaren Länder-Kameras … '+country.name+' ('+(done+1)+'/'+countries.length+')');
+   let offset=0, countryCount=0, hasMore=false;
+   try{
+    // Alle verfügbaren Seiten dieses Landes automatisch abrufen.
+    while(offset<=1000){
+     const p=new URLSearchParams({country:country.code,include:'categories,images,location,player,urls',lang:'en',limit:'50',offset:String(offset)});
+     const raw=await windyFetch('/webcams',p,key);
+     const part=normalize(raw);
+     all=all.concat(part);
+     countryCount+=part.length;
+     if(part.length<50){hasMore=false;break}
+     offset+=part.length;
+     hasMore=offset<=1000;
+     await new Promise(resolve=>setTimeout(resolve,180));
+    }
+    worldwideCountryPages.push({code:country.code,name:country.name,offset:offset,total:countryCount,hasMore:hasMore});
+   }catch(err){failed++}
+   done++;
+   await new Promise(resolve=>setTimeout(resolve,180));
+  }
+  renderWindyCombined(all);
+  const remaining=worldwideCountryPages.some(c=>c.hasMore&&c.offset<=1000);
+  $('worldMore').disabled=!remaining;
+  setMessage(worldwideLoaded.length+' eindeutige Kameras aus '+done+' Ländern geladen.'+(failed?' '+failed+' Länder konnten nicht vollständig abgefragt werden.':'')+(remaining?' Weitere API-Seiten können nachgeladen werden.':' Alle erreichbaren Seiten wurden geladen.'));
+ }catch(e){
+  setMessage('Weltweiter Abruf fehlgeschlagen: '+e.message+' Prüfe den API-Key und die Freigabe für die Webcams API.');
+ }finally{
+  worldwideBusy=false;
+  $('worldwide').disabled=false;
+ }
+}
+async function loadMoreWorldwide(){
+ const key=$('key').value.trim();
+ if(!key){setMessage('Bitte zuerst den Windy-Key eingeben.');return}
+ if(worldwideBusy)return;
+ worldwideBusy=true;$('worldMore').disabled=true;
+ let added=0,failed=0;
+ try{
+  for(const country of worldwideCountryPages){
+   if(!country.hasMore||country.offset>1000)continue;
+   const next=country.offset;
+   const p=new URLSearchParams({country:country.code,include:'categories,images,location,player,urls',lang:'en',limit:'50',offset:String(next)});
+   try{
+    const raw=await windyFetch('/webcams',p,key);
+    const part=normalize(raw);
+    worldwideLoaded=uniqueCameras(worldwideLoaded.concat(part));
+    country.offset+=part.length;
+    country.hasMore=part.length===50&&country.offset<=1000;
+    added+=part.length;
+   }catch(e){failed++}
+   await new Promise(resolve=>setTimeout(resolve,250));
+  }
+  renderWindyCombined(worldwideLoaded);
+  const remaining=worldwideCountryPages.some(c=>c.hasMore&&c.offset<=1000);
+  $('worldMore').disabled=!remaining;
+  setMessage(added+' weitere Kamera-Einträge geladen. Insgesamt: '+worldwideLoaded.length+'.'+(failed?' '+failed+' Länderabfragen fehlgeschlagen.':'')+(!remaining?' Das kostenlose Abruflimit ist erreicht oder es gibt keine weiteren Einträge.':''));
+ }finally{
+  worldwideBusy=false;
+  if(worldwideCountryPages.some(c=>c.hasMore&&c.offset<=1000))$('worldMore').disabled=false;
+ }
+}
+$('go').onclick=load;
+$('worldwide').onclick=loadWorldwide;
+$('worldMore').onclick=loadMoreWorldwide;
+$('locate').onclick=()=>{map.setView([20,0],2);setMessage('Weltkarte angezeigt. Gib einen Windy-Key ein und lade Kameras.');};
+
+let abMarkers=[];
+function abSetMessage(t){$('abmessage').textContent=t}
+function abClearMarkers(){abMarkers.forEach(m=>map.removeLayer(m));abMarkers=[]}
+function normalizeAutobahn(raw,road){
+ const arr=Array.isArray(raw)?raw:(raw.webcam||raw.result||raw.data||[]);
+ return arr.map(c=>{
+  const lat=Number(val(c,'coordinate.lat','lat','latitude'));
+  const lon=Number(val(c,'coordinate.long','coordinate.lon','lon','long','longitude'));
+  return {...c,_lat:lat,_lon:lon,_road:road,
+   _name:val(c,'title','display_type','subtitle','identifier')||('Autobahn-Kamera '+road),
+   _image:val(c,'imageurl','imageUrl','image','img','picture'),
+   _url:val(c,'url','link','href','detailsUrl')};
+ }).filter(c=>Number.isFinite(c._lat)&&Number.isFinite(c._lon)&&Math.abs(c._lat)<=90&&Math.abs(c._lon)<=180);
+}
+async function fetchJsonSafe(url){
+ const res=await fetch(url,{headers:{accept:'application/json'}});
+ if(!res.ok)throw new Error('HTTP '+res.status);
+ return res.json();
+}
+function renderAutobahn(list){
+ $('autobahnList').innerHTML='';
+ if(!list.length)return;
+ const head=document.createElement('div');head.className='note';head.style.cssText='margin:10px 0 6px;color:#ffb020;font-weight:700';head.textContent='AUTOBAHN GMBH · '+list.length;
+ $('autobahnList').appendChild(head);
+ list.forEach(c=>{
+  const marker=L.circleMarker([c._lat,c._lon],{radius:6,color:'#ffd27f',weight:2,fillColor:'#c97a1a',fillOpacity:.9}).addTo(map);
+  marker.bindPopup(`<b>${esc(c._name)}</b><br>Autobahn ${esc(c._road)}${c._image?`<img class="popupimg" src="${esc(c._image)}" alt="">`:''}${c._url?`<br><a href="${esc(c._url)}" target="_blank" rel="noopener">Details ↗</a>`:''}<p style="font-size:10px;color:#9aacc2">Quelle: Autobahn GmbH (offene Daten)</p>`);
+  abMarkers.push(marker);
+  const el=document.createElement('div');el.className='camera';el.innerHTML=`<img class="thumb" src="${esc(c._image||'')}" alt="" onerror="this.style.visibility='hidden'"><div><div class="camname">${esc(c._name)}</div><div class="cammeta">Autobahn ${esc(c._road)}</div></div>`;
+  el.onclick=()=>{map.setView([c._lat,c._lon],Math.max(map.getZoom(),9));marker.openPopup()};
+  $('autobahnList').appendChild(el);
+ });
+}
+async function loadAutobahn(){
+ const abBase='https://verkehr.autobahn.de/o/autobahn';
+ abClearMarkers();$('autobahnList').innerHTML='';
+ abSetMessage('Lade Liste der Autobahnen …');
+ try{
+  const roadsData=await fetchJsonSafe(abBase+'/roads');
+  const roads=(roadsData.roads||[]);
+  if(!roads.length)throw new Error('Keine Autobahnen in der Antwort gefunden.');
+  const b=map.getBounds();
+  let found=[],ok=0;
+  const chunk=8;
+  for(let i=0;i<roads.length;i+=chunk){
+   abSetMessage('Lade Webcams … ('+i+'/'+roads.length+' Autobahnen)');
+   const batch=roads.slice(i,i+chunk);
+   const results=await Promise.allSettled(batch.map(r=>fetchJsonSafe(abBase+'/'+encodeURIComponent(r)+'/services/webcam').then(d=>normalizeAutobahn(d,r))));
+   results.forEach(r=>{if(r.status==='fulfilled'){found=found.concat(r.value);ok++}});
+  }
+  if(!ok)throw new Error('Keine Autobahn konnte abgefragt werden. Die API ist evtl. gerade nicht erreichbar.');
+  const inView=found.filter(c=>b.contains([c._lat,c._lon]));
+  renderAutobahn(inView);
+  abSetMessage(inView.length+' Autobahn-Kameras im Ausschnitt ('+found.length+' bundesweit gefunden, '+ok+'/'+roads.length+' Autobahnen abgefragt). Zum Aktualisieren erneut klicken.');
+ }catch(e){abSetMessage('Autobahn-Kameras gerade nicht ladbar: '+e.message);}
+}
+$('autobahn').onclick=loadAutobahn;
+// Key-freie Autobahnkameras direkt beim Start laden.
+window.addEventListener('load',()=>setTimeout(loadAutobahn,900));
+$('search').addEventListener('keydown',async e=>{
+ if(e.key!=='Enter')return;
+ const q=e.target.value.trim();if(!q)return;
+ try{const r=await fetch('https://nominatim.openstreetmap.org/search?format=json&limit=1&q='+encodeURIComponent(q));const d=await r.json();if(!d.length){setMessage('Ort nicht gefunden.');return}map.setView([+d[0].lat,+d[0].lon],8);setMessage('Ort gefunden. Klicke auf „Kameras laden“.');}
+ catch{setMessage('Ortssuche gerade nicht verfügbar.');}
+});
+map.on('moveend',()=>{});
+</script>
+</body>
+</html>
