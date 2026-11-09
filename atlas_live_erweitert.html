@@ -202,7 +202,7 @@ footer{padding:10px 16px;border-top:1px solid var(--line);font-size:10px;color:v
   <footer>Quellen: Autobahn GmbH · Berlin.de · NYSDOT / 511NY · Flughäfen · Kartendaten © OpenStreetMap-Mitwirkende</footer>
 </aside>
 <div class="mapwrap"><div class="mapbadge">ATLAS LIVE · WELTKARTE</div><div class="maptools"><label class="mapstyle-label" for="mapStyle">Kartenstil</label><select id="mapStyle" aria-label="Kartenstil"><option value="street">Karte · CARTO</option><option value="dark">Dunkel</option><option value="topo">Gelände</option><option value="satellite">Satellit</option></select></div><div id="map"></div></div>
-<div class="camviewer" id="camviewer" role="dialog" aria-modal="true"><div class="camviewerbox"><div class="camviewhead"><strong id="camviewtitle">Kamera</strong><button id="camviewopen" type="button">Beim Betreiber öffnen ↗</button><button id="camviewclose" type="button">Schließen ✕</button></div><iframe class="camframe" id="camframe" title="Öffentliche Live-Kamera" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe><div class="camviewfoot" id="camviewnote">Wenn der Anbieter das Einbetten blockiert, nutze „Beim Betreiber öffnen“.</div></div></div>
+<div class="camviewer" id="camviewer" role="dialog" aria-modal="true"><div class="camviewerbox"><div class="camviewhead"><strong id="camviewtitle">Kamera</strong><button id="camviewclose" type="button">Schließen ✕</button></div><iframe class="camframe" id="camframe" title="Öffentliche Live-Kamera" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe><div class="camviewfoot" id="camviewnote">Wenn der Anbieter das Einbetten blockiert, nutze „Beim Betreiber öffnen“.</div></div></div>
   <div class="atlas-overlay" id="radioOverlay" role="dialog" aria-modal="true" aria-label="Weltweites Radio">
     <section class="atlas-panel radio-panel">
       <div class="atlas-panel-head"><h2>ATLAS LIVE · Weltweites Radio</h2><button id="closeRadio" type="button">Schließen ✕</button></div>
@@ -221,24 +221,6 @@ footer{padding:10px 16px;border-top:1px solid var(--line);font-size:10px;color:v
           <audio id="radioAudio" controls preload="none"></audio>
         </div>
         <p class="hub-note">Die Senderstandorte erscheinen als Kartenpunkte, sobald du links die Ebene „Radio“ einschaltest. Die Audiostreams laufen direkt im integrierten Player.</p>
-      </div>
-    </section>
-  </div>
-  <div class="atlas-overlay" id="flightOverlay" role="dialog" aria-modal="true" aria-label="Flugzentrum">
-    <section class="atlas-panel flight-panel">
-      <div class="atlas-panel-head"><h2>ATLAS LIVE · Flugzentrum</h2><button id="closeFlightHub" type="button">Schließen ✕</button></div>
-      <div class="atlas-panel-body">
-        <p class="hub-note">Flughäfen, offizielle Ankunfts- und Abflugtafeln sowie ein Live-Flugradar – alles an einem Ort. Flugstatus öffnet beim jeweiligen Flughafen; das Radar zeigt öffentlich empfangene ADS-B-Daten.</p>
-        <div class="flight-tabs">
-          <button id="flightBoardsTab" type="button" class="active">Flughäfen & Flugstatus</button>
-          <button id="flightRadarTab" type="button">Live-Flugradar</button>
-        </div>
-        <div id="flightBoardsPane"><div id="flightAirportCards" class="flight-airports"></div></div>
-        <div id="flightRadarPane" hidden>
-          <div class="flight-radar-head"><strong>Live-Flugradar · Berlin / BER</strong><a id="flightRadarExternal" href="https://globe.adsbexchange.com/?lat=52.37&lon=13.50&zoom=8" target="_blank" rel="noopener">Radar separat öffnen ↗</a></div>
-          <iframe id="flightRadarFrame" title="Öffentliches Live-Flugradar" loading="lazy" referrerpolicy="strict-origin-when-cross-origin"></iframe>
-          <p class="hub-note">Falls der Anbieter die Einbettung blockiert, nutze „Radar separat öffnen“. Abdeckung und Aktualität hängen von empfangenen Signalen ab.</p>
-        </div>
       </div>
     </section>
   </div>
@@ -322,12 +304,12 @@ function renderAutobahn(list){
  $('count').textContent=String(list.length);
  list.forEach(c=>{
   const marker=L.circleMarker([c._lat,c._lon],{radius:6,color:'#ffd27f',weight:2,fillColor:'#c97a1a',fillOpacity:.9}).addTo(pointLayers.autobahn);
-  marker.bindPopup('<b>'+esc(c._name)+'</b><br>Autobahn '+esc(c._road)+(c._image?'<a href="'+esc(c._image)+'" target="_blank" rel="noopener"><img class="popupimg" src="'+esc(c._image)+'" alt="Aktuelles Kamerabild"></a>':'')+(c._url?'<br><a href="'+esc(c._url)+'" target="_blank" rel="noopener">Kamera / Live-Ansicht öffnen ↗</a>':'')+'<p style="font-size:10px;color:#9aacc2">Quelle: Autobahn GmbH / zuständiger Landesanbieter</p>');
+  marker.bindPopup('<b>'+esc(c._name)+'</b><br>Autobahn '+esc(c._road)+(c._image?'<img class="popupimg" src="'+esc(c._image)+'" alt="Aktuelles Kamerabild">':'')+'<p style="font-size:10px;color:#9aacc2">Quelle: Autobahn GmbH / zuständiger Landesanbieter · Ansicht in ATLAS LIVE</p>');
   abMarkers.push(marker);
   addCameraCard(container,c._name,'Autobahn '+c._road,()=>{
    map.setView([c._lat,c._lon],Math.max(map.getZoom(),9));marker.openPopup();
    const target=c._image||c._url;
-   if(target)openCameraView({name:c._name+' · Autobahn '+c._road,url:c._url||target,embedUrl:target,source:'Autobahn GmbH · offizieller Webcam-Datensatz'});
+   if(target)openCameraView({name:c._name+' · Autobahn '+c._road,url:c._url||target,imageUrl:c._image||'',embedUrl:c._image?'':(c._url||''),source:'Autobahn GmbH · offizieller Webcam-Datensatz'});
   },c._image||'',c._image?'Kamerabild':'Verkehrskamera');
  });
 }
@@ -525,7 +507,7 @@ function buildWall(){
 }
 $('wallCount').onchange=buildWall;$('refreshWall').onclick=buildWall;
 $('randomCamera').onclick=()=>{
- const all=[...citySources,...regionalSources,...worldSources],pick=all[Math.floor(Math.random()*all.length)];
+ const all=[...citySources,...regionalSources,...worldSources].filter(c=>c.embedUrl||c.imageUrl),pick=all[Math.floor(Math.random()*all.length)];
  if(!pick){setMessage('Keine Kameradaten geladen.');return;}
  if(pick.local!==false&&Number.isFinite(pick.lat)&&Number.isFinite(pick.lon))map.setView([pick.lat,pick.lon],Math.max(map.getZoom(),7));
  openCameraView(pick);setMessage('Zufallskamera: '+pick.name);
@@ -549,11 +531,10 @@ function getSharedMapView(){
 let camRefreshTimer=null;
 function openCameraView(camera){
  const playerUrl=camera.embedUrl||camera.imageUrl||'';
- if(!playerUrl){window.open(camera.url,'_blank','noopener');setMessage('Diese Quelle bietet keinen bestätigten Einbettungslink; die Betreiberseite wird geöffnet.');return;}
+ if(!playerUrl){const viewer=$('camviewer');$('camviewtitle').textContent=camera.name||'Kamera';$('camviewnote').textContent='Für diese Quelle liegt kein direkt einbettbarer Bild- oder Player-Link vor. Sie wird deshalb nicht außerhalb von ATLAS LIVE geöffnet.';$('camframe').src='about:blank';viewer.classList.add('open');setMessage('Kein direkter In-App-Stream für diese Quelle verfügbar.');return;}
  const frame=$('camframe'),viewer=$('camviewer');
  if(camRefreshTimer){clearInterval(camRefreshTimer);camRefreshTimer=null;}
  $('camviewtitle').textContent=camera.name;
- $('camviewopen').onclick=()=>window.open(camera.url||camera.imageUrl||playerUrl,'_blank','noopener');
  $('camviewnote').textContent='Quelle: '+camera.source+'. '+(camera.imageUrl?'Öffentliches Standbild; die Ansicht wird automatisch aktualisiert.':'Wenn der Anbieter das Einbetten blockiert oder der Stream offline ist, nutze „Beim Betreiber öffnen“.');
  if(camera.imageUrl){
   const refresh=()=>{frame.src=camera.imageUrl+(camera.imageUrl.includes('?')?'&':'?')+'atlas_refresh='+Date.now();};
@@ -686,43 +667,6 @@ function openFlightRadar(){
 
 
 
-function loadBerlinCams(){
- updateListStamp();clearMarkers(cityMarkers);clearMarkers(abMarkers);clearMarkers(finMarkers);clearList();
- const all=[...citySources,...worldSources].filter(c=>/berlin/i.test([c.name,c.place].join(' ')) && c.local!==false);
- const container=$('autobahnList'),head=document.createElement('div');
- head.className='note';head.style.cssText='margin:10px 0 8px;color:#7be0f4;font-weight:700';head.textContent='BERLIN · ÖFFENTLICHE STADTPANORAMEN';
- container.appendChild(head);
- all.forEach(c=>{
-  const marker=L.circleMarker([Number(c.lat),Number(c.lon)],{radius:8,color:'#7be0f4',weight:2,fillColor:'#1689aa',fillOpacity:.95}).addTo(map);
-  marker.bindPopup('<b>'+esc(c.name)+'</b><br>'+esc(c.place)+'<br><small>'+esc(c.source)+'</small><br><a href="'+esc(c.url)+'" target="_blank" rel="noopener">Öffentliche Kamera öffnen ↗</a>');
-  cityMarkers.push(marker);
-  addCameraCard(container,c.name,c.place+' · '+c.source,()=>{map.setView([Number(c.lat),Number(c.lon)],Math.max(map.getZoom(),11));marker.openPopup();window.open(c.url,'_blank','noopener')},'',c.category==='traffic'?'Verkehrsportal':'Öffentliche Stadtcam');
- });
- const bounds=L.latLngBounds(all.map(c=>[Number(c.lat),Number(c.lon)]));
- if(all.length)map.fitBounds(bounds.pad(0.18),{maxZoom:12});
- $('count').textContent=String(all.length);filterCameraCards();
- setMessage('Berlin-Cams angezeigt. Für das aktuelle Bild den jeweiligen öffentlichen Betreiber-Link öffnen.');
-}
-function openFlightHub(){
- const overlay=$('flightOverlay');overlay.classList.add('open');
- $('flightAirportCards').innerHTML='';
- flightSources.forEach(a=>{
-  const card=document.createElement('article');card.className='flight-airport-card';
-  const title=document.createElement('strong');title.textContent=a.name;
-  const place=document.createElement('p');place.textContent=a.place;
-  const source=document.createElement('span');source.textContent=a.source;
-  const link=document.createElement('a');link.href=a.url;link.target='_blank';link.rel='noopener';link.textContent='Ankünfte & Abflüge öffnen ↗';
-  card.append(title,place,source,link);$('flightAirportCards').appendChild(card);
- });
- setFlightHubTab('boards');
-}
-function setFlightHubTab(tab){
- const boards=tab==='boards';
- $('flightBoardsPane').hidden=!boards;$('flightRadarPane').hidden=boards;
- $('flightBoardsTab').classList.toggle('active',boards);$('flightRadarTab').classList.toggle('active',!boards);
- if(!boards && !$('flightRadarFrame').src.includes('globe.adsbexchange.com'))$('flightRadarFrame').src='https://globe.adsbexchange.com/?lat=52.37&lon=13.50&zoom=8';
-}
-
 function selectRadioStation(station,autoPlay=false){
  $('radioAudio').src=station.stream;$('radioNow').textContent=station.name;
  $('radioMeta').textContent=[station.country,station.language,station.codec].filter(Boolean).join(' · ')||'Öffentlicher Radiosender';
@@ -775,10 +719,6 @@ $('radioName').addEventListener('keydown',e=>{if(e.key==='Enter')searchRadio()})
 $('radioCountry').addEventListener('keydown',e=>{if(e.key==='Enter')searchRadio()});
 $('radioTag').addEventListener('keydown',e=>{if(e.key==='Enter')searchRadio()});
 
-$('closeFlightHub').onclick=()=>{$('flightOverlay').classList.remove('open');$('flightRadarFrame').src='about:blank'};
-$('flightOverlay').addEventListener('click',e=>{if(e.target===$('flightOverlay'))$('closeFlightHub').click()});
-$('flightBoardsTab').onclick=()=>setFlightHubTab('boards');
-$('flightRadarTab').onclick=()=>setFlightHubTab('radar');
 function showAutobahnFallback(reason){
  const container=$('autobahnList');container.innerHTML='';
  const head=document.createElement('div');head.className='note';head.style.cssText='margin:10px 0 8px;color:#ffb020;font-weight:700';head.textContent='AUTOBAHN · ÖFFENTLICHE KAMERA-QUELLEN';container.appendChild(head);
