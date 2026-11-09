@@ -92,7 +92,7 @@ footer{padding:10px 16px;border-top:1px solid var(--line);font-size:10px;color:v
 /* Satellitenansicht, Welt-Radio und Hafenübersicht */
 .maptools{position:absolute;z-index:600;top:14px;right:14px;width:auto}
 .maptools button{width:auto;padding:9px 12px;font-size:11px;box-shadow:0 5px 20px #0007}.maptools{display:flex;align-items:center;gap:7px;background:#0b1422e8;border:1px solid var(--line);border-radius:10px;padding:6px 8px;backdrop-filter:blur(8px)}.maptools select{width:auto;min-width:145px;padding:8px 10px;font-size:11px}.mapstyle-label{font-size:10px;color:#b9c8dc}.statecam-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:8px}.statecam-link,.statecam-extra a{display:flex;justify-content:space-between;align-items:center;padding:11px 12px;border:1px solid #30445b;border-radius:9px;background:#0b1422;color:#d8efff;text-decoration:none;font-size:12px}.statecam-link:hover,.statecam-extra a:hover{border-color:#58c7e8;background:#14283c}.statecam-link span{color:#70d7f1}.statecam-extra{display:flex;gap:9px;flex-wrap:wrap;margin:14px 0}.statecam-extra a{color:#70d7f1}
-#map.map-dark .leaflet-tile-pane{filter:brightness(.82) saturate(.75)}
+#map.map-dark .leaflet-tile-pane{filter:invert(1) hue-rotate(180deg) brightness(.82) contrast(.9) saturate(.65)}
 .hub-actions{grid-template-columns:repeat(2,minmax(0,1fr))}
 .radio-panel{width:min(1050px,100%)}
 .radio-search{display:grid;grid-template-columns:repeat(3,minmax(0,1fr)) auto;gap:10px;align-items:end}
@@ -248,7 +248,7 @@ footer{padding:10px 16px;border-top:1px solid var(--line);font-size:10px;color:v
 const map=L.map('map',{worldCopyJump:true}).setView([25,8],2);
 const mapLayers={
  street:L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'&copy; OpenStreetMap-Mitwirkende',maxZoom:19}),
- dark:L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',{attribution:'&copy; OpenStreetMap &copy; CARTO',subdomains:'abcd',maxZoom:20}),
+ dark:L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'&copy; OpenStreetMap-Mitwirkende',maxZoom:19}),
  topo:L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}',{attribution:'Tiles &copy; Esri — World Topographic Map',maxZoom:19}),
  satellite:L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{attribution:'Tiles &copy; Esri — Source: Esri, Maxar, Earthstar Geographics, and the GIS User Community',maxZoom:19})
 };
