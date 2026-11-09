@@ -310,7 +310,11 @@ function renderAutobahn(list){
   const marker=L.circleMarker([c._lat,c._lon],{radius:6,color:'#ffd27f',weight:2,fillColor:'#c97a1a',fillOpacity:.9}).addTo(map);
   marker.bindPopup('<b>'+esc(c._name)+'</b><br>Autobahn '+esc(c._road)+(c._image?'<a href="'+esc(c._image)+'" target="_blank" rel="noopener"><img class="popupimg" src="'+esc(c._image)+'" alt="Aktuelles Kamerabild"></a>':'')+(c._url?'<br><a href="'+esc(c._url)+'" target="_blank" rel="noopener">Kamera / Live-Ansicht öffnen ↗</a>':'')+'<p style="font-size:10px;color:#9aacc2">Quelle: Autobahn GmbH / zuständiger Landesanbieter</p>');
   abMarkers.push(marker);
-  addCameraCard(container,c._name,'Autobahn '+c._road,()=>{map.setView([c._lat,c._lon],Math.max(map.getZoom(),9));marker.openPopup()},c._image||'',c._image?'Standbild':'Verkehrsportal');
+  addCameraCard(container,c._name,'Autobahn '+c._road,()=>{
+   map.setView([c._lat,c._lon],Math.max(map.getZoom(),9));marker.openPopup();
+   const target=c._image||c._url;
+   if(target)openCameraView({name:c._name+' · Autobahn '+c._road,url:c._url||target,embedUrl:target,source:'Autobahn GmbH · offizieller Webcam-Datensatz'});
+  },c._image||'',c._image?'Kamerabild':'Verkehrskamera');
  });
 }
 const citySources=[
@@ -650,10 +654,14 @@ async function loadAutobahn(){
  try{
   const data=await fetchJsonSafe('/api/autobahn/webcams',35000),raw=Array.isArray(data.webcam)?data.webcam:[];
   const found=raw.map(c=>{
-   const lat=Number(val(c,'coordinate.lat','lat','latitude')),lon=Number(val(c,'coordinate.long','coordinate.lon','lon','long','longitude'));
+   let lat=Number(val(c,'coordinate.lat','lat','latitude')),lon=Number(val(c,'coordinate.long','coordinate.lon','lon','long','longitude'));
+   if((!Number.isFinite(lat)||!Number.isFinite(lon))&&typeof c.point==='string'){
+    const pair=c.point.split(',').map(Number);
+    if(pair.length===2&&pair.every(Number.isFinite)){lon=pair[0];lat=pair[1];}
+   }
    return {...c,_lat:lat,_lon:lon,_road:val(c,'roadId','road','road_id')||(String(val(c,'title','description')||'').match(/\bA\d+[a-z]?\b/i)||['Deutschland'])[0],_name:val(c,'title','description','subtitle','identifier')||'Autobahn-Kamera',_image:val(c,'imageurl','imageUrl','image','img','picture'),_url:val(c,'linkurl','url','link','href','detailsUrl')};
-  }).filter(c=>Number.isFinite(c._lat)&&Number.isFinite(c._lon)&&Math.abs(c._lat)<=90&&Math.abs(c._lon)<=180);
-  if(found.length){map.fitBounds(L.latLngBounds(found.map(c=>[c._lat,c._lon])).pad(0.06),{maxZoom:7});renderAutobahn(found);abSetMessage(found.length+' Autobahn-Kameras gefunden.')}
+  }).filter(c=>Number.isFinite(c._lat)&&Number.isFinite(c._lon)&&Math.abs(c._lat)<=90&&Math.abs(c._lon)<=180&&String(c.isBlocked).toLowerCase()!=='true'&&c.future!==true);
+  if(found.length){map.fitBounds(L.latLngBounds(found.map(c=>[c._lat,c._lon])).pad(0.06),{maxZoom:7});renderAutobahn(found);abSetMessage(found.length+' verfügbare Autobahn-Kameras gefunden. Anbieterbilder werden direkt geöffnet.')}
   else{$('autobahnList').innerHTML='<div class="empty">Die offizielle Autobahn-API hat gerade keine Webcam-Einträge geliefert.</div>';abSetMessage(data.checked+' Straßen geprüft, aber 0 Kameras erhalten.')}
  }catch(e){abSetMessage('Autobahn-Daten konnten nicht geladen werden: '+e.message)}
  finally{button.disabled=false}
