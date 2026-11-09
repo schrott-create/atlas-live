@@ -52,14 +52,17 @@ footer{padding:10px 16px;border-top:1px solid var(--line);font-size:10px;color:v
     <div style="height:14px"></div>
     <label class="label">Zusätzliche Quelle (kein Key nötig)</label>
     <button id="autobahn" type="button">Autobahn-Kameras (DE) laden</button>
-    <p class="note" id="abmessage">Verkehrskameras der Autobahn GmbH, offene Daten. Nur im aktuellen Kartenausschnitt.</p>
+    <p class="note" id="abmessage">Verkehrskameras der Autobahn GmbH, offene Daten.</p>
+    <div style="height:8px"></div>
+    <button id="fintraffic" type="button">Wetter- & Straßenkameras (Finnland) laden</button>
+    <p class="note" id="finmessage">Fintraffic / Digitraffic – öffentliche Wetterkameras, Bildaktualisierung etwa alle 10 Minuten.</p>
   </section>
   <div class="listhead"><span>Kameras im Kartenausschnitt</span><span id="count">0</span></div>
   <div id="cameraList">
    <div id="windyList"><div class="empty">Noch keine Kameras geladen.</div></div>
    <div id="autobahnList"></div>
   </div>
-  <footer>Quellen: Autobahn GmbH (offene Verkehrsdaten) · Kartendaten © OpenStreetMap-Mitwirkende</footer>
+  <footer>Quellen: Autobahn GmbH · Fintraffic / Digitraffic (CC BY 4.0) · Kartendaten © OpenStreetMap-Mitwirkende</footer>
 </aside>
 <div class="mapwrap"><div class="mapbadge">WELTKARTE · öffentliche Webcams</div><div id="map"></div></div>
 </main>
@@ -133,6 +136,56 @@ function renderAutobahn(list){
   $('autobahnList').appendChild(el);
  });
 }
+
+let finMarkers=[];
+function finSetMessage(t){$('finmessage').textContent=t}
+function renderFintraffic(features){
+ finMarkers.forEach(m=>map.removeLayer(m));finMarkers=[];
+ const list=$('autobahnList');
+ const head=document.createElement('div');head.className='note';
+ head.style.cssText='margin:10px 0 6px;color:#7be0f4;font-weight:700';
+ head.textContent='FINTRAFFIC · '+features.length+' KAMERAS';
+ list.appendChild(head);
+ features.forEach(c=>{
+  const marker=L.circleMarker([c.lat,c.lon],{radius:5,color:'#7be0f4',weight:2,fillColor:'#1689aa',fillOpacity:.9}).addTo(map);
+  const image=c.image||'';
+  marker.bindPopup(`<b>${esc(c.name)}</b><br>Finland · Fintraffic${image?`<img class="popupimg" src="${esc(image)}" alt="">`:''}<br><a href="https://www.digitraffic.fi/en/road-traffic/" target="_blank" rel="noopener">Quelle & Informationen ↗</a><p style="font-size:10px;color:#9aacc2">Datenlizenz: CC BY 4.0 · Bilddaten von Fintraffic</p>`);
+  finMarkers.push(marker);
+  const el=document.createElement('div');el.className='camera';
+  el.innerHTML=`<img class="thumb" src="${esc(image)}" alt="" onerror="this.style.visibility='hidden'"><div><div class="camname">${esc(c.name)}</div><div class="cammeta">Finnland · Fintraffic</div></div>`;
+  el.onclick=()=>{map.setView([c.lat,c.lon],Math.max(map.getZoom(),7));marker.openPopup()};
+  list.appendChild(el);
+ });
+}
+async function loadFintraffic(){
+ finSetMessage('Lade öffentliche Kamerastationen aus Finnland …');
+ try{
+  const response=await fetch('/api/fintraffic/stations');
+  if(!response.ok)throw new Error('HTTP '+response.status);
+  const data=await response.json();
+  const features=data.features||[];
+  const cameras=[];
+  for(const feature of features){
+   const props=feature.properties||{};
+   const coords=feature.geometry?.coordinates||[];
+   const lon=Number(coords[0]),lat=Number(coords[1]);
+   if(!Number.isFinite(lat)||!Number.isFinite(lon))continue;
+   const presets=props.cameraPresets||props.presets||[];
+   for(const preset of presets){
+    if(preset.inCollection===false)continue;
+    const id=preset.id||preset.presetId;
+    if(!id)continue;
+    cameras.push({lat,lon,name:preset.presentationName||preset.name||props.name||('Fintraffic '+id),image:'https://weathercam.digitraffic.fi/'+encodeURIComponent(id)+'.jpg?thumbnail=true'});
+   }
+  }
+  const bounds=map.getBounds();
+  const visible=cameras.filter(c=>bounds.contains([c.lat,c.lon]));
+  renderFintraffic(visible);
+  finSetMessage(visible.length+' Kameras im Kartenausschnitt ('+cameras.length+' öffentliche Presets insgesamt erkannt).');
+ }catch(e){finSetMessage('Fintraffic konnte gerade nicht geladen werden: '+e.message)}
+}
+$('fintraffic').onclick=loadFintraffic;
+
 async function loadAutobahn(){
  const abBase='/api/autobahn';
  abClearMarkers();$('autobahnList').innerHTML='';
