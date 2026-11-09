@@ -61,15 +61,12 @@ for (const list of sourceLists) {
   }
 }
 
-const previousIdeas = readArray("roadmapPrevious");
-const newIdeas = readArray("roadmapNew");
-if (previousIdeas.length !== 30 || newIdeas.length !== 50) {
-  throw new Error("Roadmap-Zählung stimmt nicht: " + previousIdeas.length + " + " + newIdeas.length);
-}
 
-for (const id of ["map", "search", "windyLoad", "openWall", "randomCamera", "openRoadmap", "shareAtlas", "camviewer"]) {
+for (const id of ["map", "search", "windyLoad", "openWall", "randomCamera", "shareAtlas", "camviewer"]) {
   if (!idSet.has(id)) throw new Error("Wichtige UI-Komponente fehlt: " + id);
 }
 
+if (html.includes("roadmapOverlay") || html.includes("openRoadmap") || html.includes("roadmapPrevious") || html.includes("roadmapNew")) throw new Error("Entfernter 80-Ideen-Tab ist noch im Frontend vorhanden.");
+if (!html.includes("radioMarkers") || !html.includes("geo_lat") || !html.includes("radioSearch")) throw new Error("Radio-Kartenpunkte oder Suchfunktion fehlen.");
 console.log("Frontend-Prüfung OK: " + checkedScripts + " JavaScript-Block/Blöcke, JSON-LD, " +
-  ids.length + " IDs, DOM-Referenzen, Share-Link, " + cameraCount + " Kameraquellen und 80 Roadmap-Ideen.");
+  ids.length + " IDs, DOM-Referenzen, Share-Link, " + cameraCount + " Kameraquellen und Radio-Kartenpunkte.");
