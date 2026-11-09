@@ -489,6 +489,8 @@ async function loadWindyCams(){
 }
 $('windyLoad').onclick=loadWindyCams;
 $('windyOpen').onclick=()=>openCameraView({name:'Windy · weltweite Webcam-Karte',url:'https://www.windy.com/webcams',embedUrl:'https://www.windy.com/webcams',source:'Windy · offizielle Webcam-Karte'});
+function openOverlay(id){$(id).classList.add('open')}
+function closeOverlay(id){$(id).classList.remove('open')}
 $('openWall').onclick=()=>{buildWall();openOverlay('wallOverlay')};
 $('closeWall').onclick=()=>closeOverlay('wallOverlay');
 $('wallOverlay').addEventListener('click',e=>{if(e.target===$('wallOverlay'))closeOverlay('wallOverlay')});
