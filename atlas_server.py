@@ -166,7 +166,7 @@ def radio_stations():
     country = request.args.get("country", "").strip()[:80]
     tag = request.args.get("tag", "").strip()[:50]
     try:
-        limit = max(1, min(int(request.args.get("limit", "24")), 40))
+        limit = max(1, min(int(request.args.get("limit", "24")), 200))
     except ValueError:
         return jsonify({"error": "Ungültiges Ergebnislimit."}), 400
 
