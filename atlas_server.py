@@ -108,11 +108,11 @@ def autobahn_webcams():
 @app.route("/api/autobahn/<road>/services/webcam")
 def autobahn_data(road=None):
     if road is None:
-        upstream = AUTOBahn_BASE
+        upstream = AUTOBAHN_BASE
     else:
         if not re.fullmatch(r"[A-Za-z0-9_-]{1,12}", road):
             abort(400)
-        upstream = AUTOBahn_BASE + "/" + road + "/services/webcam"
+        upstream = AUTOBAHN_BASE + "/" + road + "/services/webcam"
 
     try:
         response = requests.get(
