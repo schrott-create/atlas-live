@@ -65,7 +65,7 @@ for (const list of sourceLists) {
 }
 
 
-for (const id of ["map", "search", "windyLoad", "openWall", "randomCamera", "shareAtlas", "camviewer", "loadNorthSeaCams", "loadGermanyCams"]) {
+for (const id of ["map", "search", "windyLoad", "openWall", "randomCamera", "shareAtlas", "camviewer", "radioSearch"]) {
   if (!idSet.has(id)) throw new Error("Wichtige UI-Komponente fehlt: " + id);
 }
 
@@ -73,6 +73,10 @@ if (html.includes("roadmapOverlay") || html.includes("openRoadmap") || html.incl
 if (!html.includes("radioMarkers") || !html.includes("geo_lat") || !html.includes("radioSearch")) throw new Error("Radio-Kartenpunkte oder Suchfunktion fehlen.");
 if (!html.includes("getFintrafficCameraSources") || !html.includes("weathercam.digitraffic.fi")) throw new Error("Fintraffic-Kameras oder Bildaktualisierung fehlen.");
 if (!html.includes("basemaps.cartocdn.com/dark_all")) throw new Error("Dunkle Kartenkacheln fehlen.");
+if (!html.includes("basemaps.cartocdn.com/rastertiles/voyager")) throw new Error("Neue Kartenbasis fehlt.");
+if (!html.includes('data-layer="radio"') || !html.includes('data-layer="webcams"')) throw new Error("Seitliche Kartenebenen fehlen.");
+if (!html.includes("params.set('limit','200')")) throw new Error("Radio-Kartenpunkte werden nicht mit erweitertem Limit geladen.");
+if (html.includes("stateCamsOverlay") || html.includes("maritimeOverlay")) throw new Error("Externe Kamera-Verteiler-Overlays sind noch vorhanden.");
 if (html.includes("H_EbNSqfoso")) throw new Error("Veralteter Alexandria-Bay-Stream ist noch eingetragen.");
 console.log("Frontend-Prüfung OK: " + checkedScripts + " JavaScript-Block/Blöcke, JSON-LD, " +
   ids.length + " IDs, DOM-Referenzen, Share-Link, " + cameraCount + " Kameraquellen und Radio-Kartenpunkte.");
