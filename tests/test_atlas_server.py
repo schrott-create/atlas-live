@@ -96,7 +96,8 @@ class AtlasServerTests(unittest.TestCase):
     def test_radio_stations_only_returns_online_https_streams(self):
         payload = [
             {"stationuuid": "12345678-1234-1234-1234-123456789012", "name": "Secure Radio",
-             "lastcheckok": 1, "url_resolved": "https://stream.example/radio", "country": "Germany"},
+             "lastcheckok": 1, "url_resolved": "https://stream.example/radio", "country": "Germany",
+             "geo_lat": 52.52, "geo_long": 13.405},
             {"stationuuid": "22345678-1234-1234-1234-123456789012", "name": "Insecure Radio",
              "lastcheckok": 1, "url_resolved": "http://stream.example/radio"},
             {"stationuuid": "32345678-1234-1234-1234-123456789012", "name": "Offline Radio",
@@ -108,6 +109,8 @@ class AtlasServerTests(unittest.TestCase):
         data = response.get_json()
         self.assertEqual(data["count"], 1)
         self.assertEqual(data["stations"][0]["name"], "Secure Radio")
+        self.assertEqual(data["stations"][0]["geo_lat"], 52.52)
+        self.assertEqual(data["stations"][0]["geo_long"], 13.405)
 
     def test_radio_click_rejects_invalid_station_uuid(self):
         response = self.client.get("/api/radio/click/not-a-uuid")
