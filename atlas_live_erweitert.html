@@ -114,7 +114,7 @@ function normalizeAutobahn(raw,road){
   return {...c,_lat:lat,_lon:lon,_road:road,
    _name:val(c,'title','display_type','subtitle','identifier')||('Autobahn-Kamera '+road),
    _image:val(c,'imageurl','imageUrl','image','img','picture'),
-   _url:val(c,'url','link','href','detailsUrl')};
+   _url:val(c,'linkurl','url','link','href','detailsUrl')};
  }).filter(c=>Number.isFinite(c._lat)&&Number.isFinite(c._lon)&&Math.abs(c._lat)<=90&&Math.abs(c._lon)<=180);
 }
 async function fetchJsonSafe(url){
@@ -142,17 +142,19 @@ function finSetMessage(t){$('finmessage').textContent=t}
 function renderFintraffic(features){
  finMarkers.forEach(m=>map.removeLayer(m));finMarkers=[];
  const list=$('autobahnList');
+ list.innerHTML='';
  const head=document.createElement('div');head.className='note';
  head.style.cssText='margin:10px 0 6px;color:#7be0f4;font-weight:700';
  head.textContent='FINTRAFFIC · '+features.length+' KAMERAS';
  list.appendChild(head);
  features.forEach(c=>{
-  const marker=L.circleMarker([c.lat,c.lon],{radius:5,color:'#7be0f4',weight:2,fillColor:'#1689aa',fillOpacity:.9}).addTo(map);
+  const marker=L.circleMarker([c.lat,c.lon],{radius:6,color:'#7be0f4',weight:2,fillColor:'#1689aa',fillOpacity:.9}).addTo(map);
   const image=c.image||'';
-  marker.bindPopup(`<b>${esc(c.name)}</b><br>Finland · Fintraffic${image?`<img class="popupimg" src="${esc(image)}" alt="">`:''}<br><a href="https://www.digitraffic.fi/en/road-traffic/" target="_blank" rel="noopener">Quelle & Informationen ↗</a><p style="font-size:10px;color:#9aacc2">Datenlizenz: CC BY 4.0 · Bilddaten von Fintraffic</p>`);
+  const popupImage=image?'<a href="'+esc(image)+'" target="_blank" rel="noopener"><img class="popupimg" src="'+esc(image)+'" alt="Aktuelles Kamerabild" style="max-height:240px"></a>':'';
+  marker.bindPopup('<b>'+esc(c.name)+'</b><br>Finnland · Fintraffic'+popupImage+'<p style="font-size:10px;color:#9aacc2">Aktuelles Standbild · Quelle: Fintraffic / Digitraffic · CC BY 4.0</p>');
   finMarkers.push(marker);
   const el=document.createElement('div');el.className='camera';
-  el.innerHTML=`<img class="thumb" src="${esc(image)}" alt="" onerror="this.style.visibility='hidden'"><div><div class="camname">${esc(c.name)}</div><div class="cammeta">Finnland · Fintraffic</div></div>`;
+  el.innerHTML='<img class="thumb" src="'+esc(image)+'" alt="Kamerabild" onerror="this.style.visibility=\'hidden\'"><div><div class="camname">'+esc(c.name)+'</div><div class="cammeta">Finnland · Kamerabild direkt anzeigen</div></div>';
   el.onclick=()=>{map.setView([c.lat,c.lon],Math.max(map.getZoom(),7));marker.openPopup()};
   list.appendChild(el);
  });
@@ -163,25 +165,27 @@ async function loadFintraffic(){
   const response=await fetch('/api/fintraffic/stations');
   if(!response.ok)throw new Error('HTTP '+response.status);
   const data=await response.json();
-  const features=data.features||[];
+  const features=Array.isArray(data.features)?data.features:[];
   const cameras=[];
   for(const feature of features){
    const props=feature.properties||{};
+   if(props.collectionStatus && props.collectionStatus!=='GATHERING')continue;
    const coords=feature.geometry?.coordinates||[];
    const lon=Number(coords[0]),lat=Number(coords[1]);
    if(!Number.isFinite(lat)||!Number.isFinite(lon))continue;
-   const presets=props.cameraPresets||props.presets||[];
+   const presets=Array.isArray(props.presets)?props.presets:[];
    for(const preset of presets){
-    if(preset.inCollection===false)continue;
+    if(preset.inCollection!==true)continue;
     const id=preset.id||preset.presetId;
     if(!id)continue;
-    cameras.push({lat,lon,name:preset.presentationName||preset.name||props.name||('Fintraffic '+id),image:'https://weathercam.digitraffic.fi/'+encodeURIComponent(id)+'.jpg?thumbnail=true'});
+    cameras.push({lat,lon,name:(props.name||'Fintraffic-Kamera')+' · '+id,image:'https://weathercam.digitraffic.fi/'+encodeURIComponent(id)+'.jpg'});
    }
   }
-  const bounds=map.getBounds();
-  const visible=cameras.filter(c=>bounds.contains([c.lat,c.lon]));
-  renderFintraffic(visible);
-  finSetMessage(visible.length+' Kameras im Kartenausschnitt ('+cameras.length+' öffentliche Presets insgesamt erkannt).');
+  if(!cameras.length)throw new Error('Die API hat keine aktiven Kameras geliefert.');
+  const bounds=L.latLngBounds(cameras.map(c=>[c.lat,c.lon]));
+  map.fitBounds(bounds.pad(0.08),{maxZoom:7});
+  renderFintraffic(cameras);
+  finSetMessage(cameras.length+' aktive Kameras geladen. Klicke links auf eine Kamera, um das Bild direkt in der Karte zu sehen.');
  }catch(e){finSetMessage('Fintraffic konnte gerade nicht geladen werden: '+e.message)}
 }
 $('fintraffic').onclick=loadFintraffic;
