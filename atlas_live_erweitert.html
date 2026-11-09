@@ -181,12 +181,12 @@ const citySources=[
  {name:'1000 Islands Bridge – Webcam',place:'Öffentlicher Fluss- und Brückenblick · Alexandria Bay',lat:44.35,lon:-75.91,url:'https://webcamlivestream.com/usa/new-york/1000-islands-bridge-alexandria-bay/',source:'Webcam Live Stream · Betreiberseite, Einbettung nicht bestätigt'}
 ];
 const regionalSources=[
- {name:'Thousand Islands – öffentliche Webcam-Übersicht',place:'Region La Fargeville · Alexandria Bay und Clayton',lat:44.18,lon:-75.93,url:'https://1000islandslive.com/live-cams/',source:'1000 Islands Live · Betreiberübersicht',category:'portal'},
- {name:'New York 511 – Verkehrskameras',place:'Jefferson County und North Country · regionale Verkehrskarte',lat:44.18,lon:-75.93,url:'https://511ny.org/map',source:'New York State · offizielles Verkehrsportal',category:'traffic'},
- {name:'Jefferson County – Wetter-Webcams',place:'Nördlich von Watertown · regionale Wetteransichten',lat:44.02,lon:-75.92,url:'https://hmienterprises.com/webcam/',source:'HMI Enterprises · öffentliche Wetter-Standbilder, Updates tagsüber',category:'still'},
- {name:'Watertown – Kameraübersicht',place:'Jefferson County · Public Square, Dry Hill und Flughafen',lat:43.9748,lon:-75.9108,url:'https://www.webcamny.com/en-US/category/watertown',source:'Webcam NY · Verzeichnis öffentlicher Kameras',category:'portal'},
- {name:'New York State – Webcam-Verzeichnis',place:'North Country und Adirondacks · regionale Übersicht',lat:44.18,lon:-75.93,url:'https://www.webcamny.com/en-US',source:'Webcam NY · kuratiertes öffentliches Verzeichnis',category:'portal'},
- {name:'Adirondacks – Webcam-Übersicht',place:'Adirondack Region · Lake Placid, Old Forge und mehr',lat:44.18,lon:-75.93,url:'https://www.adirondackregion.com/webcams',source:'AdirondackRegion · Betreiberlinks, Status je Kamera unterschiedlich',category:'portal'}
+ {name:'Thousand Islands – öffentliche Webcam-Übersicht',place:'Region La Fargeville · Alexandria Bay und Clayton',lat:44.18,lon:-75.93,url:'https://1000islandslive.com/live-cams/',source:'1000 Islands Live · Betreiberübersicht',category:'portal',local:false},
+ {name:'New York 511 – Verkehrskameras',place:'Jefferson County und North Country · regionale Verkehrskarte',lat:44.18,lon:-75.93,url:'https://511ny.org/map',source:'New York State · offizielles Verkehrsportal',category:'traffic',local:false},
+ {name:'Jefferson County – Wetter-Webcams',place:'Nördlich von Watertown · regionale Wetteransichten',lat:44.02,lon:-75.92,url:'https://hmienterprises.com/webcam/',source:'HMI Enterprises · öffentliche Wetter-Standbilder, Updates tagsüber',category:'still',local:false},
+ {name:'Watertown – Kameraübersicht',place:'Jefferson County · Public Square, Dry Hill und Flughafen',lat:43.9748,lon:-75.9108,url:'https://www.webcamny.com/en-US/category/watertown',source:'Webcam NY · Verzeichnis öffentlicher Kameras',category:'portal',local:false},
+ {name:'New York State – Webcam-Verzeichnis',place:'North Country und Adirondacks · regionale Übersicht',lat:44.18,lon:-75.93,url:'https://www.webcamny.com/en-US',source:'Webcam NY · kuratiertes öffentliches Verzeichnis',category:'portal',local:false},
+ {name:'Adirondacks – Webcam-Übersicht',place:'Adirondack Region · Lake Placid, Old Forge und mehr',lat:44.18,lon:-75.93,url:'https://www.adirondackregion.com/webcams',source:'AdirondackRegion · Betreiberlinks, Status je Kamera unterschiedlich',category:'portal',local:false}
 ];
 const flightSources=[
  {name:'Flughafen Berlin Brandenburg (BER)',place:'Berlin · Ankünfte und Abflüge',lat:52.3667,lon:13.5033,url:'https://ber.berlin-airport.de/en/flying/departures-arrivals.html',source:'BER · offizielle Flugtafel'},
@@ -210,13 +210,15 @@ function loadCityCams(){
  const container=$('autobahnList'),head=document.createElement('div');head.className='note';head.style.cssText='margin:10px 0 6px;color:#7be0f4;font-weight:700';head.textContent='STADT-, FLUSS- & ADIRONDACK-WEBCAMS';container.appendChild(head);
  $('count').textContent=String(allSources.length);
  allSources.forEach(c=>{
-  const marker=L.circleMarker([c.lat,c.lon],{radius:7,color:'#7be0f4',weight:2,fillColor:'#1689aa',fillOpacity:.9}).addTo(map);
-  marker.bindPopup('<b>'+esc(c.name)+'</b><br>'+esc(c.place)+'<br><small>'+esc(c.source)+'</small><br><a href="'+esc(c.url)+'" target="_blank" rel="noopener">Betreiberseite ↗</a><br><small>Zum eingebetteten Player: Eintrag links anklicken.</small>');
-  cityMarkers.push(marker);
-  addCameraCard(container,c.name,c.place+' · '+c.source,()=>{map.setView([c.lat,c.lon],Math.max(map.getZoom(),8));openCameraView(c)},'',c.embedUrl?'Bestätigter Video-Player':(c.category==='traffic'?'Verkehrsportal':c.category==='resort'?'Resort / Landschaft':c.category==='still'?'Standbild / Wetter':'Betreiberseite / Quelle'));
+  let marker=null;
+  if(c.local!==false && c.lat>=43.7 && c.lat<=44.5 && c.lon>=-76.35 && c.lon<=-75.65){
+   marker=L.circleMarker([c.lat,c.lon],{radius:7,color:'#7be0f4',weight:2,fillColor:'#1689aa',fillOpacity:.9}).addTo(map);
+   marker.bindPopup('<b>'+esc(c.name)+'</b><br>'+esc(c.place)+'<br><small>'+esc(c.source)+'</small><br><a href="'+esc(c.url)+'" target="_blank" rel="noopener">Betreiberseite ↗</a><br><small>Zum eingebetteten Player: Eintrag links anklicken.</small>');cityMarkers.push(marker);
+  }
+  addCameraCard(container,c.name,c.place+' · '+c.source,()=>{if(marker){map.setView([c.lat,c.lon],Math.max(map.getZoom(),8));marker.openPopup()}else map.setView([44.18,-75.93],9);openCameraView(c)},'',c.embedUrl?'Player-Link vorhanden':(c.category==='traffic'?'Verkehrsportal':c.category==='resort'?'Resort / Landschaft':c.category==='still'?'Standbild / Wetter':'Betreiberseite / Quelle'));
  });
  window.dispatchEvent(new CustomEvent('atlas-camera-list-loaded',{detail:allSources.length}));
- map.fitBounds(L.latLngBounds(allSources.filter(c=>c.local!==false).map(c=>[c.lat,c.lon])).pad(0.12),{maxZoom:9});filterCameraCards();
+ const localPoints=allSources.filter(c=>c.local!==false&&c.lat>=43.7&&c.lat<=44.5&&c.lon>=-76.35&&c.lon<=-75.65).map(c=>[c.lat,c.lon]);if(localPoints.length)map.fitBounds(L.latLngBounds(localPoints).pad(0.12),{maxZoom:9});else map.setView([44.18,-75.93],9);filterCameraCards();
  $('citymessage').textContent=allSources.length+' öffentliche Kamera- und Portal-Einträge geladen. Im Nahbereich sind Alexandria Bay, Clayton, Watertown und Dry Hill enthalten; Portale sind als solche gekennzeichnet.';
  filterCameraCards();setMessage('Kameraliste geladen. Favoriten mit ☆ speichern; bestätigte Streams öffnen im Player, Portale direkt beim Betreiber.');
 }
