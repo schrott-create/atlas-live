@@ -312,6 +312,7 @@ function renderAutobahn(list){
    if(target)openCameraView({name:c._name+' · Autobahn '+c._road,url:c._url||target,imageUrl:c._image||'',embedUrl:c._image?'':(c._url||''),source:'Autobahn GmbH · offizieller Webcam-Datensatz'});
   },c._image||'',c._image?'Kamerabild':'Verkehrskamera');
  });
+ loadedPointLayers.add('autobahn');
 }
 const citySources=[
  {name:'Berlin – offizielles Webcam-Portal',place:'Berlin · zwei bestätigte Stadtpanoramen',lat:52.52,lon:13.405,url:'https://www.berlin.de/webcams/',source:'Berlin.de · offizielle Übersicht; RBB-Fernsehzentrum und Rotes Rathaus'},
@@ -472,7 +473,7 @@ async function loadWindyCams(){
    const marker=L.circleMarker([lat,lon],{radius:7,color:'#65d7ef',weight:2,fillColor:'#087eaa',fillOpacity:.95}).addTo(pointLayers.windy);
    marker.bindPopup('<b>'+esc(title)+'</b><br>'+esc(detail)+'<br><small>Windy-Webcam · Player wird in ATLAS LIVE geöffnet.</small>');marker.on('click',()=>openCameraView({name:title,place:detail,url:detailUrl||image,embedUrl:embed,imageUrl:image,source:'Windy Webcams API'}));
    windyMarkers.push(marker);
-   addCameraCard(container,title,detail,()=>{map.setView([lat,lon],Math.max(map.getZoom(),10));marker.openPopup();openCameraView({name:title,url:detailUrl,embedUrl:embed||detailUrl,source:'Windy Webcams API · öffentlicher Kameraeintrag'})},image,'Windy-Webcam');
+   addCameraCard(container,title,detail,()=>{map.setView([lat,lon],Math.max(map.getZoom(),10));marker.openPopup();openCameraView({name:title,place:detail,url:detailUrl||image,embedUrl:embed,imageUrl:image,source:'Windy Webcams API'})},image,'Windy-Webcam');
   });
   $('count').textContent=String(cams.length);loadedPointLayers.add('windy');filterCameraCards();
   $('windyMessage').textContent=cams.length+' Windy-Einträge für diesen Kartenausschnitt geladen. Beim Verschieben der Karte erneut auf „laden“ klicken.';
