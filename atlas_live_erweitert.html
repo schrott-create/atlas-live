@@ -57,9 +57,8 @@ footer{padding:10px 16px;border-top:1px solid var(--line);font-size:10px;color:v
     <button id="fintraffic" type="button">Wetter- & Straßenkameras (Finnland) laden</button>
     <p class="note" id="finmessage">Fintraffic / Digitraffic – öffentliche Wetterkameras, Bildaktualisierung etwa alle 10 Minuten.</p>
   </section>
-  <div class="listhead"><span>Kameras im Kartenausschnitt</span><span id="count">0</span></div>
+  <div class="listhead"><span>Kameras geladen</span><span id="count">0</span></div>
   <div id="cameraList">
-   <div id="windyList"><div class="empty">Noch keine Kameras geladen.</div></div>
    <div id="autobahnList"></div>
   </div>
   <footer>Quellen: Autobahn GmbH · Fintraffic / Digitraffic (CC BY 4.0) · Kartendaten © OpenStreetMap-Mitwirkende</footer>
@@ -70,63 +69,27 @@ footer{padding:10px 16px;border-top:1px solid var(--line);font-size:10px;color:v
 <script>
 const map=L.map('map',{worldCopyJump:true}).setView([25,8],2);
 L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'&copy; OpenStreetMap-Mitwirkende',maxZoom:19}).addTo(map);
-let markers=[], cameras=[], active=null;
 const $=id=>document.getElementById(id);
 function setMessage(t){$('message').textContent=t}
-function clear(){markers.forEach(m=>map.removeLayer(m));markers=[];cameras=[];$('windyList').innerHTML='';$('count').textContent='0'}
 function val(o,...paths){for(const p of paths){let x=o;for(const k of p.split('.'))x=x?.[k];if(x!==undefined&&x!==null)return x}return ''}
-function normalize(raw){
- const arr=Array.isArray(raw)?raw:(raw.webcams||raw.data||raw.result?.webcams||raw.result||[]);
- return arr.map(c=>{
-  const lat=Number(val(c,'location.latitude','location.lat','latitude','lat'));
-  const lon=Number(val(c,'location.longitude','location.lon','location.lng','longitude','lon','lng'));
-  return {...c,_lat:lat,_lon:lon,_name:val(c,'title','name')||'Öffentliche Webcam',
-   _place:[val(c,'location.city','city'),val(c,'location.region','region'),val(c,'location.country','country')].filter(Boolean).join(', '),
-   _image:val(c,'images.current.preview','images.current.thumbnail','image.preview','image','thumbnail'),
-   _url:val(c,'urls.detail','urls.webcam','url','webcamUrl'),
-   _player:val(c,'player.live','player.url','player')};
- }).filter(c=>Number.isFinite(c._lat)&&Number.isFinite(c._lon)&&Math.abs(c._lat)<=90&&Math.abs(c._lon)<=180);
-}
-function render(list){
- clear();cameras=list;
- if(!list.length){$('windyList').innerHTML='<div class="empty">Keine Kameras im aktuellen Ausschnitt gefunden. Zoome heraus oder verschiebe die Karte.</div>';return}
- list.forEach((c,i)=>{
-  const marker=L.circleMarker([c._lat,c._lon],{radius:6,color:'#7be0f4',weight:2,fillColor:'#1689aa',fillOpacity:.9}).addTo(map);
-  marker.bindPopup(`<b>${esc(c._name)}</b><br>${esc(c._place)}${c._image?`<img class="popupimg" src="${esc(c._image)}" alt="">`:''}${c._url?`<br><a href="${esc(c._url)}" target="_blank" rel="noopener">Kamera beim Anbieter öffnen ↗</a>`:''}<p style="font-size:10px;color:#9aacc2">Webcams provided by <a href="https://www.Autobahn GmbH/" target="_blank" rel="noopener">windy.com</a> — <a href="https://www.autobahn.de/webcams/add" target="_blank" rel="noopener">add a webcam</a></p>`);
-  marker.on('click',()=>select(i));markers.push(marker);
-  const el=document.createElement('div');el.className='camera';el.innerHTML=`<img class="thumb" src="${esc(c._image||'')}" alt="" onerror="this.style.visibility='hidden'"><div><div class="camname">${esc(c._name)}</div><div class="cammeta">${esc(c._place||'Standort verfügbar')}</div></div>`;
-  el.onclick=()=>{map.setView([c._lat,c._lon],Math.max(map.getZoom(),8));marker.openPopup();select(i)};
-  $('windyList').appendChild(el);
- });
- $('count').textContent=String(list.length);
-}
-function select(i){active=i;document.querySelectorAll('.camera').forEach((e,n)=>e.classList.toggle('active',n===i))}
-function esc(s){return String(s??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]))}
-// Windy wurde entfernt: keine API-Schlüssel oder Windy-Abfragen.
-let abMarkers=[];
-function abSetMessage(t){$('abmessage').textContent=t}
-function abClearMarkers(){abMarkers.forEach(m=>map.removeLayer(m));abMarkers=[]}
-function normalizeAutobahn(raw,road){
- const arr=Array.isArray(raw)?raw:(raw.webcam||raw.result||raw.data||[]);
- return arr.map(c=>{
-  const lat=Number(val(c,'coordinate.lat','lat','latitude'));
-  const lon=Number(val(c,'coordinate.long','coordinate.lon','lon','long','longitude'));
-  return {...c,_lat:lat,_lon:lon,_road:road,
-   _name:val(c,'title','display_type','subtitle','identifier')||('Autobahn-Kamera '+road),
-   _image:val(c,'imageurl','imageUrl','image','img','picture'),
-   _url:val(c,'linkurl','url','link','href','detailsUrl')};
- }).filter(c=>Number.isFinite(c._lat)&&Number.isFinite(c._lon)&&Math.abs(c._lat)<=90&&Math.abs(c._lon)<=180);
-}
-async function fetchJsonSafe(url){
- const res=await fetch(url,{headers:{accept:'application/json'}});
- if(!res.ok)throw new Error('HTTP '+res.status);
- return res.json();
+async function fetchJsonSafe(url,timeoutMs=12000){
+ const controller=new AbortController();
+ const timer=setTimeout(()=>controller.abort(),timeoutMs);
+ try{
+  const res=await fetch(url,{headers:{accept:'application/json'},signal:controller.signal});
+  if(!res.ok)throw new Error('HTTP '+res.status);
+  return await res.json();
+ }catch(error){
+  if(error.name==='AbortError')throw new Error('Zeitüberschreitung beim Laden');
+  throw error;
+ }finally{clearTimeout(timer)}
 }
 function renderAutobahn(list){
  $('autobahnList').innerHTML='';
  if(!list.length)return;
  const head=document.createElement('div');head.className='note';head.style.cssText='margin:10px 0 6px;color:#ffb020;font-weight:700';head.textContent='AUTOBAHN GMBH · '+list.length;
  $('autobahnList').appendChild(head);
+ $('count').textContent=String(list.length);
  list.forEach(c=>{
   const marker=L.circleMarker([c._lat,c._lon],{radius:6,color:'#ffd27f',weight:2,fillColor:'#c97a1a',fillOpacity:.9}).addTo(map);
   marker.bindPopup(`<b>${esc(c._name)}</b><br>Autobahn ${esc(c._road)}${c._image?`<a href="${esc(c._image)}" target="_blank" rel="noopener"><img class="popupimg" src="${esc(c._image)}" alt="Aktuelles Kamerabild"></a>`:''}${c._url?`<br><a href="${esc(c._url)}" target="_blank" rel="noopener">Kamera / Live-Ansicht beim Anbieter öffnen ↗</a>`:''}<p style="font-size:10px;color:#9aacc2">Quelle: Autobahn GmbH / zuständiger Landesanbieter. Je nach Kamera gibt es ein Standbild oder einen externen Stream.</p>`);
@@ -141,7 +104,9 @@ let finMarkers=[];
 function finSetMessage(t){$('finmessage').textContent=t}
 function renderFintraffic(features){
  finMarkers.forEach(m=>map.removeLayer(m));finMarkers=[];
+ abMarkers.forEach(m=>map.removeLayer(m));abMarkers=[];
  const list=$('autobahnList');
+ $('count').textContent=String(features.length);
  list.innerHTML='';
  const head=document.createElement('div');head.className='note';
  head.style.cssText='margin:10px 0 6px;color:#7be0f4;font-weight:700';
@@ -193,16 +158,17 @@ $('fintraffic').onclick=loadFintraffic;
 async function loadAutobahn(){
  const button=$('autobahn');
  button.disabled=true;
+ finMarkers.forEach(m=>map.removeLayer(m));finMarkers=[];
  abClearMarkers();$('autobahnList').innerHTML='';
  abSetMessage('Prüfe die offiziellen Autobahn-Kameradaten …');
  try{
-  const data=await fetchJsonSafe('/api/autobahn/webcams');
+  const data=await fetchJsonSafe('/api/autobahn/webcams',35000);
   const raw=Array.isArray(data.webcam)?data.webcam:[];
   const found=raw.map(c=>{
    const lat=Number(val(c,'coordinate.lat','lat','latitude'));
    const lon=Number(val(c,'coordinate.long','coordinate.lon','lon','long','longitude'));
    return {...c,_lat:lat,_lon:lon,
-    _road:val(c,'roadId','road','road_id')||'Deutschland',
+    _road:val(c,'roadId','road','road_id')||(String(val(c,'title','description')||'').match(/\bA\d+[a-z]?\b/i)||['Deutschland'])[0],
     _name:val(c,'title','description','subtitle','identifier')||'Autobahn-Kamera',
     _image:val(c,'imageurl','imageUrl','image','img','picture'),
     _url:val(c,'linkurl','url','link','href','detailsUrl')};
@@ -213,7 +179,8 @@ async function loadAutobahn(){
    renderAutobahn(found);
    abSetMessage(found.length+' Autobahn-Kameras gefunden. Klicke links auf eine Kamera.');
   }else{
-   $('autobahnList').innerHTML='<div class="empty">Die offizielle Autobahn-API liefert im Moment keine Kameras. Das ist kein Fehler beim Laden von ATLAS LIVE.</div>';
+   $('count').textContent='0';
+   $('autobahnList').innerHTML='<div class="empty">Die offizielle Autobahn-API hat gerade keine Webcam-Einträge geliefert. ATLAS LIVE hat alle Straßen abgefragt, aber es gibt aktuell keine Bilder zum Anzeigen.</div>';
    abSetMessage('Prüfung abgeschlossen: '+data.checked+' Straßen geprüft, aber 0 Kameras von der offiziellen API erhalten.'+(data.failed?' ('+data.failed+' Abfragen fehlgeschlagen.)':''));
   }
  }catch(e){
@@ -231,7 +198,6 @@ $('search').addEventListener('keydown',async e=>{
  try{const r=await fetch('https://nominatim.openstreetmap.org/search?format=json&limit=1&q='+encodeURIComponent(q));const d=await r.json();if(!d.length){setMessage('Ort nicht gefunden.');return}map.setView([+d[0].lat,+d[0].lon],8);setMessage('Ort gefunden. Klicke auf „Kameras laden“.');}
  catch{setMessage('Ortssuche gerade nicht verfügbar.');}
 });
-map.on('moveend',()=>{});
 </script>
 </body>
 </html>
