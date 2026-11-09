@@ -1,0 +1,7 @@
+services:
+  - type: web
+    name: atlas-live
+    runtime: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn atlas_server:app
+    plan: free
