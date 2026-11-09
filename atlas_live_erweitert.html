@@ -195,6 +195,8 @@ footer{padding:10px 16px;border-top:1px solid var(--line);font-size:10px;color:v
         <button type="button" class="map-layer-toggle" data-layer="airports" aria-pressed="false">✈ Flughäfen</button>
         <button type="button" class="map-layer-toggle" data-layer="windy" aria-pressed="false">🌦 Windy</button>
         <button type="button" class="map-layer-toggle" data-layer="space" aria-pressed="false">🛰️ ISS / Weltall</button>
+        <button type="button" class="map-layer-toggle" data-layer="sights" aria-pressed="false">🏛️ Sehenswürdigkeiten</button>
+        <button type="button" class="map-layer-toggle" data-layer="nature" aria-pressed="false">🌋 Natur & Berge</button>
       </div>
       <p class="note">Jedes Feld schaltet nur seine eigenen Kartenpunkte ein oder aus. Du kannst mehrere Bereiche gleichzeitig anzeigen.</p>
     </div>
@@ -303,7 +305,7 @@ const mapLayers={
  satellite:L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{attribution:'Tiles &copy; Esri — Source: Esri, Maxar, Earthstar Geographics, and the GIS User Community',maxZoom:19})
 };
 let activeMapStyle='street';mapLayers.street.addTo(map);
-const pointLayers={webcams:L.layerGroup(),germany:L.layerGroup(),northsea:L.layerGroup(),usa:L.layerGroup(),harbors:L.layerGroup(),autobahn:L.layerGroup(),radio:L.layerGroup(),airports:L.layerGroup(),windy:L.layerGroup(),space:L.layerGroup()};
+const pointLayers={webcams:L.layerGroup(),germany:L.layerGroup(),northsea:L.layerGroup(),usa:L.layerGroup(),harbors:L.layerGroup(),autobahn:L.layerGroup(),radio:L.layerGroup(),airports:L.layerGroup(),windy:L.layerGroup(),space:L.layerGroup(),sights:L.layerGroup(),nature:L.layerGroup()};
 const loadedPointLayers=new Set();
 let flightMarkers=[];
 const $=id=>document.getElementById(id);
@@ -690,6 +692,70 @@ function loadFlights(){
  loadedPointLayers.add('airports');$('flightmessage').textContent='Zwei Flughafen-Standorte mit Kartenpunkten geladen: BER und Albany.';
  setMessage('Flughäfen angezeigt. Öffne einen Eintrag für die offizielle Ankunfts- und Abflugtafel.');
 }
+
+const discoveryPlaces={
+ sights:[
+  ['Brandenburger Tor','Berlin, Deutschland',52.5163,13.3777,'Historisches Wahrzeichen am Pariser Platz.'],
+  ['Kölner Dom','Köln, Deutschland',50.9413,6.9583,'Gotische Kathedrale und UNESCO-Welterbe.'],
+  ['Schloss Neuschwanstein','Schwangau, Deutschland',47.5576,10.7498,'Berühmtes Schloss in den Bayerischen Alpen.'],
+  ['Eiffelturm','Paris, Frankreich',48.8584,2.2945,'Wahrzeichen von Paris am Seineufer.'],
+  ['Kolosseum','Rom, Italien',41.8902,12.4922,'Antikes Amphitheater im Zentrum Roms.'],
+  ['Akropolis','Athen, Griechenland',37.9715,23.7257,'Antike Tempelanlage über Athen.'],
+  ['Pyramiden von Gizeh','Gizeh, Ägypten',29.9792,31.1342,'Monumentale Pyramiden am Rand von Kairo.'],
+  ['Taj Mahal','Agra, Indien',27.1751,78.0421,'Mausoleum aus weißem Marmor.'],
+  ['Petra','Wadi Musa, Jordanien',30.3285,35.4444,'Historische Felsenstadt.'],
+  ['Machu Picchu','Cusco, Peru',-13.1631,-72.5450,'Inka-Stadt hoch in den Anden.'],
+  ['Freiheitsstatue','New York, USA',40.6892,-74.0445,'Monument auf Liberty Island.'],
+  ['Golden Gate Bridge','San Francisco, USA',37.8199,-122.4783,'Bekannte Hängebrücke über der Golden Gate Strait.'],
+  ['Chinesische Mauer','Mutianyu, China',40.4319,116.5704,'Berühmter Abschnitt der Großen Mauer.'],
+  ['Angkor Wat','Siem Reap, Kambodscha',13.4125,103.8670,'Große Tempelanlage nahe Siem Reap.'],
+  ['Opernhaus Sydney','Sydney, Australien',-33.8568,151.2153,' ikonisches Opernhaus am Hafen.'],
+  ['Christusstatue','Rio de Janeiro, Brasilien',-22.9519,-43.2105,'Aussichtspunkt auf dem Corcovado.']
+ ],
+ nature:[
+  ['Mount Everest','Nepal / China',27.9881,86.9250,'Höchster Berg der Erde.'],
+  ['Matterhorn','Schweiz / Italien',45.9763,7.6586,'Markanter Gipfel der Alpen.'],
+  ['Zugspitze','Bayern, Deutschland',47.4211,10.9853,'Höchster Berg Deutschlands.'],
+  ['Kilimandscharo','Tansania',-3.0674,37.3556,'Hoher freistehender Vulkanberg Afrikas.'],
+  ['Mount Fuji','Honshu, Japan',35.3606,138.7274,'Vulkan und bekanntes Wahrzeichen Japans.'],
+  ['Ätna','Sizilien, Italien',37.7510,14.9934,'Aktiver Vulkan auf Sizilien.'],
+  ['Stromboli','Äolische Inseln, Italien',38.7890,15.2130,'Aktiver Inselvulkan.'],
+  ['Vesuv','Neapel, Italien',40.8214,14.4265,'Vulkan am Golf von Neapel.'],
+  ['Hekla','Island',63.9833,-19.7000,'Bekannter Vulkan im Süden Islands.'],
+  ['Eyjafjallajökull','Island',63.6333,-19.6167,'Vulkan unter einem Gletscher.'],
+  ['Reykjanes','Island',63.8950,-22.2500,'Vulkanische Halbinsel mit geothermalen Gebieten.'],
+  ['Yellowstone','Wyoming, USA',44.4280,-110.5885,'Nationalpark mit Geysiren und heißen Quellen.'],
+  ['Grand Canyon','Arizona, USA',36.1069,-112.1129,'Riesige Schlucht des Colorado River.'],
+  ['Niagarafälle','Kanada / USA',43.0799,-79.0747,'Berühmte große Wasserfälle.'],
+  ['Iguazú-Wasserfälle','Argentinien / Brasilien',-25.6953,-54.4367,'Weitläufiges Wasserfallsystem im Regenwald.'],
+  ['Uluru','Northern Territory, Australien',-25.3444,131.0369,'Großer Sandsteinmonolith im Outback.'],
+  ['Salar de Uyuni','Bolivien',-20.1338,-67.4891,'Riesige Salzfläche im Altiplano.'],
+  ['Geirangerfjord','Norwegen',62.1015,7.0940,'Spektakulärer Fjord mit steilen Berghängen.'],
+  ['Dolomiten','Südtirol, Italien',46.4102,11.8440,'Markante Felsgipfel der Alpen.'],
+  ['Aoraki / Mount Cook','Neuseeland',-43.5950,170.1410,'Höchster Berg Neuseelands.']
+ ]
+};
+function loadDiscoveryLayer(key){
+ const group=pointLayers[key],places=discoveryPlaces[key]||[],container=$('autobahnList');
+ group.clearLayers();clearList();
+ const title=key==='sights'?'SEHENSWÜRDIGKEITEN':'NATURWUNDER · BERGE · VULKANE';
+ const head=document.createElement('div');head.className='note';head.style.cssText='margin:10px 0 8px;color:#7be0f4;font-weight:700';head.textContent=title+' · '+places.length+' ORTE';container.appendChild(head);
+ places.forEach((p,i)=>{
+  const [name,place,lat,lon,description]=p;
+  const color=key==='sights'?['#f0c76a','#9c6a1d']:['#ff947d','#b94d35'];
+  const marker=L.circleMarker([lat,lon],{radius:8,color:color[0],weight:2,fillColor:color[1],fillOpacity:.95}).addTo(group);
+  marker.bindPopup('<b>'+esc(name)+'</b><br>'+esc(place)+'<br><small>'+esc(description)+'</small><br><small>Standort-Marker · keine Live-Kamera</small>');
+  const card=document.createElement('article');card.className='radio-card';
+  const heading=document.createElement('strong');heading.textContent=name;
+  const detail=document.createElement('span');detail.textContent=place+' · '+description;
+  const focus=document.createElement('button');focus.type='button';focus.textContent='Auf Karte zeigen';focus.onclick=()=>{map.setView([lat,lon],Math.max(map.getZoom(),7));marker.openPopup();};
+  card.append(heading,detail,focus);container.appendChild(card);
+ });
+ $('count').textContent=String(places.length);$('citymessage').textContent=places.length+' kuratierte Standortmarker. Beschreibungen sind Infopunkte, keine Live-Daten.';
+ loadedPointLayers.add(key);filterCameraCards();
+ setMessage(places.length+' '+(key==='sights'?'Sehenswürdigkeiten':'Naturziele')+' auf der Karte geladen. Marker anklicken für Kurzinfos.');
+}
+
 async function setMapLayerVisible(key,forceVisible=null){
  const group=pointLayers[key],button=document.querySelector('.map-layer-toggle[data-layer="'+key+'"]');
  if(!group)return;
@@ -708,6 +774,7 @@ async function setMapLayerVisible(key,forceVisible=null){
    else if(key==='airports')loadFlights();
    else if(key==='windy')await loadWindyCams();
    else if(key==='space')await loadSpaceTracker();
+   else if(key==='sights'||key==='nature')loadDiscoveryLayer(key);
   }
   if(!loadedPointLayers.has(key)||!group.getLayers().length){
    button?.classList.remove('active');button?.setAttribute('aria-pressed','false');
