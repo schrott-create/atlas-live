@@ -498,10 +498,10 @@ async function loadWindyCams(){
    const loc=c.location||{},lat=Number(loc.latitude),lon=Number(loc.longitude);
    if(!Number.isFinite(lat)||!Number.isFinite(lon))return;
    const title=c.title||('Windy-Webcam '+(i+1)),detail=[loc.city,loc.region,loc.country].filter(Boolean).join(' · ')||'Windy-Webcam';
-   const image=c.images?.current?.icon||'',detailUrl=c.urls?.detail||'https://www.windy.com/webcams';
-   const live=c.player?.live,embed=typeof live==='string'?live:(live?.embed||detailUrl);
+   const image=c.images?.current?.icon||'',detailUrl=c.urls?.detail||'';
+   const live=c.player?.live,embed=typeof live==='string'?live:(live?.embed||'');if(!embed&&!image)return;
    const marker=L.circleMarker([lat,lon],{radius:7,color:'#65d7ef',weight:2,fillColor:'#087eaa',fillOpacity:.95}).addTo(pointLayers.windy);
-   marker.bindPopup('<b>'+esc(title)+'</b><br>'+esc(detail)+(image?'<img class="popupimg" src="'+esc(image)+'" alt="Windy-Kameravorschau">':'')+'<br><a href="'+esc(detailUrl)+'" target="_blank" rel="noopener">Windy-Kamera öffnen ↗</a>');
+   marker.bindPopup('<b>'+esc(title)+'</b><br>'+esc(detail)+'<br><small>Windy-Webcam · Player wird in ATLAS LIVE geöffnet.</small>');marker.on('click',()=>openCameraView({name:title,place:detail,url:detailUrl||image,embedUrl:embed,imageUrl:image,source:'Windy Webcams API'}));
    windyMarkers.push(marker);
    addCameraCard(container,title,detail,()=>{map.setView([lat,lon],Math.max(map.getZoom(),10));marker.openPopup();openCameraView({name:title,url:detailUrl,embedUrl:embed||detailUrl,source:'Windy Webcams API · öffentlicher Kameraeintrag'})},image,'Windy-Webcam');
   });
@@ -662,7 +662,7 @@ function openFlightRadar(){
  openCameraView({name:'Live-Flugradar · Thousand Islands',place:'La Fargeville / Watertown / Thousand Islands',url,embedUrl:url,source:'ADS-B Exchange · öffentliche ADS-B-Livekarte'});
  setMessage('Live-Flugradar wird im ATLAS-LIVE-Player geöffnet. Sichtbare Flugzeuge hängen von empfangenen ADS-B-Signalen in der Region ab.');
 }
-$('citycams').onclick=loadCityCams;
+
 $('openStateCams').onclick=()=>openOverlay('stateCamsOverlay');$('closeStateCams').onclick=()=>closeOverlay('stateCamsOverlay');
 $('loadNorthSeaCams').onclick=async()=>{closeOverlay('stateCamsOverlay');await loadCityCams();$('cameraFilter').value='Nordsee';filterCameraCards();map.setView([54.35,8.65],7);setMessage('Nordsee- und Nordfriesland-Kameras geladen. Standbilder werden im Player aktualisiert; Streams öffnen direkt im Overlay, sofern der Anbieter Einbettung erlaubt.');};
 $('loadGermanyCams').onclick=async()=>{closeOverlay('stateCamsOverlay');await loadCityCams();$('cameraFilter').value='Deutschland';filterCameraCards();map.setView([51.1,10.4],6);setMessage('Deutschland-Kameras und öffentliche Verkehrsquellen geladen.');};
@@ -704,51 +704,61 @@ function setFlightHubTab(tab){
  if(!boards && !$('flightRadarFrame').src.includes('globe.adsbexchange.com'))$('flightRadarFrame').src='https://globe.adsbexchange.com/?lat=52.37&lon=13.50&zoom=8';
 }
 
-async function searchRadio(){
+function selectRadioStation(station,autoPlay=false){
+ $('radioAudio').src=station.stream;$('radioNow').textContent=station.name;
+ $('radioMeta').textContent=[station.country,station.language,station.codec].filter(Boolean).join(' · ')||'Öffentlicher Radiosender';
+ $('radioOverlay').classList.add('open');
+ if(autoPlay)$('radioAudio').play().then(()=>{if(station.stationuuid)fetch('/api/radio/click/'+encodeURIComponent(station.stationuuid)).catch(()=>{});}).catch(()=>{$('radioMessage').textContent='Der Sender ist ausgewählt. Drücke Play im Audioplayer, falls er nicht automatisch startet.';});
+}
+async function searchRadio(options={}){
+ const showMap=options.showMap===true,openOverlay=options.openOverlay===true;
  const button=$('radioSearch'),params=new URLSearchParams();
  const name=$('radioName').value.trim(),country=$('radioCountry').value.trim(),tag=$('radioTag').value.trim();
  if(name)params.set('name',name);if(country)params.set('country',country);if(tag)params.set('tag',tag);
- params.set('limit','32');
- button.disabled=true;$('radioMessage').textContent='Suche öffentliche Sender …';$('radioResults').innerHTML='';
+ params.set('limit','200');
+ button.disabled=true;$('radioMessage').textContent='Lade Radiosender und ihre Standorte …';$('radioResults').innerHTML='';
+ const wasVisible=map.hasLayer(pointLayers.radio);
+ clearMarkers(radioMarkers);pointLayers.radio.clearLayers();
  try{
-  const data=await fetchJsonSafe('/api/radio/stations?'+params.toString(),18000);
-  if(!data.stations.length){$('radioMessage').textContent='Keine passenden, als online markierten HTTPS-Sender gefunden. Probiere ein anderes Land oder Genre.';return;}
-  $('radioMessage').textContent=data.count+' Sender gefunden · Quelle: '+data.source;
-  data.stations.forEach(station=>{
+  const data=await fetchJsonSafe('/api/radio/stations?'+params.toString(),30000);
+  const stations=Array.isArray(data.stations)?data.stations:[];
+  if(!stations.length){$('radioMessage').textContent='Keine passenden, als online markierten HTTPS-Sender gefunden. Probiere ein anderes Land oder Genre.';return;}
+  let mapped=0,unmapped=0;
+  stations.forEach(station=>{
    const card=document.createElement('article');card.className='radio-card';
    const title=document.createElement('strong');title.textContent=station.name;
    const details=document.createElement('span');details.textContent=[station.country,station.language,station.tags,station.codec,station.bitrate?station.bitrate+' kbit/s':''].filter(Boolean).join(' · ');
-   const play=document.createElement('button');play.type='button';play.textContent='▶ Anhören';
-   play.onclick=async()=>{
-    $('radioAudio').src=station.stream;$('radioNow').textContent=station.name;$('radioMeta').textContent=[station.country,station.language,station.codec].filter(Boolean).join(' · ')||'Öffentlicher Radiosender';
-    try{await $('radioAudio').play();if(station.stationuuid)fetch('/api/radio/click/'+encodeURIComponent(station.stationuuid)).catch(()=>{});}
-    catch(e){$('radioMessage').textContent='Der Stream konnte nicht automatisch starten. Drücke bitte direkt auf Play im Audioplayer.';}
-   };
+   const play=document.createElement('button');play.type='button';play.textContent='▶ Anhören';play.onclick=()=>selectRadioStation(station,true);
    card.append(title,details,play);$('radioResults').appendChild(card);
-    const lat=Number(station.geo_lat),lon=Number(station.geo_long);
-    if(Number.isFinite(lat)&&Number.isFinite(lon)&&Math.abs(lat)<=90&&Math.abs(lon)<=180&&(lat!==0||lon!==0)){
-     const marker=L.circleMarker([lat,lon],{radius:7,color:'#f0c76a',weight:2,fillColor:'#b88725',fillOpacity:.95}).addTo(pointLayers.radio);
-     marker.bindPopup('<b>'+esc(station.name)+'</b><br>'+esc(station.country||'Land unbekannt')+'<br><span style="font-size:11px;color:#9aacc2">Öffentlicher Radiosender · Radio Browser</span>');
-     marker.on('click',()=>{$('radioOverlay').classList.add('open');});
-     radioMarkers.push(marker);
-     const locate=document.createElement('button');locate.type='button';locate.className='radio-locate';locate.textContent='⌖ Auf Karte';locate.onclick=()=>{map.setView([lat,lon],Math.max(map.getZoom(),5));marker.openPopup();};
-     card.appendChild(locate);
-    }
+   const lat=Number(station.geo_lat),lon=Number(station.geo_long);
+   if(Number.isFinite(lat)&&Number.isFinite(lon)&&Math.abs(lat)<=90&&Math.abs(lon)<=180&&(lat!==0||lon!==0)){
+    const marker=L.circleMarker([lat,lon],{radius:6,color:'#f0c76a',weight:2,fillColor:'#b88725',fillOpacity:.95}).addTo(pointLayers.radio);
+    marker.bindPopup('<b>'+esc(station.name)+'</b><br>'+esc(station.country||'Land unbekannt')+'<br><small>Radiosender · anklicken zum Anhören</small>');
+    marker.on('click',()=>selectRadioStation(station,true));
+    radioMarkers.push(marker);mapped++;
+   }else unmapped++;
   });
+  loadedPointLayers.add('radio');
+  if(showMap||wasVisible)pointLayers.radio.addTo(map);
+  if(openOverlay)$('radioOverlay').classList.add('open');
+  $('radioMessage').textContent=stations.length+' Sender geladen · '+mapped+' mit echten Koordinaten auf der Karte'+(unmapped?' · '+unmapped+' ohne Standortangabe':'')+'.';
+  if((showMap||wasVisible)&&mapped)map.fitBounds(L.latLngBounds(radioMarkers.map(m=>m.getLatLng())).pad(.08),{maxZoom:5});
+  if(showMap)setMessage(mapped+' Radiosender-Standorte auf der Karte eingeblendet. Klicke einen Punkt zum Anhören.');
  }catch(e){$('radioMessage').textContent='Radiosender konnten nicht geladen werden: '+e.message;}
  finally{button.disabled=false;}
 }
-$('openRadio').onclick=()=>{$('radioOverlay').classList.add('open');if(!$('radioResults').childElementCount)searchRadio();};
+
+$('openRadio').onclick=()=>{$('radioOverlay').classList.add('open');if(!$('radioResults').childElementCount)searchRadio({showMap:false,openOverlay:false});};
 $('closeRadio').onclick=()=>{$('radioOverlay').classList.remove('open');$('radioAudio').pause();$('radioAudio').removeAttribute('src');$('radioAudio').load();};
 $('radioOverlay').addEventListener('click',e=>{if(e.target===$('radioOverlay'))$('closeRadio').click()});
-$('radioSearch').onclick=searchRadio;
+$('radioSearch').onclick=()=>searchRadio({showMap:false,openOverlay:false});
 $('radioName').addEventListener('keydown',e=>{if(e.key==='Enter')searchRadio()});
 $('radioCountry').addEventListener('keydown',e=>{if(e.key==='Enter')searchRadio()});
 $('radioTag').addEventListener('keydown',e=>{if(e.key==='Enter')searchRadio()});
 $('openMaritime').onclick=()=>$('maritimeOverlay').classList.add('open');
 $('closeMaritime').onclick=()=>$('maritimeOverlay').classList.remove('open');
 $('maritimeOverlay').addEventListener('click',e=>{if(e.target===$('maritimeOverlay'))$('closeMaritime').click()});
-$('flightHub').onclick=openFlightHub;
+
 $('closeFlightHub').onclick=()=>{$('flightOverlay').classList.remove('open');$('flightRadarFrame').src='about:blank'};
 $('flightOverlay').addEventListener('click',e=>{if(e.target===$('flightOverlay'))$('closeFlightHub').click()});
 $('flightBoardsTab').onclick=()=>setFlightHubTab('boards');
@@ -756,13 +766,7 @@ $('flightRadarTab').onclick=()=>setFlightHubTab('radar');
 function showAutobahnFallback(reason){
  const container=$('autobahnList');container.innerHTML='';
  const head=document.createElement('div');head.className='note';head.style.cssText='margin:10px 0 8px;color:#ffb020;font-weight:700';head.textContent='AUTOBAHN · ÖFFENTLICHE KAMERA-QUELLEN';container.appendChild(head);
- const fallback=[
-  {name:'Deutschland – Autobahn-Livekamera-Index',place:'Deutschland · Autobahnen und Fernstraßen',url:'https://worldeye.app/germany-traffic-cameras',embedUrl:'https://worldeye.app/germany-traffic-cameras',source:'WorldEye · externer Index öffentlicher Verkehrsfeeds; Verfügbarkeit je Kamera unterschiedlich',category:'traffic'},
-  {name:'Autobahn GmbH – offizielle Verkehrsinformationen',place:'Deutschland · Autobahnnetz bundesweit',url:'https://www.autobahn.de/verkehrsmeldungen',source:'Die Autobahn GmbH · offizielles Verkehrsportal; kein direkter Kamerastream',category:'portal'}
- ];
- fallback.forEach(c=>addCameraCard(container,c.name,c.place+' · '+c.source,()=>openCameraView(c),'',c.embedUrl?'Kamera-Index / Player':'Offizielles Portal'));
- $('count').textContent=String(fallback.length);
- abSetMessage(reason+' Die öffentliche Autobahn-API liefert gerade keine direkt nutzbaren Kamera-Feeds. Als Ersatz sind ein Kamera-Index und das offizielle Verkehrsportal hinterlegt.');
+ const note=document.createElement('div');note.className='note';note.textContent='Die Autobahn-Schnittstelle liefert gerade keine direkt einbettbaren Kamerabilder. Deshalb werden keine externen Verzeichnis-Links als Kamera-Punkte ausgegeben.';container.appendChild(note);$('count').textContent='0';loadedPointLayers.add('autobahn');abSetMessage(reason+' Es sind derzeit keine echten Autobahn-Kamerapunkte verfügbar.');
 }
 async function loadAutobahn(){
  const button=document.querySelector('[data-layer="autobahn"]');if(button)button.disabled=true;clearMarkers(abMarkers);clearList();abSetMessage('Prüfe die offiziellen Autobahn-Kameradaten …');
@@ -781,9 +785,9 @@ async function loadAutobahn(){
  }catch(e){showAutobahnFallback('Autobahn-Daten konnten nicht geladen werden: '+e.message)}
  finally{if(button)button.disabled=false}
 }
-$('autobahn').onclick=loadAutobahn;
-window.addEventListener('load',()=>setTimeout(()=>{if(!getSharedMapView())map.setView([44.18,-75.93],9);loadCityCams()},650));
-$('regionHome').onclick=()=>{map.setView([44.18,-75.93],9);loadCityCams();setMessage('La Fargeville und die öffentliche Thousand-Islands-Region werden angezeigt.');};
+
+window.addEventListener('load',()=>setTimeout(()=>{if(!getSharedMapView())map.setView([25,8],2);setMessage('Weltkarte bereit. Wähle links die Kartenebenen aus, deren Punkte du sehen möchtest.')},650));
+$('regionHome').onclick=async()=>{map.setView([44.18,-75.93],9);await setMapLayerVisible('usa',true);setMessage('La Fargeville und die verfügbaren, georeferenzierten Kameras der Thousand-Islands-Region werden angezeigt.');};
 $('locate').addEventListener('click',()=>{map.setView([25,8],2);setMessage('Weltkarte angezeigt. Wähle eine Kameraquelle.')});
 let searchMarker=null,roadLayer=L.geoJSON(null,{style:{color:'#ffbf47',weight:6,opacity:.95}}).addTo(map);
 $('search').addEventListener('keydown',async e=>{
