@@ -33,8 +33,43 @@ if (!shareRegex.test("#map=44.18,-75.93,9")) {
   throw new Error("Geteilte Kartenlinks werden nicht korrekt erkannt.");
 }
 
+function readArray(name) {
+  const prefix = "const " + name + "=";
+  const start = html.indexOf(prefix);
+  if (start < 0) throw new Error("Datenliste fehlt: " + name);
+  const valueStart = start + prefix.length;
+  const end = html.indexOf(";\n", valueStart);
+  if (end < 0) throw new Error("Datenliste ist nicht sauber abgeschlossen: " + name);
+  return new Function("return (" + html.slice(valueStart, end) + ")")();
+}
+
+const sourceLists = ["citySources", "regionalSources", "worldSources"].map(readArray);
+let cameraCount = 0;
+for (const list of sourceLists) {
+  cameraCount += list.length;
+  for (const camera of list) {
+    if (!camera.name || !/^https:\/\//.test(camera.url || "")) {
+      throw new Error("Kameraquelle ohne Namen oder HTTPS-Link: " + (camera.name || "unbekannt"));
+    }
+    if (!Number.isFinite(Number(camera.lat)) || !Number.isFinite(Number(camera.lon)) ||
+        Math.abs(Number(camera.lat)) > 90 || Math.abs(Number(camera.lon)) > 180) {
+      throw new Error("Ungültige Koordinaten: " + camera.name);
+    }
+    if (camera.embedUrl && !/^https:\/\//.test(camera.embedUrl)) {
+      throw new Error("Unsicherer oder ungültiger Player-Link: " + camera.name);
+    }
+  }
+}
+
+const previousIdeas = readArray("roadmapPrevious");
+const newIdeas = readArray("roadmapNew");
+if (previousIdeas.length !== 30 || newIdeas.length !== 50) {
+  throw new Error("Roadmap-Zählung stimmt nicht: " + previousIdeas.length + " + " + newIdeas.length);
+}
+
 for (const id of ["map", "search", "windyLoad", "openWall", "randomCamera", "openRoadmap", "shareAtlas", "camviewer"]) {
   if (!idSet.has(id)) throw new Error("Wichtige UI-Komponente fehlt: " + id);
 }
 
-console.log("Frontend-Prüfung OK: " + checkedScripts + " JavaScript-Block/Blöcke, JSON-LD, " + ids.length + " IDs, DOM-Referenzen und Karten-Share-Link.");
+console.log("Frontend-Prüfung OK: " + checkedScripts + " JavaScript-Block/Blöcke, JSON-LD, " +
+  ids.length + " IDs, DOM-Referenzen, Share-Link, " + cameraCount + " Kameraquellen und 80 Roadmap-Ideen.");
