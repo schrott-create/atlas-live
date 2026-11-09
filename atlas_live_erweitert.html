@@ -41,20 +41,14 @@ footer{padding:10px 16px;border-top:1px solid var(--line);font-size:10px;color:v
 </style>
 </head>
 <body>
-<header><div class="logo">◎</div><div><h1>ATLAS LIVE</h1><div class="sub">PUBLIC CAMERA EXPLORER</div></div><div class="status">● PUBLIC SOURCES ONLY</div></header>
+<header><div class="logo">◎</div><div><h1>ATLAS LIVE</h1><div class="sub">PUBLIC CAMERA EXPLORER · KEY-FREE</div></div><div class="status">● PUBLIC SOURCES ONLY</div></header>
 <main>
 <aside>
   <section class="tools">
-    <label class="label" for="key">Windy Webcams API-Key</label>
-    <input id="key" type="password" placeholder="API-Key hier einfügen" autocomplete="off">
-    <p class="note">Der Schlüssel bleibt nur in diesem Browser-Tab und wird nicht gespeichert. Er ist nicht dein TypeSafe-Key.</p>
-    <div style="height:12px"></div>
-    <label class="label" for="search">Ort / Land suchen</label>
-    <input id="search" placeholder="z. B. Berlin, Paris, Japan">
-    <div class="row"><button id="go">Kameras laden</button><button id="locate" type="button">Weltkarte</button></div>
-    <div class="row"><button id="worldwide" type="button">Weltweit: Länder-Kameras laden</button></div>
-    <div class="row"><button id="worldMore" type="button" disabled>Weitere Kameras weltweit nachladen</button></div>
-    <p class="note" id="message">Autobahnkameras werden beim Start automatisch geladen. Für weltweite Windy-Webcams: API-Key eingeben und „Weltweit“ wählen.</p>
+    <label class="label" for="search">Ort suchen</label>
+    <input id="search" placeholder="z. B. Berlin, Hamburg, München">
+    <div class="row"><button id="locate" type="button">Weltkarte</button></div>
+    <p class="note" id="message">Öffentliche Autobahnkameras in Deutschland werden automatisch geladen. Weitere öffentliche Quellen können später ergänzt werden.</p>
     <div style="height:14px"></div>
     <label class="label">Zusätzliche Quelle (kein Key nötig)</label>
     <button id="autobahn" type="button">Autobahn-Kameras (DE) laden</button>
@@ -65,7 +59,7 @@ footer{padding:10px 16px;border-top:1px solid var(--line);font-size:10px;color:v
    <div id="windyList"><div class="empty">Noch keine Kameras geladen.</div></div>
    <div id="autobahnList"></div>
   </div>
-  <footer>Quellen: Windy Webcams API · Autobahn GmbH (offene Verkehrsdaten) · Kartendaten © OpenStreetMap-Mitwirkende</footer>
+  <footer>Quellen: Autobahn GmbH (offene Verkehrsdaten) · Kartendaten © OpenStreetMap-Mitwirkende</footer>
 </aside>
 <div class="mapwrap"><div class="mapbadge">WELTKARTE · öffentliche Webcams</div><div id="map"></div></div>
 </main>
@@ -95,7 +89,7 @@ function render(list){
  if(!list.length){$('windyList').innerHTML='<div class="empty">Keine Kameras im aktuellen Ausschnitt gefunden. Zoome heraus oder verschiebe die Karte.</div>';return}
  list.forEach((c,i)=>{
   const marker=L.circleMarker([c._lat,c._lon],{radius:6,color:'#7be0f4',weight:2,fillColor:'#1689aa',fillOpacity:.9}).addTo(map);
-  marker.bindPopup(`<b>${esc(c._name)}</b><br>${esc(c._place)}${c._image?`<img class="popupimg" src="${esc(c._image)}" alt="">`:''}${c._url?`<br><a href="${esc(c._url)}" target="_blank" rel="noopener">Kamera beim Anbieter öffnen ↗</a>`:''}<p style="font-size:10px;color:#9aacc2">Webcams provided by <a href="https://www.windy.com/" target="_blank" rel="noopener">windy.com</a> — <a href="https://www.windy.com/webcams/add" target="_blank" rel="noopener">add a webcam</a></p>`);
+  marker.bindPopup(`<b>${esc(c._name)}</b><br>${esc(c._place)}${c._image?`<img class="popupimg" src="${esc(c._image)}" alt="">`:''}${c._url?`<br><a href="${esc(c._url)}" target="_blank" rel="noopener">Kamera beim Anbieter öffnen ↗</a>`:''}<p style="font-size:10px;color:#9aacc2">Webcams provided by <a href="https://www.Autobahn GmbH/" target="_blank" rel="noopener">windy.com</a> — <a href="https://www.autobahn.de/webcams/add" target="_blank" rel="noopener">add a webcam</a></p>`);
   marker.on('click',()=>select(i));markers.push(marker);
   const el=document.createElement('div');el.className='camera';el.innerHTML=`<img class="thumb" src="${esc(c._image||'')}" alt="" onerror="this.style.visibility='hidden'"><div><div class="camname">${esc(c._name)}</div><div class="cammeta">${esc(c._place||'Standort verfügbar')}</div></div>`;
   el.onclick=()=>{map.setView([c._lat,c._lon],Math.max(map.getZoom(),8));marker.openPopup();select(i)};
@@ -105,139 +99,7 @@ function render(list){
 }
 function select(i){active=i;document.querySelectorAll('.camera').forEach((e,n)=>e.classList.toggle('active',n===i))}
 function esc(s){return String(s??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]))}
-const WINDY_BASE='https://api.windy.com/webcams/api/v3';
-let worldwideCountryPages=[];
-let worldwideLoaded=[];
-let worldwideBusy=false;
-
-function uniqueCameras(items){
- const seen=new Set(),out=[];
- items.forEach(c=>{
-  const id=val(c,'webcamId','id','webcam_id')||[c._lat,c._lon,c._name].join('|');
-  if(!seen.has(String(id))){seen.add(String(id));out.push(c)}
- });
- return out;
-}
-function extractCountries(raw){
- const arr=Array.isArray(raw)?raw:(raw.countries||raw.data||raw.result?.countries||raw.result||[]);
- return arr.map(c=>({
-  code:String(val(c,'code','countryCode','iso2','id')).trim(),
-  name:String(val(c,'name','title','label')).trim()
- })).filter(c=>/^[A-Za-z]{2,3}$/.test(c.code));
-}
-async function windyFetch(path,params,key){
- const url=WINDY_BASE+path+(params&&params.toString()?'?'+params.toString():'');
- const res=await fetch(url,{headers:{'x-windy-api-key':key}});
- if(!res.ok){
-  let body='';try{body=(await res.text()).slice(0,180)}catch{}
-  throw new Error('Windy HTTP '+res.status+(body?': '+body:''));
- }
- return res.json();
-}
-function renderWindyCombined(items){
- worldwideLoaded=uniqueCameras(items);
- render(worldwideLoaded);
-}
-async function load(){
- const key=$('key').value.trim();if(!key){setMessage('Bitte zuerst einen Windy-Webcams-API-Key eingeben.');$('key').focus();return}
- const b=map.getBounds();
- const params=new URLSearchParams({bbox:[b.getNorth(),b.getEast(),b.getSouth(),b.getWest()].join(','),include:'categories,images,location,player,urls',lang:'en',limit:'50',offset:'0'});
- setMessage('Lade Kameras im Kartenausschnitt …');
- try{
-  let all=[];
-  for(let off=0;off<=1000;off+=50){
-   params.set('offset',String(off));
-   const raw=await windyFetch('/webcams',params,key);
-   const part=normalize(raw);
-   all=all.concat(part);
-   if(part.length<50)break;
-  }
-  render(all);
-  setMessage(all.length+' Kamera-Einträge im Kartenausschnitt geladen.');
- }catch(e){setMessage(e.message+' Prüfe den Key und die Windy-API-Freigabe.');}
-}
-async function loadWorldwide(){
- const key=$('key').value.trim();
- if(!key){setMessage('Bitte zuerst einen Windy-Webcams-API-Key eingeben.');$('key').focus();return}
- if(worldwideBusy)return;
- worldwideBusy=true;
- $('worldwide').disabled=true;
- $('worldMore').disabled=true;
- worldwideCountryPages=[];
- worldwideLoaded=[];
- setMessage('Lade Liste der verfügbaren Länder …');
- try{
-  const countriesRaw=await windyFetch('/countries',new URLSearchParams({lang:'en'}),key);
-  const countries=extractCountries(countriesRaw);
-  if(!countries.length)throw new Error('Windy hat keine auswertbare Länderliste geliefert.');
-  let done=0,failed=0,all=[];
-  for(const country of countries){
-   setMessage('Lade alle verfügbaren Länder-Kameras … '+country.name+' ('+(done+1)+'/'+countries.length+')');
-   let offset=0, countryCount=0, hasMore=false;
-   try{
-    // Alle verfügbaren Seiten dieses Landes automatisch abrufen.
-    while(offset<=1000){
-     const p=new URLSearchParams({country:country.code,include:'categories,images,location,player,urls',lang:'en',limit:'50',offset:String(offset)});
-     const raw=await windyFetch('/webcams',p,key);
-     const part=normalize(raw);
-     all=all.concat(part);
-     countryCount+=part.length;
-     if(part.length<50){hasMore=false;break}
-     offset+=part.length;
-     hasMore=offset<=1000;
-     await new Promise(resolve=>setTimeout(resolve,180));
-    }
-    worldwideCountryPages.push({code:country.code,name:country.name,offset:offset,total:countryCount,hasMore:hasMore});
-   }catch(err){failed++}
-   done++;
-   await new Promise(resolve=>setTimeout(resolve,180));
-  }
-  renderWindyCombined(all);
-  const remaining=worldwideCountryPages.some(c=>c.hasMore&&c.offset<=1000);
-  $('worldMore').disabled=!remaining;
-  setMessage(worldwideLoaded.length+' eindeutige Kameras aus '+done+' Ländern geladen.'+(failed?' '+failed+' Länder konnten nicht vollständig abgefragt werden.':'')+(remaining?' Weitere API-Seiten können nachgeladen werden.':' Alle erreichbaren Seiten wurden geladen.'));
- }catch(e){
-  setMessage('Weltweiter Abruf fehlgeschlagen: '+e.message+' Prüfe den API-Key und die Freigabe für die Webcams API.');
- }finally{
-  worldwideBusy=false;
-  $('worldwide').disabled=false;
- }
-}
-async function loadMoreWorldwide(){
- const key=$('key').value.trim();
- if(!key){setMessage('Bitte zuerst den Windy-Key eingeben.');return}
- if(worldwideBusy)return;
- worldwideBusy=true;$('worldMore').disabled=true;
- let added=0,failed=0;
- try{
-  for(const country of worldwideCountryPages){
-   if(!country.hasMore||country.offset>1000)continue;
-   const next=country.offset;
-   const p=new URLSearchParams({country:country.code,include:'categories,images,location,player,urls',lang:'en',limit:'50',offset:String(next)});
-   try{
-    const raw=await windyFetch('/webcams',p,key);
-    const part=normalize(raw);
-    worldwideLoaded=uniqueCameras(worldwideLoaded.concat(part));
-    country.offset+=part.length;
-    country.hasMore=part.length===50&&country.offset<=1000;
-    added+=part.length;
-   }catch(e){failed++}
-   await new Promise(resolve=>setTimeout(resolve,250));
-  }
-  renderWindyCombined(worldwideLoaded);
-  const remaining=worldwideCountryPages.some(c=>c.hasMore&&c.offset<=1000);
-  $('worldMore').disabled=!remaining;
-  setMessage(added+' weitere Kamera-Einträge geladen. Insgesamt: '+worldwideLoaded.length+'.'+(failed?' '+failed+' Länderabfragen fehlgeschlagen.':'')+(!remaining?' Das kostenlose Abruflimit ist erreicht oder es gibt keine weiteren Einträge.':''));
- }finally{
-  worldwideBusy=false;
-  if(worldwideCountryPages.some(c=>c.hasMore&&c.offset<=1000))$('worldMore').disabled=false;
- }
-}
-$('go').onclick=load;
-$('worldwide').onclick=loadWorldwide;
-$('worldMore').onclick=loadMoreWorldwide;
-$('locate').onclick=()=>{map.setView([20,0],2);setMessage('Weltkarte angezeigt. Gib einen Windy-Key ein und lade Kameras.');};
-
+// Windy wurde entfernt: keine API-Schlüssel oder Windy-Abfragen.
 let abMarkers=[];
 function abSetMessage(t){$('abmessage').textContent=t}
 function abClearMarkers(){abMarkers.forEach(m=>map.removeLayer(m));abMarkers=[]}
@@ -272,7 +134,7 @@ function renderAutobahn(list){
  });
 }
 async function loadAutobahn(){
- const abBase='https://verkehr.autobahn.de/o/autobahn';
+ const abBase='/api/autobahn';
  abClearMarkers();$('autobahnList').innerHTML='';
  abSetMessage('Lade Liste der Autobahnen …');
  try{
