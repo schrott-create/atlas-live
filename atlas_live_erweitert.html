@@ -354,6 +354,7 @@ function countryForPoint(latlng){return countryFeatures.find(f=>featureContainsP
 function applyCountryFilter(){if(!countryDataReady)return;const filtering=selectedCountries.size!==countryFeatures.length;Object.values(pointLayers).forEach(group=>group.eachLayer(layer=>{const ll=layer.getLatLng?.();if(!ll)return;if(!layer.__countryBaseStyle&&layer.options)layer.__countryBaseStyle={opacity:layer.options.opacity??1,fillOpacity:layer.options.fillOpacity??.9};if(layer.__countryBaseOpacity===undefined)layer.__countryBaseOpacity=1;const country=filtering?countryForPoint(ll):null,show=!filtering||(!!country&&selectedCountries.has(country));if(layer.setStyle){const base=layer.__countryBaseStyle||{opacity:1,fillOpacity:.9};layer.setStyle(show?base:{opacity:0,fillOpacity:0});}if(layer.setOpacity)layer.setOpacity(show?layer.__countryBaseOpacity:0);layer.options.interactive=show;}));try{localStorage.setItem('atlas-live-selected-countries-v1',JSON.stringify([...selectedCountries]));}catch{}const label=selectedCountries.size===countryFeatures.length?'Alle Länder':selectedCountries.size+' Länder';$('countrySelectedLabel').textContent=label;$('countryStatus').textContent=filtering?(selectedCountries.size+' von '+countryFeatures.length+' Ländern ausgewählt. Kartenpunkte außerhalb der Auswahl werden ausgeblendet.'):'Alle '+countryFeatures.length+' Länder ausgewählt. Alle passenden Kartenpunkte sind sichtbar.';}
 let countryExploreRun=0;
 const countryOSMCache=new Map();
+const countryOSMFailureCache=new Map();
 function countryPoiCategory(tags){
  if(tags.aeroway==='aerodrome')return 'Flughafen';
  if(tags.tourism==='museum')return 'Museum';
@@ -382,6 +383,7 @@ async function fetchCountryOSMPlaces(feature){
  const iso=String(feature.__iso2||'').toUpperCase();
  if(!/^[A-Z]{2}$/.test(iso))return [];
  if(countryOSMCache.has(iso))return countryOSMCache.get(iso);
+ const failedAt=countryOSMFailureCache.get(iso);if(failedAt&&Date.now()-failedAt<60000)throw new Error('OpenStreetMap-Abfrage wird nach einem Fehler kurz pausiert.');
  const query='[out:json][timeout:25];area["ISO3166-1"="'+iso+'"]["admin_level"="2"]->.country;(nwr["tourism"~"attraction|museum|zoo|viewpoint|gallery|theme_park|camp_site|artwork|information"](area.country);nwr["historic"~"castle|monument|archaeological_site|fort|ruins|memorial"](area.country);nwr["natural"~"peak|volcano|waterfall|cave|glacier|hot_spring|beach"](area.country);nwr["leisure"~"nature_reserve|park|marina"](area.country);nwr["amenity"~"theatre|library"](area.country);nwr["railway"="station"](area.country);nwr["public_transport"="station"](area.country);nwr["aeroway"="aerodrome"](area.country);nwr["man_made"="lighthouse"](area.country););out center tags 100;';
  const endpoints=['https://overpass-api.de/api/interpreter','https://overpass.kumi.systems/api/interpreter'];
  let lastError=null;
@@ -391,10 +393,10 @@ async function fetchCountryOSMPlaces(feature){
    if(!response.ok)throw new Error('Overpass HTTP '+response.status);
    const data=await response.json();
    const places=(data.elements||[]).map(el=>{const tags=el.tags||{},lat=Number(el.lat??el.center?.lat),lon=Number(el.lon??el.center?.lon),name=tags.name||tags['name:en']||tags['name:de']||tags.operator||tags.ref;if(!name||!Number.isFinite(lat)||!Number.isFinite(lon))return null;return {id:el.id,type:el.type,name,lat,lon,tags,category:countryPoiCategory(tags),url:'https://www.openstreetmap.org/'+el.type+'/'+el.id};}).filter(Boolean);
-   countryOSMCache.set(iso,places);return places;
+   countryOSMCache.set(iso,places);countryOSMFailureCache.delete(iso);return places;
   }catch(error){lastError=error;}
  }
- throw lastError||new Error('OpenStreetMap ist gerade nicht erreichbar');
+ countryOSMFailureCache.set(iso,Date.now());throw lastError||new Error('OpenStreetMap ist gerade nicht erreichbar');
 }
 async function loadCountryExplorer(){
  const run=++countryExploreRun,panel=$('countryExplore');if(!panel)return;
@@ -408,7 +410,9 @@ async function loadCountryExplorer(){
  try{if(!loadedPointLayers.has('webcams'))await loadCityCams();}catch(e){cameraLoadNote='Kameraquellen konnten nicht vollständig aktualisiert werden: '+e.message;}
  const sources=[...new Map([...(cameraSourceCache||[]),...(typeof citySources!=='undefined'?citySources:[]),...(typeof regionalSources!=='undefined'?regionalSources:[]),...(typeof worldSources!=='undefined'?worldSources:[])].filter(c=>Number.isFinite(Number(c.lat))&&Number.isFinite(Number(c.lon))&&(c.embedUrl||c.imageUrl)).map(c=>[c.name+'|'+c.lat+'|'+c.lon,c])).values()];
  const places=Object.entries(discoveryPlaces||{}).flatMap(([kind,items])=>items.map(p=>({kind,p})));
- const osmResults=await Promise.allSettled(selected.map(async feature=>({feature,places:await fetchCountryOSMPlaces(feature)})));
+ const osmResults=new Array(selected.length);let osmCursor=0;
+ async function loadOSMBatch(){while(osmCursor<selected.length){const index=osmCursor++,feature=selected[index];try{osmResults[index]={status:'fulfilled',value:{feature,places:await fetchCountryOSMPlaces(feature)}};}catch(reason){osmResults[index]={status:'rejected',reason};}}}
+ await Promise.all(Array.from({length:Math.min(2,selected.length)},()=>loadOSMBatch()));
  if(run!==countryExploreRun)return;
  panel.innerHTML='';
  let totalMarkers=0;
@@ -890,15 +894,24 @@ const discoveryPlaces={
   ['Aoraki / Mount Cook','Neuseeland',-43.5950,170.1410,'Höchster Berg Neuseelands.']
  ]
 };
+let placePhotoQueue=Promise.resolve();
+const placePhotoCache=new Map();
 async function findPlacePhoto(name){
- try{
-  const q=encodeURIComponent(name);
-  const url='https://de.wikipedia.org/w/api.php?action=query&generator=search&gsrsearch='+q+'&gsrlimit=1&prop=pageimages|extracts&piprop=thumbnail&pithumbsize=720&exintro=1&explaintext=1&format=json&origin=*';
-  const r=await fetch(url,{headers:{accept:'application/json'}});
-  if(!r.ok)throw new Error('Bildsuche HTTP '+r.status);
-  const d=await r.json(),pages=Object.values(d.query?.pages||{}),page=pages[0];
-  return page?.thumbnail?.source?{image:page.thumbnail.source,caption:page.title||name,extract:page.extract||''}:null;
- }catch(e){return null;}
+ const key=String(name||'').trim();if(!key)return null;
+ if(placePhotoCache.has(key))return placePhotoCache.get(key);
+ const task=placePhotoQueue.then(async()=>{
+  try{
+   const q=encodeURIComponent(key);
+   const url='https://de.wikipedia.org/w/api.php?action=query&generator=search&gsrsearch='+q+'&gsrlimit=1&prop=pageimages|extracts&piprop=thumbnail&pithumbsize=720&exintro=1&explaintext=1&format=json&origin=*';
+   const response=await fetch(url,{headers:{accept:'application/json'}});
+   if(!response.ok)throw new Error('Bildsuche HTTP '+response.status);
+   const data=await response.json(),pages=Object.values(data.query?.pages||{}),page=pages[0];
+   return page?.thumbnail?.source?{image:page.thumbnail.source,caption:page.title||key,extract:page.extract||''}:null;
+  }catch(error){return null;}
+ });
+ placePhotoCache.set(key,task);
+ placePhotoQueue=task.then(()=>undefined,()=>undefined);
+ return task;
 }
 function nearbyCameraForPlace(lat,lon){
  const all=[...(cameraSourceCache||[]),...(typeof citySources!=='undefined'?citySources:[]),...(typeof regionalSources!=='undefined'?regionalSources:[]),...(typeof worldSources!=='undefined'?worldSources:[])];
