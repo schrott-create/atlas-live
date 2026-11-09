@@ -236,6 +236,61 @@ const regionalSources=[
  {name:'WorldCams – Bord- und Hafen-Webcams',place:'Weltweit · Fähren, Schiffe und Kreuzfahrthäfen',lat:20,lon:0,url:'https://worldcams.tv/ships/',source:'WorldCams · Schiffs- und Hafen-Webcam-Verzeichnis',category:'portal',local:false},
  {name:'CruisingEarth – echte Bord-Webcams',place:'Internationale Reedereien · verfügbare Schiffskameras',lat:20,lon:0,url:'https://www.cruisingearth.com/ship-webcams/',source:'CruisingEarth · Verzeichnis von Reedereien mit öffentlichen Bordkameras',category:'portal',local:false},
  {name:'EarthLive – Häfen und Marinas',place:'Weltweit · Hafenbecken, Marinas und Schifffahrtswege',lat:20,lon:0,url:'https://earthlive.tv/interests/harbours-and-marinas',source:'EarthLive · öffentliche Hafen- und Marina-Webcams',category:'portal',local:false}];
+const worldSources=[
+ {name:'EarthCam – Weltweite Livekameras',place:'Weltweit · Städte, Sehenswürdigkeiten und Plätze',lat:40.7128,lon:-74.0060,url:'https://www.earthcam.com/',source:'EarthCam · internationales Webcam-Portal',category:'portal',local:false},
+ {name:'SkylineWebcams – Weltweite Ansichten',place:'Weltweit · Städte, Küsten, Plätze und Natur',lat:41.9028,lon:12.4964,url:'https://www.skylinewebcams.com/',source:'SkylineWebcams · internationales Webcam-Verzeichnis',category:'portal',local:false},
+ {name:'Webcamtaxi – Live-Webcams weltweit',place:'Weltweit · Städte, Strände, Berge und Häfen',lat:48.8566,lon:2.3522,url:'https://www.webcamtaxi.com/',source:'Webcamtaxi · öffentliches Webcam-Verzeichnis',category:'portal',local:false},
+ {name:'Webcam Galore – Internationale Sammlung',place:'Weltweit · Städte, Landschaften und Wetter',lat:52.52,lon:13.405,url:'https://www.webcamgalore.com/',source:'Webcam Galore · internationales Verzeichnis',category:'portal',local:false},
+ {name:'Explore.org – Natur- und Tierkameras',place:'Weltweit · Wildtiere, Naturreservate und Nester',lat:58.3,lon:-134.4,url:'https://explore.org/livecams',source:'Explore.org · öffentliche Natur-Livestreams',category:'video',local:false},
+ {name:'Africam – Wildtierkameras',place:'Südafrika und weitere afrikanische Naturgebiete',lat:-24.0,lon:31.5,url:'https://africam.com/',source:'Africam · öffentliche Safari- und Wildtierkameras',category:'video',local:false},
+ {name:'Monterey Bay Aquarium – Livecams',place:'Monterey · Kalifornien, USA',lat:36.618,lon:-121.9,url:'https://www.montereybayaquarium.org/animals/live-cams',source:'Monterey Bay Aquarium · offizielle Tier-Livestreams',category:'video',local:false},
+ {name:'San Diego Zoo – Tierkameras',place:'San Diego · Kalifornien, USA',lat:32.7353,lon:-117.149,url:'https://zoo.sandiegozoo.org/live-cams',source:'San Diego Zoo · offizielle Tierkameras',category:'video',local:false},
+ {name:'Smithsonian National Zoo – Webcams',place:'Washington, D.C. · USA',lat:38.9296,lon:-77.0497,url:'https://nationalzoo.si.edu/webcams',source:'Smithsonian National Zoo · offizielle Tier-Webcams',category:'video',local:false},
+ {name:'Cornell Lab – Vogelkameras',place:'Ithaca · New York, USA',lat:42.45,lon:-76.48,url:'https://www.allaboutbirds.org/cams/',source:'Cornell Lab of Ornithology · öffentliche Vogelkameras',category:'video',local:false},
+ {name:'US National Park Service – Webcams',place:'USA · Nationalparks und Landschaften',lat:39.0,lon:-105.5,url:'https://www.nps.gov/subjects/air/webcams.htm',source:'National Park Service · offizielle Park-Webcams',category:'portal',local:false},
+ {name:'Yellowstone – Park-Webcams',place:'Wyoming, Montana und Idaho · USA',lat:44.6,lon:-110.5,url:'https://www.nps.gov/yell/learn/photosmultimedia/webcams.htm',source:'National Park Service · Yellowstone-Webcams',category:'portal',local:false},
+ {name:'Glacier National Park – Webcams',place:'Montana · USA',lat:48.7,lon:-113.8,url:'https://www.nps.gov/glac/learn/photosmultimedia/webcams.htm',source:'National Park Service · Park-Webcams',category:'portal',local:false},
+ {name:'Yosemite – Parkkameras',place:'Kalifornien · USA',lat:37.7456,lon:-119.5936,url:'https://www.nps.gov/yose/learn/photosmultimedia/webcams.htm',source:'National Park Service · Yosemite-Webcams',category:'portal',local:false},
+ {name:'Grand Canyon – Park-Webcams',place:'Arizona · USA',lat:36.0544,lon:-112.14,url:'https://www.nps.gov/grca/learn/photosmultimedia/webcams.htm',source:'National Park Service · Grand-Canyon-Webcams',category:'portal',local:false},
+ {name:'Alaska 511 – Straßenkameras',place:'Alaska · USA',lat:61.2,lon:-149.9,url:'https://511.alaska.gov/',source:'Alaska Department of Transportation · Verkehrskarte und Kameras',category:'traffic',local:false},
+ {name:'Caltrans QuickMap – Verkehrskameras',place:'Kalifornien · USA',lat:36.7783,lon:-119.4179,url:'https://quickmap.dot.ca.gov/',source:'Caltrans · offizielle Verkehrskarte mit Kamera-Layern',category:'traffic',local:false},
+ {name:'Oregon TripCheck – Straßenkameras',place:'Oregon · USA',lat:44.0,lon:-120.5,url:'https://www.tripcheck.com/',source:'Oregon Department of Transportation · Straßenkamera-Portal',category:'traffic',local:false},
+ {name:'Washington State DOT – Kamerakarte',place:'Washington State · USA',lat:47.4,lon:-120.7,url:'https://wsdot.com/Travel/Real-time/Map/',source:'Washington State DOT · Verkehrskameras',category:'traffic',local:false},
+ {name:'Colorado COtrip – Kameras',place:'Colorado · USA',lat:39.0,lon:-105.5,url:'https://www.cotrip.org/',source:'Colorado DOT · Verkehrskarte und Kameras',category:'traffic',local:false},
+ {name:'Utah UDOT Traffic – Kameras',place:'Utah · USA',lat:39.3,lon:-111.7,url:'https://udottraffic.utah.gov/',source:'Utah DOT · Verkehrskameras',category:'traffic',local:false},
+ {name:'Florida 511 – Verkehrskameras',place:'Florida · USA',lat:27.8,lon:-81.7,url:'https://fl511.com/',source:'Florida Department of Transportation · Verkehrskameras',category:'traffic',local:false},
+ {name:'Ontario 511 – Straßenkameras',place:'Ontario · Kanada',lat:50.0,lon:-85.0,url:'https://511on.ca/',source:'Ontario Ministry of Transportation · Verkehrskameras',category:'traffic',local:false},
+ {name:'DriveBC – Straßenkameras',place:'British Columbia · Kanada',lat:53.7,lon:-127.6,url:'https://www.drivebc.ca/',source:'British Columbia Ministry of Transportation · Straßenkameras',category:'traffic',local:false},
+ {name:'Québec 511 – Kameras',place:'Québec · Kanada',lat:52.0,lon:-71.0,url:'https://www.quebec511.info/',source:'Québec 511 · offizielle Verkehrskarte und Kameras',category:'traffic',local:false},
+ {name:'Traffic England – Verkehrskameras',place:'England · Vereinigtes Königreich',lat:52.5,lon:-1.5,url:'https://www.trafficengland.com/',source:'National Highways · Verkehrskarte und Kameraansichten',category:'traffic',local:false},
+ {name:'National Highways – Verkehrsinformationen',place:'England · Vereinigtes Königreich',lat:51.5,lon:-0.1,url:'https://nationalhighways.co.uk/travel-updates/',source:'National Highways · offizielle Verkehrsinformationen',category:'traffic',local:false},
+ {name:'Traffic Scotland – Kameras',place:'Schottland · Vereinigtes Königreich',lat:56.5,lon:-4.2,url:'https://www.traffic.gov.scot/',source:'Transport Scotland · Verkehrskarte und Kameras',category:'traffic',local:false},
+ {name:'Traffic Wales – Straßenkameras',place:'Wales · Vereinigtes Königreich',lat:52.3,lon:-3.7,url:'https://traffic.wales/',source:'Traffic Wales · offizielle Verkehrskarte',category:'traffic',local:false},
+ {name:'Transport Infrastructure Ireland – Verkehr',place:'Irland · landesweite Straßen',lat:53.3,lon:-8.0,url:'https://www.tii.ie/roads-tolling/operations/traffic-management/',source:'Transport Infrastructure Ireland · Verkehrsmanagement und Kamera-Infos',category:'traffic',local:false},
+ {name:'Norwegen – Vegvesen Verkehrskarte',place:'Norwegen · Straßen und Gebirgspässe',lat:61.0,lon:8.0,url:'https://www.vegvesen.no/trafikk/',source:'Norwegian Public Roads Administration · Straßenkameras',category:'traffic',local:false},
+ {name:'Schweden – Trafikverket Verkehr',place:'Schweden · Straßen und Verkehr',lat:60.1,lon:18.6,url:'https://www.trafikverket.se/trafikinformation/vag/',source:'Trafikverket · offizielle Verkehrsinformationen und Kameras',category:'traffic',local:false},
+ {name:'Island – Umferdin Verkehrskarte',place:'Island · Straßen und Wetter',lat:64.9,lon:-18.6,url:'https://umferdin.is/',source:'Icelandic Road and Coastal Administration · Straßenkameras',category:'traffic',local:false},
+ {name:'Niederlande – Rijkswaterstaat Verkehr',place:'Niederlande · Autobahnen und Wasserwege',lat:52.1,lon:5.3,url:'https://www.rijkswaterstaat.nl/wegen/verkeersinformatie-en-werkzaamheden',source:'Rijkswaterstaat · Verkehrsinformationen und Kameraansichten',category:'traffic',local:false},
+ {name:'Deutschland – Autobahn-Verkehrskarte',place:'Deutschland · Autobahnen bundesweit',lat:51.2,lon:10.4,url:'https://www.autobahn.de/verkehrsmeldungen',source:'Die Autobahn GmbH · Verkehrsinformationen und Kameras',category:'traffic',local:false},
+ {name:'Österreich – ASFINAG Webcams',place:'Österreich · Autobahnen und Alpenrouten',lat:47.6,lon:14.1,url:'https://www.asfinag.at/verkehr-sicherheit/webcams/',source:'ASFINAG · offizielle Straßen-Webcams',category:'traffic',local:false},
+ {name:'Frankreich – Bison Futé Verkehr',place:'Frankreich · landesweite Verkehrsübersicht',lat:46.2,lon:2.2,url:'https://www.bison-fute.gouv.fr/',source:'Bison Futé · offizielles Verkehrsportal',category:'traffic',local:false},
+ {name:'Spanien – DGT Verkehrskarte',place:'Spanien · Straßen und Autobahnen',lat:40.4,lon:-3.7,url:'https://www.dgt.es/',source:'Dirección General de Tráfico · offizielle Verkehrsinformationen',category:'traffic',local:false},
+ {name:'Portugal – Infraestruturas de Portugal',place:'Portugal · Straßen- und Verkehrsinformationen',lat:39.5,lon:-8.0,url:'https://www.infraestruturasdeportugal.pt/',source:'Infraestruturas de Portugal · offizielles Verkehrsportal',category:'traffic',local:false},
+ {name:'Finnland – Digitraffic Wetterkameras',place:'Finnland · Straßen und Wetterstationen',lat:64.0,lon:26.0,url:'https://www.digitraffic.fi/en/road-traffic/',source:'Fintraffic / Digitraffic · öffentliche Wetterkameras und Verkehrsdaten',category:'traffic',local:false},
+ {name:'Schweiz – Schweiz Tourismus Webcams',place:'Schweiz · Alpen, Seen und Bergorte',lat:46.8,lon:8.2,url:'https://www.myswitzerland.com/en-us/experiences/summer/water-sports/webcams/',source:'My Switzerland · Webcam-Übersicht',category:'portal',local:false},
+ {name:'Österreich – Feratel Livecams',place:'Österreich und Alpenraum · Berge und Orte',lat:47.3,lon:11.4,url:'https://www.feratel.com/en/webcams.html',source:'Feratel · Livecam-Verzeichnis',category:'portal',local:false},
+ {name:'Japan – NEXCO Central Verkehr',place:'Japan · Straßen und Autobahnen',lat:36.2,lon:138.3,url:'https://www.c-nexco.co.jp/en/',source:'NEXCO Central · offizielles Straßenportal',category:'traffic',local:false},
+ {name:'Singapur – LTA Verkehrskameras',place:'Singapur · Stadt und Schnellstraßen',lat:1.3521,lon:103.8198,url:'https://onemotoring.lta.gov.sg/content/onemotoring/home/driving/traffic_information/traffic-cameras.html',source:'Land Transport Authority · offizielle Verkehrskameras',category:'traffic',local:false},
+ {name:'Hongkong – Transport Department CCTV',place:'Hongkong · Straßen und Tunnel',lat:22.3193,lon:114.1694,url:'https://www.td.gov.hk/en/transport_in_hong_kong/its/traffic_cctv/index.html',source:'Hong Kong Transport Department · öffentliche Verkehrskameras',category:'traffic',local:false},
+ {name:'Taiwan – Freeway Traffic Cameras',place:'Taiwan · Autobahnen und Städte',lat:23.7,lon:121.0,url:'https://1968.freeway.gov.tw/',source:'Taiwan Freeway Bureau · Verkehrskarte und Kameras',category:'traffic',local:false},
+ {name:'Südkorea – ITS Verkehrsinformationen',place:'Südkorea · landesweite Straßen',lat:36.5,lon:127.8,url:'https://www.its.go.kr/',source:'Korea ITS · öffentliches Verkehrsportal',category:'traffic',local:false},
+ {name:'Neuseeland – NZTA Journey Planner',place:'Neuseeland · Straßen und Pässe',lat:-41.0,lon:172.0,url:'https://www.journeys.nzta.govt.nz/traffic/',source:'Waka Kotahi NZTA · Verkehrskameras und Meldungen',category:'traffic',local:false},
+ {name:'Australien – NSW Live Traffic',place:'New South Wales · Australien',lat:-31.5,lon:147.0,url:'https://www.livetraffic.com/traffic-cameras',source:'Transport for NSW · offizielle Verkehrskameras',category:'traffic',local:false},
+ {name:'Australien – Queensland Traffic',place:'Queensland · Australien',lat:-20.9,lon:142.7,url:'https://qldtraffic.qld.gov.au/',source:'Queensland Government · Verkehrskarte und Kameras',category:'traffic',local:false},
+ {name:'World Port Cams – Häfen und Marinas',place:'Weltweit · Häfen, Yachthäfen und Schifffahrtswege',lat:0,lon:0,url:'https://worldportcams.com/en',source:'World Port Cams · öffentliche Hafen-Webcam-Sammlung',category:'portal',local:false},
+ {name:'CruisingEarth – Schiffs-Webcams',place:'Weltweit · Kreuzfahrtschiffe und Bordkameras',lat:0,lon:0,url:'https://www.cruisingearth.com/ship-webcams/',source:'CruisingEarth · Verzeichnis öffentlicher Reederei-Webcams',category:'portal',local:false},
+ {name:'EarthLive – Häfen und Marinas',place:'Weltweit · Hafenbecken und Marinas',lat:0,lon:0,url:'https://earthlive.tv/interests/harbours-and-marinas',source:'EarthLive · öffentliche Hafen- und Marina-Webcams',category:'portal',local:false}
+];
 const flightSources=[
  {name:'Flughafen Berlin Brandenburg (BER)',place:'Berlin · Ankünfte und Abflüge',lat:52.3667,lon:13.5033,url:'https://ber.berlin-airport.de/en/flying/departures-arrivals.html',source:'BER · offizielle Flugtafel'},
  {name:'Albany International Airport (ALB)',place:'Upstate New York · Ankünfte und Abflüge',lat:42.7483,lon:-73.8017,url:'https://www.albanyairport.com/flights',source:'Albany Airport · offizielle Flugtafel'}
@@ -287,8 +342,8 @@ $('camviewer').addEventListener('click',e=>{if(e.target===$('camviewer'))$('camv
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&$('camviewer').classList.contains('open'))$('camviewclose').click()});
 function loadCityCams(){
  updateListStamp();clearMarkers(cityMarkers);clearMarkers(abMarkers);clearMarkers(finMarkers);clearList();
- const allSources=[...citySources,...regionalSources];
- const container=$('autobahnList'),head=document.createElement('div');head.className='note';head.style.cssText='margin:10px 0 6px;color:#7be0f4;font-weight:700';head.textContent='STADT-, FLUSS- & ADIRONDACK-WEBCAMS';container.appendChild(head);
+ const allSources=[...citySources,...regionalSources,...worldSources];
+ const container=$('autobahnList'),head=document.createElement('div');head.className='note';head.style.cssText='margin:10px 0 6px;color:#7be0f4;font-weight:700';head.textContent='WELTWEITE WEBCAMS · 50 NEUE QUELLEN & BEREICHE';container.appendChild(head);
  $('count').textContent=String(allSources.length);
  allSources.forEach(c=>{
   let marker=null;
@@ -300,7 +355,7 @@ function loadCityCams(){
  });
  window.dispatchEvent(new CustomEvent('atlas-camera-list-loaded',{detail:allSources.length}));
  const localPoints=allSources.filter(c=>c.local!==false&&c.lat>=43.7&&c.lat<=44.5&&c.lon>=-76.35&&c.lon<=-75.65).map(c=>[c.lat,c.lon]);if(localPoints.length)map.fitBounds(L.latLngBounds(localPoints).pad(0.12),{maxZoom:9});else map.setView([44.18,-75.93],9);filterCameraCards();
- $('citymessage').textContent=allSources.length+' öffentliche Kamera- und Portal-Einträge geladen. Im Nahbereich sind Alexandria Bay, Clayton, Watertown und Dry Hill enthalten; Portale sind als solche gekennzeichnet.';
+ $('citymessage').textContent=allSources.length+' öffentliche Kamera- und Portal-Einträge geladen, darunter 50 neue internationale Quellen aus Nordamerika, Europa, Asien, Afrika und Ozeanien. Verzeichnisse und Verkehrsportale sind als solche gekennzeichnet; nicht jeder Link ist ein direkter Livestream.';
  filterCameraCards();setMessage('Kameraliste geladen. Favoriten mit ☆ speichern; bestätigte Streams öffnen im Player, Portale direkt beim Betreiber.');
 }
 window.addEventListener('atlas-open-camera',e=>openCameraView(e.detail));
