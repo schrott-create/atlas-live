@@ -358,6 +358,9 @@ function countryPoiCategory(tags){
  if(tags.aeroway==='aerodrome')return 'Flughafen';
  if(tags.tourism==='museum')return 'Museum';
  if(tags.tourism==='zoo')return 'Zoo';
+ if(tags.tourism==='camp_site')return 'Campingplatz';
+ if(tags.tourism==='artwork')return 'Kunst im öffentlichen Raum';
+ if(tags.tourism==='information')return 'Touristeninformation';
  if(tags.tourism==='viewpoint')return 'Aussichtspunkt';
  if(tags.tourism==='attraction')return 'Sehenswürdigkeit';
  if(tags.historic)return 'Historischer Ort';
@@ -369,13 +372,17 @@ function countryPoiCategory(tags){
  if(tags.leisure==='nature_reserve')return 'Naturschutzgebiet';
  if(tags.leisure==='park')return 'Park';
  if(tags.man_made==='lighthouse')return 'Leuchtturm';
+ if(tags.railway==='station'||tags.public_transport==='station')return 'Bahnhof';
+ if(tags.amenity==='theatre')return 'Theater';
+ if(tags.amenity==='library')return 'Bibliothek';
+ if(tags.leisure==='marina')return 'Marina / Yachthafen';
  return tags.tourism||tags.natural||tags.leisure||'Ort';
 }
 async function fetchCountryOSMPlaces(feature){
  const iso=String(feature.__iso2||'').toUpperCase();
  if(!/^[A-Z]{2}$/.test(iso))return [];
  if(countryOSMCache.has(iso))return countryOSMCache.get(iso);
- const query='[out:json][timeout:25];area["ISO3166-1"="'+iso+'"]["admin_level"="2"]->.country;(nwr["tourism"~"attraction|museum|zoo|viewpoint|gallery|theme_park"](area.country);nwr["historic"~"castle|monument|archaeological_site|fort|ruins|memorial"](area.country);nwr["natural"~"peak|volcano|waterfall|cave|glacier|hot_spring|beach"](area.country);nwr["leisure"~"nature_reserve|park"](area.country);nwr["aeroway"="aerodrome"](area.country);nwr["man_made"="lighthouse"](area.country););out center tags 100;';
+ const query='[out:json][timeout:25];area["ISO3166-1"="'+iso+'"]["admin_level"="2"]->.country;(nwr["tourism"~"attraction|museum|zoo|viewpoint|gallery|theme_park|camp_site|artwork|information"](area.country);nwr["historic"~"castle|monument|archaeological_site|fort|ruins|memorial"](area.country);nwr["natural"~"peak|volcano|waterfall|cave|glacier|hot_spring|beach"](area.country);nwr["leisure"~"nature_reserve|park|marina"](area.country);nwr["amenity"~"theatre|library"](area.country);nwr["railway"="station"](area.country);nwr["public_transport"="station"](area.country);nwr["aeroway"="aerodrome"](area.country);nwr["man_made"="lighthouse"](area.country););out center tags 100;';
  const endpoints=['https://overpass-api.de/api/interpreter','https://overpass.kumi.systems/api/interpreter'];
  let lastError=null;
  for(const endpoint of endpoints){
@@ -419,7 +426,7 @@ async function loadCountryExplorer(){
    const btn=document.createElement('button');btn.type='button';btn.textContent='▶ Kamera in ATLAS LIVE öffnen';btn.addEventListener('click',()=>openCameraView(c));
    item.append(name,sub,btn);section.appendChild(item);
    const marker=L.circleMarker([Number(c.lat),Number(c.lon)],{radius:8,color:'#72d9f2',weight:2,fillColor:'#087eaa',fillOpacity:.96}).addTo(pointLayers.countryPOIs);
-   marker.bindPopup('<b>'+esc(c.name)+'</b><br>'+esc(c.place||'')+'<br><small>'+esc(c.source||'Öffentliche Kamera')+'</small><br><button type="button" onclick="window.dispatchEvent(new CustomEvent(\'atlas-open-camera\',{detail:'+JSON.stringify({name:c.name,place:c.place||'',url:c.url||'',embedUrl:c.embedUrl||'',imageUrl:c.imageUrl||'',source:c.source||'Öffentliche Kamera',refreshMs:c.refreshMs||600000}).replace(/</g,'\\u003c')+'}))">In ATLAS LIVE öffnen</button>');
+   marker.bindPopup('<b>'+esc(c.name)+'</b><br>'+esc(c.place||'')+'<br><small>'+esc(c.source||'Öffentliche Kamera')+'</small><br><small>Marker anklicken, um die Kamera im integrierten Player zu öffnen.</small>');
    marker.on('click',()=>openCameraView(c));totalMarkers++;
   });
   const siteHead=document.createElement('div');siteHead.className='country-explore-item';siteHead.textContent='🏛️ Kuratierte Sehenswürdigkeiten & Natur · '+sites.length;section.appendChild(siteHead);
@@ -452,7 +459,7 @@ async function loadCountryExplorer(){
  const info=document.createElement('div');info.className='country-status';info.textContent=totalMarkers+' Kartenpunkte aus den ausgewählten Ländern geladen. '+(cameraLoadNote?cameraLoadNote+' ':'')+'Kameras öffnen sich im ATLAS-LIVE-Player; OSM-Daten sind keine Live-Kameras.';panel.appendChild(info);
 }
 function renderCountryList(){const box=$('countryList'),q=$('countrySearch').value.trim().toLocaleLowerCase('de');box.innerHTML='';countryFeatures.filter(f=>f.__country.toLocaleLowerCase('de').includes(q)).sort((a,b)=>a.__country.localeCompare(b.__country,'de')).forEach(f=>{const label=document.createElement('label');label.className='country-option';const cb=document.createElement('input');cb.type='checkbox';cb.checked=selectedCountries.has(f.__country);cb.addEventListener('change',()=>{if(cb.checked)selectedCountries.add(f.__country);else selectedCountries.delete(f.__country);applyCountryFilter();loadCountryExplorer();});const name=document.createElement('span');name.textContent=f.__country;label.append(cb,name);box.appendChild(label);});if(!box.childElementCount)box.textContent='Kein Land gefunden.';}
-async function loadCountryData(){try{const res=await fetch(COUNTRY_GEOJSON_URL,{headers:{accept:'application/geo+json,application/json'}});if(!res.ok)throw new Error('HTTP '+res.status);const data=await res.json();countryFeatures=(data.features||[]).map(f=>({...f,__country:f.properties?.ADMIN||f.properties?.name||f.properties?.NAME,__iso2:f.properties?.ISO_A2||f.properties?.['ISO3166-1-Alpha-2']||f.properties?.iso_a2||null})).filter(f=>f.__country&&f.geometry);if(!countryFeatures.length)throw new Error('Keine Ländergrenzen gefunden');let saved=null;try{const raw=localStorage.getItem('atlas-live-selected-countries-v1');if(raw!==null)saved=JSON.parse(raw)}catch{}const validSaved=Array.isArray(saved)?saved.filter(name=>countryFeatures.some(f=>f.__country===name)):countryFeatures.map(f=>f.__country);selectedCountries=new Set(validSaved);countryDataReady=true;renderCountryList();applyCountryFilter();}catch(e){$('countryList').textContent='Ländergrenzen konnten nicht geladen werden. Prüfe deine Internetverbindung und lade die Seite neu.';$('countryStatus').textContent='Länderfilter nicht verfügbar: '+e.message;}}
+async function loadCountryData(){try{const res=await fetch(COUNTRY_GEOJSON_URL,{headers:{accept:'application/geo+json,application/json'}});if(!res.ok)throw new Error('HTTP '+res.status);const data=await res.json();countryFeatures=(data.features||[]).map(f=>({...f,__country:f.properties?.ADMIN||f.properties?.name||f.properties?.NAME,__iso2:f.properties?.ISO_A2_EH||f.properties?.ISO_A2||f.properties?.['ISO3166-1-Alpha-2']||f.properties?.iso_a2||null})).filter(f=>f.__country&&f.geometry);if(!countryFeatures.length)throw new Error('Keine Ländergrenzen gefunden');let saved=null;try{const raw=localStorage.getItem('atlas-live-selected-countries-v1');if(raw!==null)saved=JSON.parse(raw)}catch{}const validSaved=Array.isArray(saved)?saved.filter(name=>countryFeatures.some(f=>f.__country===name)):countryFeatures.map(f=>f.__country);selectedCountries=new Set(validSaved);countryDataReady=true;renderCountryList();applyCountryFilter();}catch(e){$('countryList').textContent='Ländergrenzen konnten nicht geladen werden. Prüfe deine Internetverbindung und lade die Seite neu.';$('countryStatus').textContent='Länderfilter nicht verfügbar: '+e.message;}}
 $('countrySearch').addEventListener('input',renderCountryList);
 $('countriesAll').addEventListener('click',()=>{selectedCountries=new Set(countryFeatures.map(f=>f.__country));renderCountryList();applyCountryFilter();loadCountryExplorer();});
 $('countriesNone').addEventListener('click',()=>{selectedCountries.clear();renderCountryList();applyCountryFilter();loadCountryExplorer();});
