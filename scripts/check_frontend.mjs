@@ -58,15 +58,21 @@ for (const list of sourceLists) {
     if (camera.embedUrl && !/^https:\/\//.test(camera.embedUrl)) {
       throw new Error("Unsicherer oder ungültiger Player-Link: " + camera.name);
     }
+    if (camera.imageUrl && !/^https:\/\//.test(camera.imageUrl)) {
+      throw new Error("Unsicherer oder ungültiger Bild-Link: " + camera.name);
+    }
   }
 }
 
 
-for (const id of ["map", "search", "windyLoad", "openWall", "randomCamera", "shareAtlas", "camviewer"]) {
+for (const id of ["map", "search", "windyLoad", "openWall", "randomCamera", "shareAtlas", "camviewer", "loadNorthSeaCams", "loadGermanyCams"]) {
   if (!idSet.has(id)) throw new Error("Wichtige UI-Komponente fehlt: " + id);
 }
 
 if (html.includes("roadmapOverlay") || html.includes("openRoadmap") || html.includes("roadmapPrevious") || html.includes("roadmapNew")) throw new Error("Entfernter 80-Ideen-Tab ist noch im Frontend vorhanden.");
 if (!html.includes("radioMarkers") || !html.includes("geo_lat") || !html.includes("radioSearch")) throw new Error("Radio-Kartenpunkte oder Suchfunktion fehlen.");
+if (!html.includes("getFintrafficCameraSources") || !html.includes("weathercam.digitraffic.fi")) throw new Error("Fintraffic-Kameras oder Bildaktualisierung fehlen.");
+if (!html.includes("basemaps.cartocdn.com/dark_all")) throw new Error("Dunkle Kartenkacheln fehlen.");
+if (html.includes("H_EbNSqfoso")) throw new Error("Veralteter Alexandria-Bay-Stream ist noch eingetragen.");
 console.log("Frontend-Prüfung OK: " + checkedScripts + " JavaScript-Block/Blöcke, JSON-LD, " +
   ids.length + " IDs, DOM-Referenzen, Share-Link, " + cameraCount + " Kameraquellen und Radio-Kartenpunkte.");
