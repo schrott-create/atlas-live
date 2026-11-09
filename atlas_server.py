@@ -23,7 +23,7 @@ def health():
 @app.route("/robots.txt")
 def robots_txt():
     # Dynamic host keeps this correct for the Render URL or a later custom domain.
-    body = "User-agent: *\\nAllow: /\\nSitemap: " + request.host_url.rstrip("/") + "/sitemap.xml\\n"
+    body = "User-agent: *\nAllow: /\nSitemap: " + request.host_url.rstrip("/") + "/sitemap.xml\n"
     return Response(body, content_type="text/plain; charset=utf-8")
 
 
