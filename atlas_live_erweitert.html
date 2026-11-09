@@ -89,6 +89,23 @@ footer{padding:10px 16px;border-top:1px solid var(--line);font-size:10px;color:v
 .wall-empty{padding:24px;border:1px dashed #3b536d;border-radius:12px;color:#a9bbd0;font-size:13px}
 .hub-note{font-size:11px;color:#93a8c0;line-height:1.5;margin:0 0 12px}
 @media(max-width:680px){.wall-grid,.wall-grid[data-count="9"],.wall-grid[data-count="16"]{grid-template-columns:1fr}.wall-tile iframe{height:220px}.atlas-panel-head h2{font-size:14px}}
+/* Flugzentrum und klarere Navigation */
+.flight-panel{width:min(980px,100%)}
+.flight-tabs{display:flex;gap:8px;flex-wrap:wrap;margin:14px 0}
+.flight-tabs button{width:auto;min-width:190px;background:#0b1422;border-color:#30445b}
+.flight-tabs button.active{background:#17465e;border-color:#58c7e8;color:#e8fbff}
+.flight-airports{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px}
+.flight-airport-card{display:flex;flex-direction:column;gap:8px;padding:16px;border:1px solid #30445b;border-radius:13px;background:linear-gradient(145deg,#14243a,#0b1422)}
+.flight-airport-card strong{font-size:14px}
+.flight-airport-card p{margin:0;color:#a8bbd1;font-size:12px}
+.flight-airport-card span{font-size:10px;color:#8ea5bf}
+.flight-airport-card a,.flight-radar-head a{color:#70d7f1;font-size:12px;text-decoration:none}
+.flight-airport-card a{margin-top:6px}
+.flight-radar-head{display:flex;justify-content:space-between;align-items:center;gap:12px;margin:12px 0}
+#flightRadarFrame{width:100%;height:min(65vh,620px);border:1px solid #30445b;border-radius:12px;background:#050a12}
+[hidden]{display:none!important}
+@media(max-width:600px){.flight-tabs button{flex:1;min-width:0}.flight-radar-head{align-items:flex-start;flex-direction:column}#flightRadarFrame{height:58vh}}
+
 
 </style>
 </head>
@@ -113,11 +130,11 @@ footer{padding:10px 16px;border-top:1px solid var(--line);font-size:10px;color:v
     <button id="citycams" type="button">Stadt- & Regionskameras laden</button>
     <p class="note" id="citymessage">Berlin, Thousand Islands und Adirondacks: öffentliche Kameraquellen mit eingebettetem Anbieter-Player, soweit erlaubt.</p>
     <div style="height:8px"></div>
-    <button id="flights" type="button">Flugstatus & Flughäfen laden</button>
-    <p class="note" id="flightmessage">Offizielle Ankunfts- und Abflugtafeln für BER und Albany (Upstate New York).</p>
+    <button id="berlinCams" type="button">🇩🇪 Berlin-Cams anzeigen</button>
+    <p class="note" id="berlinMessage">Öffentliche Stadtpanoramen aus Berlin, mit direkten Betreiberseiten und Kartenmarkern.</p>
     <div style="height:8px"></div>
-    <button id="flightRadar" type="button">✈ Live-Flugradar in ATLAS LIVE öffnen</button>
-    <p class="note">Live-Positionen öffentlicher ADS-B-Meldungen rund um La Fargeville. Die Karte öffnet im ATLAS-LIVE-Fenster; falls der Anbieter Einbettung sperrt, gibt es den Direktaufruf.</p>
+    <button id="flightHub" type="button">✈ Flugzentrum öffnen</button>
+    <p class="note" id="flightmessage">Flugstatus, Flughäfen und Live-Flugradar gemeinsam in einem Bereich.</p>
     <div style="height:14px"></div>
     <label class="label" for="windyKey">Windy-Webcams direkt auf der Karte</label>
     <input id="windyKey" type="password" autocomplete="off" placeholder="Optionaler persönlicher Windy-API-Key">
@@ -148,6 +165,24 @@ footer{padding:10px 16px;border-top:1px solid var(--line);font-size:10px;color:v
         <p class="hub-note">Die Liste enthält die 30 zuvor besprochenen Ideen und 50 zusätzliche Vorschläge. „Vorhanden/teilweise“ bedeutet, dass es dafür bereits eine Basis in der App gibt. „Idee“ bedeutet: noch nicht fertig eingebaut.</p>
         <div class="roadmap-tools"><input id="roadmapSearch" type="search" placeholder="Idee suchen …"><select id="roadmapFilter"><option value="all">Alle 80 Ideen</option><option value="active">Vorhanden / teilweise</option><option value="idea">Noch geplant</option></select></div>
         <div id="roadmapContent"></div>
+      </div>
+    </section>
+  </div>
+  <div class="atlas-overlay" id="flightOverlay" role="dialog" aria-modal="true" aria-label="Flugzentrum">
+    <section class="atlas-panel flight-panel">
+      <div class="atlas-panel-head"><h2>ATLAS LIVE · Flugzentrum</h2><button id="closeFlightHub" type="button">Schließen ✕</button></div>
+      <div class="atlas-panel-body">
+        <p class="hub-note">Flughäfen, offizielle Ankunfts- und Abflugtafeln sowie ein Live-Flugradar – alles an einem Ort. Flugstatus öffnet beim jeweiligen Flughafen; das Radar zeigt öffentlich empfangene ADS-B-Daten.</p>
+        <div class="flight-tabs">
+          <button id="flightBoardsTab" type="button" class="active">Flughäfen & Flugstatus</button>
+          <button id="flightRadarTab" type="button">Live-Flugradar</button>
+        </div>
+        <div id="flightBoardsPane"><div id="flightAirportCards" class="flight-airports"></div></div>
+        <div id="flightRadarPane" hidden>
+          <div class="flight-radar-head"><strong>Live-Flugradar · Berlin / BER</strong><a id="flightRadarExternal" href="https://globe.adsbexchange.com/?lat=52.37&lon=13.50&zoom=8" target="_blank" rel="noopener">Radar separat öffnen ↗</a></div>
+          <iframe id="flightRadarFrame" title="Öffentliches Live-Flugradar" loading="lazy" referrerpolicy="strict-origin-when-cross-origin"></iframe>
+          <p class="hub-note">Falls der Anbieter die Einbettung blockiert, nutze „Radar separat öffnen“. Abdeckung und Aktualität hängen von empfangenen Signalen ab.</p>
+        </div>
       </div>
     </section>
   </div>
@@ -251,10 +286,11 @@ async function loadFintraffic(){
  }catch(e){finSetMessage('Fintraffic konnte gerade nicht geladen werden: '+e.message)}
 }
 const citySources=[
- {name:'Webcams Berlin – offizielles Stadtportal',place:'Berlin · RBB-Fernsehzentrum und Rotes Rathaus',lat:52.52,lon:13.405,url:'https://www.berlin.de/webcams/',source:'Berlin.de · zwei aktive Stadtpanoramen'},
- {name:'RBB-Fernsehzentrum',place:'Berlin-Westend · Theodor-Heuss-Platz',lat:52.507,lon:13.282,url:'https://www.berlin.de/webcams/',source:'Berlin.de / RBB · Kamerabild auf dem Stadtportal'},
- {name:'Rotes Rathaus',place:'Berlin-Mitte',lat:52.5186,lon:13.4081,url:'https://www.berlin.de/webcams/',source:'Berlin.de / RBB · Kamerabild auf dem Stadtportal'},
- {name:'Berlin & Umgebung – Webcam-Verzeichnis',place:'Berlin und Brandenburg',lat:52.52,lon:13.405,url:'https://www.berlin-webcams.de/webcams/',source:'Öffentliches Webcam-Verzeichnis · Betreiber können Kameras ändern'},
+ {name:'Berlin – offizielles Webcam-Portal',place:'Berlin · zwei bestätigte Stadtpanoramen',lat:52.52,lon:13.405,url:'https://www.berlin.de/webcams/',source:'Berlin.de · offizielle Übersicht; RBB-Fernsehzentrum und Rotes Rathaus'},
+ {name:'RBB-Fernsehzentrum – Stadtpanorama',place:'Berlin-Westend · Theodor-Heuss-Platz',lat:52.507,lon:13.282,url:'https://www.berlin.de/webcams/4350926-4350835-rbb-fernsehzentrum.html',source:'RBB / Berlin.de · öffentliche schwenkbare Panorama-Webcam'},
+ {name:'Rotes Rathaus – Stadtpanorama',place:'Berlin-Mitte · Berliner Rathaus',lat:52.5186,lon:13.4081,url:'https://www.berlin.de/webcams/4350944-4350835-webcam-am-rotes-rathaus.html',source:'RBB / Berlin.de · öffentliche schwenkbare Panorama-Webcam'},
+ {name:'RBB Wetter-Webcam – Rotes Rathaus',place:'Berlin-Mitte · aktuelles Wetterbild',lat:52.5186,lon:13.4081,url:'https://www.rbb24.de/wetter/webcam/rathaus.html',source:'RBB24 · öffentliche Wetterkamera-Seite'},
+ {name:'Berlin & Umgebung – Webcam-Verzeichnis',place:'Berlin und Brandenburg · öffentliche Stadt- und Landschaftskameras',lat:52.52,lon:13.405,url:'https://www.berlin-webcams.de/webcams/',source:'Webcam-Verzeichnis · Verfügbarkeit je Betreiber unterschiedlich'}
  {name:'511NY – öffentliche Verkehrskameras',place:'Upstate New York und gesamter Bundesstaat',lat:42.6526,lon:-73.7562,url:'https://511ny.org/map',source:'New York State · offizielle Verkehrskarte'},
  {name:'NYSDOT – Traffic Monitoring Cameras',place:'Upstate New York · Bundesstaat New York',lat:42.6526,lon:-73.7562,url:'https://www.dot.ny.gov/divisions/operating/oom/transportation-systems/systems-optimization-section/ny-moves/traffic-cameras',source:'New York State Department of Transportation'},
  {name:'AdirondackRegion – 24 Live-Webcams',place:'Upstate New York · 9 Regionen der Adirondacks',lat:44.2795,lon:-73.9799,url:'https://www.adirondackregion.com/webcams',source:'AdirondackRegion.com · kuratierte Live-/Near-live-Kameras'},
@@ -490,7 +526,7 @@ function loadCityCams(){
  $('count').textContent=String(allSources.length);
  allSources.forEach(c=>{
   let marker=null;
-  if(c.local!==false && c.lat>=43.7 && c.lat<=44.5 && c.lon>=-76.35 && c.lon<=-75.65){
+  if(c.local!==false && Number.isFinite(Number(c.lat)) && Number.isFinite(Number(c.lon)) && Math.abs(Number(c.lat))<=90 && Math.abs(Number(c.lon))<=180){
    marker=L.circleMarker([c.lat,c.lon],{radius:7,color:'#7be0f4',weight:2,fillColor:'#1689aa',fillOpacity:.9}).addTo(map);
    marker.bindPopup('<b>'+esc(c.name)+'</b><br>'+esc(c.place)+'<br><small>'+esc(c.source)+'</small><br><a href="'+esc(c.url)+'" target="_blank" rel="noopener">Betreiberseite ↗</a><br><small>Zum eingebetteten Player: Eintrag links anklicken.</small>');cityMarkers.push(marker);
   }
@@ -524,9 +560,51 @@ function openFlightRadar(){
  openCameraView({name:'Live-Flugradar · Thousand Islands',place:'La Fargeville / Watertown / Thousand Islands',url,embedUrl:url,source:'ADS-B Exchange · öffentliche ADS-B-Livekarte'});
  setMessage('Live-Flugradar wird im ATLAS-LIVE-Player geöffnet. Sichtbare Flugzeuge hängen von empfangenen ADS-B-Signalen in der Region ab.');
 }
-$('flightRadar').onclick=openFlightRadar;
 $('citycams').onclick=loadCityCams;
-$('flights').onclick=loadFlights;
+function loadBerlinCams(){
+ updateListStamp();clearMarkers(cityMarkers);clearMarkers(abMarkers);clearMarkers(finMarkers);clearList();
+ const all=[...citySources,...worldSources].filter(c=>/berlin/i.test([c.name,c.place].join(' ')) && c.local!==false);
+ const container=$('autobahnList'),head=document.createElement('div');
+ head.className='note';head.style.cssText='margin:10px 0 8px;color:#7be0f4;font-weight:700';head.textContent='BERLIN · ÖFFENTLICHE STADTPANORAMEN';
+ container.appendChild(head);
+ all.forEach(c=>{
+  const marker=L.circleMarker([Number(c.lat),Number(c.lon)],{radius:8,color:'#7be0f4',weight:2,fillColor:'#1689aa',fillOpacity:.95}).addTo(map);
+  marker.bindPopup('<b>'+esc(c.name)+'</b><br>'+esc(c.place)+'<br><small>'+esc(c.source)+'</small><br><a href="'+esc(c.url)+'" target="_blank" rel="noopener">Öffentliche Kamera öffnen ↗</a>');
+  cityMarkers.push(marker);
+  addCameraCard(container,c.name,c.place+' · '+c.source,()=>{map.setView([Number(c.lat),Number(c.lon)],Math.max(map.getZoom(),11));marker.openPopup();window.open(c.url,'_blank','noopener')},'',c.category==='traffic'?'Verkehrsportal':'Öffentliche Stadtcam');
+ });
+ const bounds=L.latLngBounds(all.map(c=>[Number(c.lat),Number(c.lon)]));
+ if(all.length)map.fitBounds(bounds.pad(0.18),{maxZoom:12});
+ $('count').textContent=String(all.length);filterCameraCards();
+ $('berlinMessage').textContent=all.length+' öffentliche Berlin-Quellen geladen. Die offiziellen Panorama-Kameras öffnen beim Betreiber.';
+ setMessage('Berlin-Cams angezeigt. Für das aktuelle Bild den jeweiligen öffentlichen Betreiber-Link öffnen.');
+}
+$('berlinCams').onclick=loadBerlinCams;
+function openFlightHub(){
+ const overlay=$('flightOverlay');overlay.classList.add('open');
+ $('flightAirportCards').innerHTML='';
+ flightSources.forEach(a=>{
+  const card=document.createElement('article');card.className='flight-airport-card';
+  const title=document.createElement('strong');title.textContent=a.name;
+  const place=document.createElement('p');place.textContent=a.place;
+  const source=document.createElement('span');source.textContent=a.source;
+  const link=document.createElement('a');link.href=a.url;link.target='_blank';link.rel='noopener';link.textContent='Ankünfte & Abflüge öffnen ↗';
+  card.append(title,place,source,link);$('flightAirportCards').appendChild(card);
+ });
+ setFlightHubTab('boards');
+}
+function setFlightHubTab(tab){
+ const boards=tab==='boards';
+ $('flightBoardsPane').hidden=!boards;$('flightRadarPane').hidden=boards;
+ $('flightBoardsTab').classList.toggle('active',boards);$('flightRadarTab').classList.toggle('active',!boards);
+ if(!boards && !$('flightRadarFrame').src.includes('globe.adsbexchange.com'))$('flightRadarFrame').src='https://globe.adsbexchange.com/?lat=52.37&lon=13.50&zoom=8';
+}
+$('flightHub').onclick=openFlightHub;
+$('closeFlightHub').onclick=()=>{$('flightOverlay').classList.remove('open');$('flightRadarFrame').src='about:blank'};
+$('flightOverlay').addEventListener('click',e=>{if(e.target===$('flightOverlay'))$('closeFlightHub').click()});
+$('flightBoardsTab').onclick=()=>setFlightHubTab('boards');
+$('flightRadarTab').onclick=()=>setFlightHubTab('radar');
+$('fintraffic').onclick=loadFintraffic;
 $('fintraffic').onclick=loadFintraffic;
 async function loadAutobahn(){
  const button=$('autobahn');button.disabled=true;clearMarkers(finMarkers);clearMarkers(cityMarkers);clearMarkers(abMarkers);clearList();abSetMessage('Prüfe die offiziellen Autobahn-Kameradaten …');
