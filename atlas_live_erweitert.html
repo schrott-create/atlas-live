@@ -52,7 +52,7 @@ footer{padding:10px 16px;border-top:1px solid var(--line);font-size:10px;color:v
     <label class="label" for="search">Ort suchen</label>
     <input id="search" placeholder="z. B. Berlin, Hamburg, München">
     <div class="row"><button id="locate" type="button">Weltkarte</button><button id="regionHome" type="button">La Fargeville & Umgebung</button></div>
-    <p class="note" id="message">Öffentliche Autobahnkameras in Deutschland werden automatisch geladen. Weitere öffentliche Quellen können später ergänzt werden.</p>
+    <p class="note" id="message">ATLAS LIVE startet in der Thousand-Islands-Region rund um La Fargeville. Wähle öffentliche Livekameras oder regionale Betreiber- und Verkehrsportale.</p>
     <div style="height:14px"></div>
     <label class="label">Zusätzliche Quelle (kein Key nötig)</label>
     <button id="autobahn" type="button">Autobahn-Kameras (DE) laden</button>
@@ -69,13 +69,13 @@ footer{padding:10px 16px;border-top:1px solid var(--line);font-size:10px;color:v
   </section>
   <div class="listhead"><span>Quellen & Kameras</span><span id="count">0</span></div>
   <div class="listupdated" id="listUpdated">Noch nicht geladen</div>
-  <div class="filterbox"><input id="cameraFilter" type="search" placeholder="Kamera, Ort oder Quelle filtern …" aria-label="Kameraeinträge filtern"><select id="categoryFilter" aria-label="Kategorie filtern"><option value="all">Alle Kategorien</option><option value="video">Bestätigte Videostreams</option><option value="still">Standbild / Wetterkamera</option><option value="traffic">Verkehr / Straßen</option><option value="portal">Kamera-Portale / Betreiberseiten</option><option value="resort">Resort / Landschaft</option></select><div class="filteractions"><button id="favoritesOnly" type="button" aria-pressed="false">☆ Nur Favoriten</button><button id="resetFilters" type="button">Filter zurücksetzen</button></div></div>
+  <div class="filterbox"><input id="cameraFilter" type="search" placeholder="Kamera, Ort oder Quelle filtern …" aria-label="Kameraeinträge filtern"><select id="categoryFilter" aria-label="Kategorie filtern"><option value="all">Alle Kategorien</option><option value="video">Videostreams / Player</option><option value="still">Standbild / Wetterkamera</option><option value="traffic">Verkehr / Straßen</option><option value="portal">Kamera-Portale / Betreiberseiten</option><option value="resort">Resort / Landschaft</option></select><div class="filteractions"><button id="favoritesOnly" type="button" aria-pressed="false">☆ Nur Favoriten</button><button id="resetFilters" type="button">Filter zurücksetzen</button></div></div>
   <div id="cameraList">
    <div id="autobahnList"></div>
   </div>
   <footer>Quellen: Autobahn GmbH · Fintraffic / Digitraffic (CC BY 4.0) · Berlin.de · NYSDOT / 511NY · Flughäfen · Kartendaten © OpenStreetMap-Mitwirkende</footer>
 </aside>
-<div class="mapwrap"><div class="mapbadge">WELTKARTE · öffentliche Webcams</div><div id="map"></div></div>
+<div class="mapwrap"><div class="mapbadge">THOUSAND ISLANDS · LA FARGEVILLE-REGION</div><div id="map"></div></div>
 <div class="camviewer" id="camviewer" role="dialog" aria-modal="true"><div class="camviewerbox"><div class="camviewhead"><strong id="camviewtitle">Kamera</strong><button id="camviewopen" type="button">Beim Betreiber öffnen ↗</button><button id="camviewclose" type="button">Schließen ✕</button></div><iframe class="camframe" id="camframe" title="Öffentliche Live-Kamera" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe><div class="camviewfoot" id="camviewnote">Wenn der Anbieter das Einbetten blockiert, nutze „Beim Betreiber öffnen“.</div></div></div>
 </main>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -88,7 +88,7 @@ const FAVORITES_KEY='atlas-live-favorites-v1';
 let favorites=new Set();try{favorites=new Set(JSON.parse(localStorage.getItem(FAVORITES_KEY)||'[]'))}catch{}
 let favoritesOnly=false;
 function saveFavorites(){try{localStorage.setItem(FAVORITES_KEY,JSON.stringify([...favorites]))}catch{setMessage('Favoriten können in diesem Browser nicht dauerhaft gespeichert werden.')}}
-function cameraCategory(tag,meta){const t=(tag+' '+meta).toLowerCase();if(t.includes('bestätigter video'))return 'video';if(t.includes('standbild'))return 'still';if(t.includes('autobahn')||t.includes('verkehr')||t.includes('traffic'))return 'traffic';if(t.includes('resort')||t.includes('ski')||t.includes('landschaft'))return 'resort';return 'portal'}
+function cameraCategory(tag,meta){const t=(tag+' '+meta).toLowerCase();if(t.includes('bestätigter video')||t.includes('player')||t.includes('livestream'))return 'video';if(t.includes('standbild'))return 'still';if(t.includes('autobahn')||t.includes('verkehr')||t.includes('traffic'))return 'traffic';if(t.includes('resort')||t.includes('ski')||t.includes('landschaft'))return 'resort';return 'portal'}
 function updateListStamp(){const d=new Date();$('listUpdated').textContent='Liste zuletzt geladen: '+d.toLocaleString('de-DE',{dateStyle:'medium',timeStyle:'short'});}
 
 function esc(s){return String(s??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]))}
