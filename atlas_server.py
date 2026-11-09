@@ -1,12 +1,14 @@
 import os
 import re
+import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from threading import Lock
 
 import requests
 from flask import Flask, jsonify, send_from_directory, abort, Response
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-AUTOBahn_BASE = "https://verkehr.autobahn.de/o/autobahn"
+AUTOBAHN_BASE = "https://verkehr.autobahn.de/o/autobahn"
 
 app = Flask(__name__)
 
@@ -42,17 +44,28 @@ def fintraffic_stations():
     )
 
 
+_webcam_cache = {"created": 0.0, "data": {}}
+_webcam_cache_lock = Lock()
+
 @app.route("/api/autobahn/webcams")
 def autobahn_webcams():
-    """Fetch webcam lists from motorway roads concurrently, with a bounded timeout."""
+    """Return public Autobahn webcams; cache results briefly and isolate road failures."""
+    now = time.time()
+    with _webcam_cache_lock:
+        if _webcam_cache["data"] and now - _webcam_cache["created"] < 300:
+            return jsonify(_webcam_cache["data"])
+
     try:
         roads_response = requests.get(
-            AUTOBahn_BASE + "/",
+            AUTOBAHN_BASE + "/",
             headers={"Accept": "application/json", "User-Agent": "ATLAS-LIVE/1.0"},
-            timeout=10,
+            timeout=(3, 7),
         )
         roads_response.raise_for_status()
-        roads = roads_response.json().get("roads", [])
+        roads_payload = roads_response.json()
+        roads = roads_payload.get("roads", []) if isinstance(roads_payload, dict) else []
+        if not roads:
+            return jsonify({"error": "Die Autobahn-API hat keine Straßenliste geliefert."}), 502
     except (requests.RequestException, ValueError):
         return jsonify({"error": "Die Autobahn-Straßenliste ist gerade nicht erreichbar."}), 502
 
@@ -63,23 +76,33 @@ def autobahn_webcams():
         if not re.fullmatch(r"[A-Za-z0-9_-]{1,12}", str(road)):
             return []
         response = requests.get(
-            f"{AUTOBahn_BASE}/{road}/services/webcam",
+            f"{AUTOBAHN_BASE}/{road}/services/webcam",
             headers={"Accept": "application/json", "User-Agent": "ATLAS-LIVE/1.0"},
-            timeout=10,
+            timeout=(3, 6),
         )
         response.raise_for_status()
         payload = response.json()
         return payload.get("webcam", []) if isinstance(payload, dict) else []
 
-    with ThreadPoolExecutor(max_workers=12) as pool:
-        futures = {pool.submit(fetch_road, road): road for road in roads}
+    with ThreadPoolExecutor(max_workers=32) as pool:
+        futures = [pool.submit(fetch_road, road) for road in roads]
         for future in as_completed(futures):
             try:
                 webcams.extend(future.result())
             except Exception:
                 failed += 1
 
-    return jsonify({"webcam": webcams, "checked": len(roads), "failed": failed})
+    result = {
+        "webcam": webcams,
+        "checked": len(roads),
+        "failed": failed,
+        "count": len(webcams),
+        "source": "Autobahn GmbH",
+    }
+    with _webcam_cache_lock:
+        _webcam_cache["created"] = time.time()
+        _webcam_cache["data"] = result
+    return jsonify(result)
 
 @app.route("/api/autobahn/roads")
 @app.route("/api/autobahn/<road>/services/webcam")
