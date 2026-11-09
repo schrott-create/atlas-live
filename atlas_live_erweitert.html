@@ -77,6 +77,11 @@ footer{padding:10px 16px;border-top:1px solid var(--line);font-size:10px;color:v
     <div style="height:8px"></div>
     <button id="flightRadar" type="button">✈ Live-Flugradar in ATLAS LIVE öffnen</button>
     <p class="note">Live-Positionen öffentlicher ADS-B-Meldungen rund um La Fargeville. Die Karte öffnet im ATLAS-LIVE-Fenster; falls der Anbieter Einbettung sperrt, gibt es den Direktaufruf.</p>
+    <div style="height:14px"></div>
+    <label class="label" for="windyKey">Windy-Webcams direkt auf der Karte</label>
+    <input id="windyKey" type="password" autocomplete="off" placeholder="Optionaler persönlicher Windy-API-Key">
+    <div class="row"><button id="windyLoad" type="button">Windy-Kameras im Kartenausschnitt laden</button><button id="windyOpen" type="button">Windy-Karte öffnen ↗</button></div>
+    <p class="note" id="windyMessage">Mit einem eigenen Windy-Webcams-API-Key erscheinen echte Windy-Kameras als Marker mit Vorschaubild. Der Schlüssel wird nicht gespeichert und bleibt nur bis zum Neuladen in diesem Tab.</p>
   </section>
   <div class="listhead"><span>Quellen & Kameras</span><span id="count">0</span></div>
   <div class="listupdated" id="listUpdated">Noch nicht geladen</div>
@@ -94,7 +99,7 @@ footer{padding:10px 16px;border-top:1px solid var(--line);font-size:10px;color:v
 const map=L.map('map',{worldCopyJump:true}).setView([25,8],2);
 L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'&copy; OpenStreetMap-Mitwirkende',maxZoom:19}).addTo(map);
 const $=id=>document.getElementById(id);
-let abMarkers=[],finMarkers=[],cityMarkers=[];
+let abMarkers=[],finMarkers=[],cityMarkers=[],windyMarkers=[];let windyApiKey='';
 const FAVORITES_KEY='atlas-live-favorites-v1',FOLDERS_KEY='atlas-live-folders-v1',ASSIGN_KEY='atlas-live-folder-assignments-v1';
 let favorites=new Set(),folders=[],folderAssignments={};try{favorites=new Set(JSON.parse(localStorage.getItem(FAVORITES_KEY)||'[]'))}catch{}try{folders=JSON.parse(localStorage.getItem(FOLDERS_KEY)||'[]');if(!Array.isArray(folders))folders=[]}catch{}try{folderAssignments=JSON.parse(localStorage.getItem(ASSIGN_KEY)||'{}')}catch{}
 let favoritesOnly=false,activeFolder='all';
@@ -113,7 +118,7 @@ function setMessage(t){$('message').textContent=t}
 function abSetMessage(t){$('abmessage').textContent=t}
 function finSetMessage(t){$('finmessage').textContent=t}
 function clearMarkers(arr){arr.forEach(m=>map.removeLayer(m));arr.length=0}
-function clearList(){ $('autobahnList').innerHTML=''; $('count').textContent='0'; $('cameraFilter').value=''; $('categoryFilter').value='all';favoritesOnly=false;activeFolder='all';renderFolderBar();$('favoritesOnly').classList.remove('selected');$('favoritesOnly').setAttribute('aria-pressed','false');$('favoritesOnly').textContent='☆ Nur Favoriten'; }
+function clearList(){ clearMarkers(windyMarkers); $('autobahnList').innerHTML=''; $('count').textContent='0'; $('cameraFilter').value=''; $('categoryFilter').value='all';favoritesOnly=false;activeFolder='all';renderFolderBar();$('favoritesOnly').classList.remove('selected');$('favoritesOnly').setAttribute('aria-pressed','false');$('favoritesOnly').textContent='☆ Nur Favoriten'; }
 function filterCameraCards(){const q=$('cameraFilter').value.trim().toLocaleLowerCase('de'),cat=$('categoryFilter').value;let visible=0;document.querySelectorAll('#autobahnList .camera').forEach(card=>{const id=card.dataset.id,assigned=folderAssignments[id]||[],showText=!q||card.dataset.search.includes(q),showCat=cat==='all'||card.dataset.category===cat,showFav=(!favoritesOnly||favorites.has(id))&&(activeFolder!=='favorites'||favorites.has(id)),showFolder=activeFolder==='all'||activeFolder==='favorites'||assigned.includes(activeFolder);card.hidden=!(showText&&showCat&&showFav&&showFolder);if(!card.hidden)visible++;});$('count').textContent=String(visible);}
 $('cameraFilter').addEventListener('input',filterCameraCards);$('categoryFilter').addEventListener('change',filterCameraCards);
 $('favoritesOnly').onclick=()=>{favoritesOnly=!favoritesOnly;$('favoritesOnly').classList.toggle('selected',favoritesOnly);$('favoritesOnly').setAttribute('aria-pressed',String(favoritesOnly));$('favoritesOnly').textContent=favoritesOnly?'★ Favoriten aktiv':'☆ Nur Favoriten';filterCameraCards();};
@@ -223,11 +228,51 @@ const regionalSources=[
  {name:'Live-Webcams aus vielen Ländern',place:'Weltweit · Städte, Strände, Natur, Bahn und Häfen',lat:20,lon:0,url:'https://livepublicwebcams.com/de/',source:'LivePublicWebcams · öffentliche YouTube-Livestreams, zuletzt laut Anbieter geprüft am 4. Oktober 2026',category:'portal',local:false},
  {name:'Internationale Hafen-Webcams',place:'Hamburg, Kiel, Warnemünde, Genua, Barcelona, Miami und mehr',lat:53.55,lon:9.99,url:'https://kreuzfahrtradar24.de/webcams/',source:'Kreuzfahrtradar24 · Links zu öffentlichen Hafen-Webcams',category:'portal',local:false},
  {name:'Expeditionsschiffe – Bordkameras live',place:'Öffentliche Bugkameras der HANSEATIC-Expeditionsschiffe',lat:0,lon:0,url:'https://www.hl-cruises.de/flotte/expeditionsschiffe/schiffsrundgang/webcam-schiffsposition',source:'Hapag-Lloyd Cruises · offizielle öffentliche Bord-Webcams',category:'video',local:false},
- {name:'Internationale Webcam-Sammlung – Scenic Views',place:'72 Länder und Gebiete · Landschaft, Küsten und Städte',lat:20,lon:0,url:'https://iicsm.com/views/',source:'Scenic Views · internationales Verzeichnis; viele Kameras öffnen beim Betreiber',category:'portal',local:false}];
+ {name:'Internationale Webcam-Sammlung – Scenic Views',place:'72 Länder und Gebiete · Landschaft, Küsten und Städte',lat:20,lon:0,url:'https://iicsm.com/views/',source:'Scenic Views · internationales Verzeichnis; viele Kameras öffnen beim Betreiber',category:'portal',local:false},
+ {name:'Windy – weltweite Webcam-Karte',place:'Weltweit · Live-Bilder nach Ort, Land und Kategorie',lat:20,lon:0,url:'https://www.windy.com/webcams',source:'Windy · offizielle Webcam-Karte; API-Marker benötigen einen eigenen API-Key',category:'portal',local:false},
+ {name:'Windy – Hafen- und Küstenkameras',place:'Weltweit · Häfen, Küsten, Strände und Flüsse',lat:20,lon:0,url:'https://www.windy.com/webcams',source:'Windy · Webcam-Karte, Filter nach Port / Coast / Beach',category:'portal',local:false},
+ {name:'World Port Cams – Hafen- und Marina-Livebilder',place:'30 Länder · Häfen, Marinas und Schiffsverkehr',lat:20,lon:0,url:'https://worldportcams.com/en',source:'World Port Cams · öffentliche Hafen-Webcams und Schiffsansichten',category:'portal',local:false},
+ {name:'SeeTheView – Boot- und Schiffs-Webcams',place:'Weltweit · öffentliche Boot-, Hafen- und Schiffsansichten',lat:20,lon:0,url:'https://seetheview.com/cams/category/boats',source:'SeeTheView · Sammlung öffentlicher Boat-Cams',category:'portal',local:false},
+ {name:'WorldCams – Bord- und Hafen-Webcams',place:'Weltweit · Fähren, Schiffe und Kreuzfahrthäfen',lat:20,lon:0,url:'https://worldcams.tv/ships/',source:'WorldCams · Schiffs- und Hafen-Webcam-Verzeichnis',category:'portal',local:false},
+ {name:'CruisingEarth – echte Bord-Webcams',place:'Internationale Reedereien · verfügbare Schiffskameras',lat:20,lon:0,url:'https://www.cruisingearth.com/ship-webcams/',source:'CruisingEarth · Verzeichnis von Reedereien mit öffentlichen Bordkameras',category:'portal',local:false},
+ {name:'EarthLive – Häfen und Marinas',place:'Weltweit · Hafenbecken, Marinas und Schifffahrtswege',lat:20,lon:0,url:'https://earthlive.tv/interests/harbours-and-marinas',source:'EarthLive · öffentliche Hafen- und Marina-Webcams',category:'portal',local:false}];
 const flightSources=[
  {name:'Flughafen Berlin Brandenburg (BER)',place:'Berlin · Ankünfte und Abflüge',lat:52.3667,lon:13.5033,url:'https://ber.berlin-airport.de/en/flying/departures-arrivals.html',source:'BER · offizielle Flugtafel'},
  {name:'Albany International Airport (ALB)',place:'Upstate New York · Ankünfte und Abflüge',lat:42.7483,lon:-73.8017,url:'https://www.albanyairport.com/flights',source:'Albany Airport · offizielle Flugtafel'}
 ];
+async function loadWindyCams(){
+ const key=$('windyKey').value.trim();
+ if(!key){$('windyMessage').textContent='Für echte Windy-Kameramarker wird ein eigener API-Key benötigt. Ohne Key kannst du die Windy-Webcam-Karte direkt öffnen.';setMessage('Bitte Windy-API-Key einfügen oder die Windy-Karte öffnen.');return;}
+ windyApiKey=key;
+ const button=$('windyLoad');button.disabled=true;$('windyMessage').textContent='Lade Windy-Kameras für den sichtbaren Kartenausschnitt …';
+ clearMarkers(windyMarkers);clearList();updateListStamp();
+ try{
+  const b=map.getBounds(),z=Math.max(1,Math.min(18,map.getZoom()));
+  const params=new URLSearchParams({northLat:String(b.getNorth()),eastLon:String(b.getEast()),southLat:String(b.getSouth()),westLon:String(b.getWest()),zoom:String(z),include:'categories,images,location,player,urls',lang:'de'});
+  const response=await fetch('https://api.windy.com/webcams/api/v3/map/clusters?'+params.toString(),{headers:{'x-windy-api-key':windyApiKey,accept:'application/json'}});
+  if(!response.ok)throw new Error(response.status===401||response.status===403?'API-Key ungültig oder nicht freigeschaltet (HTTP '+response.status+').':'Windy API antwortet mit HTTP '+response.status);
+  const data=await response.json(),cams=Array.isArray(data)?data:(Array.isArray(data.webcams)?data.webcams:[]);
+  const container=$('autobahnList'),head=document.createElement('div');head.className='note';head.style.cssText='margin:10px 0 6px;color:#7be0f4;font-weight:700';head.textContent='WINDY · KAMERAS IM SICHTBAREN KARTENAUSSCHNITT';container.appendChild(head);
+  cams.forEach((c,i)=>{
+   const loc=c.location||{},lat=Number(loc.latitude),lon=Number(loc.longitude);
+   if(!Number.isFinite(lat)||!Number.isFinite(lon))return;
+   const title=c.title||('Windy-Webcam '+(i+1)),detail=[loc.city,loc.region,loc.country].filter(Boolean).join(' · ')||'Windy-Webcam';
+   const image=c.images?.current?.icon||'',detailUrl=c.urls?.detail||'https://www.windy.com/webcams';
+   const live=c.player?.live,embed=typeof live==='string'?live:(live?.embed||'');
+   const marker=L.circleMarker([lat,lon],{radius:7,color:'#65d7ef',weight:2,fillColor:'#087eaa',fillOpacity:.95}).addTo(map);
+   marker.bindPopup('<b>'+esc(title)+'</b><br>'+esc(detail)+(image?'<img class="popupimg" src="'+esc(image)+'" alt="Windy-Kameravorschau">':'')+'<br><a href="'+esc(detailUrl)+'" target="_blank" rel="noopener">Windy-Kamera öffnen ↗</a>');
+   windyMarkers.push(marker);
+   addCameraCard(container,title,detail,()=>{map.setView([lat,lon],Math.max(map.getZoom(),10));marker.openPopup();openCameraView({name:title,url:detailUrl,embedUrl:embed||'',source:'Windy Webcams API · öffentlicher Kameraeintrag'})},image,'Windy-Webcam');
+  });
+  $('count').textContent=String(cams.length);filterCameraCards();
+  $('windyMessage').textContent=cams.length+' Windy-Einträge für diesen Kartenausschnitt geladen. Beim Verschieben der Karte erneut auf „laden“ klicken.';
+  setMessage(cams.length+' Windy-Kameras geladen. Marker anklicken oder links einen Eintrag öffnen.');
+  if(!cams.length)setMessage('In diesem Kartenausschnitt wurden keine Windy-Kameras zurückgegeben. Zoome heraus oder verschiebe die Karte.');
+ }catch(error){$('windyMessage').textContent='Windy konnte nicht geladen werden: '+error.message;setMessage('Windy-Webcams: '+error.message);}
+ finally{button.disabled=false;}
+}
+$('windyLoad').onclick=loadWindyCams;
+$('windyOpen').onclick=()=>openCameraView({name:'Windy · weltweite Webcam-Karte',url:'https://www.windy.com/webcams',embedUrl:'https://www.windy.com/webcams',source:'Windy · offizielle Webcam-Karte'});
 function openCameraView(camera){
  if(!camera.embedUrl){window.open(camera.url,'_blank','noopener');setMessage('Diese Quelle öffnet sich direkt beim Betreiber; ein eingebetteter Videostream ist nicht bestätigt.');return;}
  const frame=$('camframe'),viewer=$('camviewer');
