@@ -308,8 +308,7 @@ function renderAutobahn(list){
   abMarkers.push(marker);
   addCameraCard(container,c._name,'Autobahn '+c._road,()=>{
    map.setView([c._lat,c._lon],Math.max(map.getZoom(),9));marker.openPopup();
-   const target=c._image||c._url;
-   if(target)openCameraView({name:c._name+' · Autobahn '+c._road,url:c._url||target,imageUrl:c._image||'',embedUrl:c._image?'':(c._url||''),source:'Autobahn GmbH · offizieller Webcam-Datensatz'});
+   if(c._image)openCameraView({name:c._name+' · Autobahn '+c._road,url:c._image,imageUrl:c._image,source:'Autobahn GmbH · offizieller Webcam-Datensatz',refreshMs:600000});
   },c._image||'',c._image?'Kamerabild':'Verkehrskamera');
  });
  loadedPointLayers.add('autobahn');
@@ -366,6 +365,8 @@ const citySources=[
  ,{name:'Kiel – Schwedenkai',place:'Deutschland · Kiel · Schwedenkai und Innenstadt',lat:54.322,lon:10.135,url:'https://cm.livespotting.com/v1/player/c61cba4f-68a3-488e-b2e4-ffb8e182794f/b80c51ef-5da6-49e0-bf9e-617d1e78cf22/f8e142dd-b175-4a1d-bd94-29a064696a0d',embedUrl:'https://cm.livespotting.com/v1/player/c61cba4f-68a3-488e-b2e4-ffb8e182794f/b80c51ef-5da6-49e0-bf9e-617d1e78cf22/f8e142dd-b175-4a1d-bd94-29a064696a0d',source:'Port of Kiel / Livespotting · öffentlicher Player-Link',category:'video'}
  ,{name:'Kiel – Hafenhaus',place:'Deutschland · Kiel · Schwedenkai und Norwegenkai',lat:54.322,lon:10.135,url:'https://www.portofkiel.com/webcam.html',source:'Port of Kiel · offizielle Webcam-Seite',category:'portal'}
 
+ ,{name:'Alexandria Bay – Chamber River View Stream',place:'USA · New York · Alexandria Bay · St. Lawrence River',lat:44.3360,lon:-75.9180,url:'https://www.youtube.com/watch?v=XfiHdsxawCY',embedUrl:'https://www.youtube-nocookie.com/embed/XfiHdsxawCY?autoplay=1&mute=1',source:'Alexandria Bay Chamber of Commerce · offizieller River-View-Livestream',category:'video'}
+ ,{name:'Alexandria Bay – Dock Camera',place:'USA · New York · Alexandria Bay · Dock',lat:44.3325,lon:-75.9185,url:'https://www.youtube.com/watch?v=6DDfSIMfi0c',embedUrl:'https://www.youtube-nocookie.com/embed/6DDfSIMfi0c?autoplay=1&mute=1',source:'Alexandria Bay Chamber of Commerce · offizieller Dock-Livestream',category:'video'}
 ];
 const regionalSources=[
  {name:'Thousand Islands – öffentliche Webcam-Übersicht',place:'Region La Fargeville · Alexandria Bay und Clayton',lat:44.18,lon:-75.93,url:'https://1000islandslive.com/live-cams/',source:'1000 Islands Live · Betreiberübersicht',category:'portal',local:false},
@@ -554,9 +555,12 @@ async function getFintrafficCameraSources(){
    const props=feature.properties||{},coords=feature.geometry?.coordinates||[];
    const lon=Number(coords[0]),lat=Number(coords[1]);
    if(!Number.isFinite(lat)||!Number.isFinite(lon)||Math.abs(lat)>90||Math.abs(lon)>180)return;
+   // Fintraffic documents these metadata fields but their values vary by camera lifecycle.
+   // Exclude only explicit unavailable/out-of-collection states; do not discard valid cameras
+   // merely because the API adds a new active-state label.
    const state=String(props.state||'').toUpperCase(),collection=String(props.collectionStatus||'').toUpperCase();
-   if(state&&!['GATHERING','ACTIVE'].includes(state))return;
-   if(collection&&!['GATHERING','ACTIVE'].includes(collection))return;
+   const unavailable=/NOT[_ -]?IN[_ -]?USE|NOT[_ -]?IN[_ -]?COLLECTION|OUT[_ -]?OF[_ -]?COLLECTION|REMOVED|DISABLED|INACTIVE|CLOSED|REJECTED/;
+   if(unavailable.test(state)||unavailable.test(collection))return;
    const presets=Array.isArray(props.presets)?props.presets:[];
    presets.forEach((preset,index)=>{
     if(preset.inCollection===false)return;
@@ -736,7 +740,7 @@ async function loadAutobahn(){
     if(pair.length===2&&pair.every(Number.isFinite)){lon=pair[0];lat=pair[1];}
    }
    return {...c,_lat:lat,_lon:lon,_road:val(c,'roadId','road','road_id')||(String(val(c,'title','description')||'').match(/\bA\d+[a-z]?\b/i)||['Deutschland'])[0],_name:val(c,'title','description','subtitle','identifier')||'Autobahn-Kamera',_image:val(c,'imageurl','imageUrl','image','img','picture'),_url:val(c,'linkurl','url','link','href','detailsUrl')};
-  }).filter(c=>Number.isFinite(c._lat)&&Number.isFinite(c._lon)&&Math.abs(c._lat)<=90&&Math.abs(c._lon)<=180&&String(c.isBlocked).toLowerCase()!=='true'&&c.future!==true);
+  }).filter(c=>Number.isFinite(c._lat)&&Number.isFinite(c._lon)&&Math.abs(c._lat)<=90&&Math.abs(c._lon)<=180&&String(c.isBlocked).toLowerCase()!=='true'&&c.future!==true&&typeof c._image==='string'&&/^https:\/\//i.test(c._image));
   if(found.length){map.fitBounds(L.latLngBounds(found.map(c=>[c._lat,c._lon])).pad(0.06),{maxZoom:7});renderAutobahn(found);abSetMessage(found.length+' verfügbare Autobahn-Kameras gefunden. Anbieterbilder werden direkt geöffnet.')}
   else{showAutobahnFallback(data.checked+' Straßen geprüft, aber 0 Kameras erhalten.');}
  }catch(e){showAutobahnFallback('Autobahn-Daten konnten nicht geladen werden: '+e.message)}
