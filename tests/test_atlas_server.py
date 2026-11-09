@@ -1,0 +1,98 @@
+import unittest
+from unittest.mock import patch
+import os
+import sys
+
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, ROOT)
+
+import atlas_server
+
+
+class FakeResponse:
+    def __init__(self, payload=None, content=b"{}", status_code=200, headers=None):
+        self._payload = payload or {}
+        self.content = content
+        self.status_code = status_code
+        self.headers = headers or {"Content-Type": "application/json"}
+
+    def raise_for_status(self):
+        if self.status_code >= 400:
+            raise atlas_server.requests.HTTPError("upstream error")
+
+    def json(self):
+        return self._payload
+
+
+class AtlasServerTests(unittest.TestCase):
+    def setUp(self):
+        atlas_server.app.config.update(TESTING=True)
+        self.client = atlas_server.app.test_client()
+        atlas_server._webcam_cache.update({"created": 0.0, "data": {}})
+
+    def test_home_serves_application(self):
+        response = self.client.get("/")
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(b"ATLAS LIVE", response.data)
+
+    def test_health_endpoint(self):
+        response = self.client.get("/health")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.get_json()["status"], "online")
+
+    def test_robots_and_sitemap_use_request_host(self):
+        robots = self.client.get("/robots.txt", base_url="https://atlas.example")
+        sitemap = self.client.get("/sitemap.xml", base_url="https://atlas.example")
+        self.assertEqual(robots.status_code, 200)
+        self.assertIn(b"Sitemap: https://atlas.example/sitemap.xml", robots.data)
+        self.assertEqual(sitemap.status_code, 200)
+        self.assertIn(b"https://atlas.example/", sitemap.data)
+        self.assertIn(b"application/xml", sitemap.content_type)
+
+    def test_fintraffic_proxy_returns_upstream_data(self):
+        payload = b'{"features":[]}'
+        with patch.object(atlas_server.requests, "get", return_value=FakeResponse(content=payload)):
+            response = self.client.get("/api/fintraffic/stations")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data, payload)
+
+    def test_fintraffic_proxy_reports_upstream_failure(self):
+        with patch.object(atlas_server.requests, "get", side_effect=atlas_server.requests.Timeout):
+            response = self.client.get("/api/fintraffic/stations")
+        self.assertEqual(response.status_code, 502)
+        self.assertIn("error", response.get_json())
+
+    def test_autobahn_webcam_aggregation_and_cache(self):
+        def fake_get(url, **kwargs):
+            if url.endswith("/"):
+                return FakeResponse({"roads": ["A1", "A2"]})
+            if url.endswith("/A1/services/webcam"):
+                return FakeResponse({"webcam": [{"title": "Cam 1"}]})
+            if url.endswith("/A2/services/webcam"):
+                return FakeResponse({"webcam": [{"title": "Cam 2"}]})
+            raise AssertionError("Unexpected upstream URL: " + url)
+
+        with patch.object(atlas_server.requests, "get", side_effect=fake_get) as mocked:
+            first = self.client.get("/api/autobahn/webcams")
+            calls_after_first = mocked.call_count
+            second = self.client.get("/api/autobahn/webcams")
+
+        self.assertEqual(first.status_code, 200)
+        self.assertEqual(first.get_json()["count"], 2)
+        self.assertEqual(second.get_json()["count"], 2)
+        self.assertEqual(mocked.call_count, calls_after_first)
+
+    def test_autobahn_webcam_route_rejects_invalid_road(self):
+        response = self.client.get("/api/autobahn/../../bad/services/webcam")
+        self.assertIn(response.status_code, (400, 404))
+
+    def test_autobahn_webcam_proxy(self):
+        payload = b'{"webcam":[]}'
+        with patch.object(atlas_server.requests, "get", return_value=FakeResponse(content=payload)):
+            response = self.client.get("/api/autobahn/A1/services/webcam")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data, payload)
+
+
+if __name__ == "__main__":
+    unittest.main()
