@@ -45,7 +45,7 @@ def fintraffic_stations():
 @app.route("/api/autobahn/<road>/services/webcam")
 def autobahn_data(road=None):
     if road is None:
-        upstream = AUTOBahn_BASE + "/roads"
+        upstream = AUTOBahn_BASE
     else:
         if not re.fullmatch(r"[A-Za-z0-9_-]{1,12}", road):
             abort(400)
