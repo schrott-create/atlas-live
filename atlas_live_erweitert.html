@@ -275,7 +275,6 @@ function esc(s){return String(s??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&
 function val(o,...paths){for(const p of paths){let x=o;for(const k of p.split('.'))x=x?.[k];if(x!==undefined&&x!==null)return x}return ''}
 function setMessage(t){$('message').textContent=t}
 function abSetMessage(t){$('abmessage').textContent=t}
-function finSetMessage(t){$('finmessage').textContent=t}
 function clearMarkers(arr){arr.forEach(m=>map.removeLayer(m));arr.length=0}
 function clearList(){ clearMarkers(windyMarkers); $('autobahnList').innerHTML=''; $('count').textContent='0'; $('cameraFilter').value=''; $('categoryFilter').value='all';favoritesOnly=false;activeFolder='all';renderFolderBar();$('favoritesOnly').classList.remove('selected');$('favoritesOnly').setAttribute('aria-pressed','false');$('favoritesOnly').textContent='☆ Nur Favoriten'; }
 function filterCameraCards(){const q=$('cameraFilter').value.trim().toLocaleLowerCase('de'),cat=$('categoryFilter').value;let visible=0;document.querySelectorAll('#autobahnList .camera').forEach(card=>{const id=card.dataset.id,assigned=folderAssignments[id]||[],showText=!q||card.dataset.search.includes(q),showCat=cat==='all'||card.dataset.category===cat,showFav=(!favoritesOnly||favorites.has(id))&&(activeFolder!=='favorites'||favorites.has(id)),showFolder=activeFolder==='all'||activeFolder==='favorites'||assigned.includes(activeFolder);card.hidden=!(showText&&showCat&&showFav&&showFolder);if(!card.hidden)visible++;});$('count').textContent=String(visible);}
