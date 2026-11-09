@@ -185,6 +185,15 @@ footer{padding:10px 16px;border-top:1px solid var(--line);font-size:10px;color:v
 .country-option input{width:auto;margin:0;accent-color:#58c7e8}
 .country-option span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .country-status{font-size:10px;color:#91a8c0;margin-top:8px}
+.country-explore{margin-top:10px;display:grid;gap:9px}
+.country-explore-section{border:1px solid #29435d;border-radius:9px;background:#0d1a2a;padding:9px}
+.country-explore-section h4{margin:0 0 7px;color:#8de4ff;font-size:11px}
+.country-explore-item{padding:7px 0;border-top:1px solid #22364b;font-size:10px;color:#c5d5e5}
+.country-explore-item:first-of-type{border-top:0}
+.country-explore-item button{width:auto;padding:5px 8px;margin-top:5px;font-size:10px}
+.country-explore-item a{color:#8de4ff}
+.country-explore-item img{display:block;width:100%;max-height:125px;object-fit:cover;border-radius:7px;margin-top:6px}
+
 @media(max-width:760px){.country-picker-list{grid-template-columns:1fr 1fr}}
 
 </style>
@@ -223,6 +232,7 @@ footer{padding:10px 16px;border-top:1px solid var(--line);font-size:10px;color:v
       <input id="countrySearch" type="search" placeholder="Land suchen …" aria-label="Land suchen">
       <div id="countryList" class="country-picker-list"><div class="country-status">Länderdaten werden geladen …</div></div>
       <div class="country-status" id="countryStatus">Standardmäßig sind alle Länder ausgewählt.</div>
+      <div id="countryExplore" class="country-explore"><div class="country-status">Wähle ein oder mehrere Länder aus, um dort bekannte Kameras, Sehenswürdigkeiten und Naturziele zu entdecken.</div></div>
     </details>
     <p class="note" id="abmessage" hidden></p><p class="note" id="citymessage" hidden></p><p class="note" id="flightmessage" hidden></p>
     <div style="height:14px"></div>
@@ -342,11 +352,35 @@ function pointInPolygon(point,poly){if(!poly?.length||!pointInRing(point,poly[0]
 function featureContainsPoint(feature,latlng){const g=feature.geometry;if(!g)return false;const p=[latlng.lng,latlng.lat];if(g.type==='Polygon')return pointInPolygon(p,g.coordinates);if(g.type==='MultiPolygon')return g.coordinates.some(poly=>pointInPolygon(p,poly));return false;}
 function countryForPoint(latlng){return countryFeatures.find(f=>featureContainsPoint(f,latlng))?.__country||null;}
 function applyCountryFilter(){if(!countryDataReady)return;const filtering=selectedCountries.size!==countryFeatures.length;Object.values(pointLayers).forEach(group=>group.eachLayer(layer=>{const ll=layer.getLatLng?.();if(!ll)return;if(!layer.__countryBaseStyle&&layer.options)layer.__countryBaseStyle={opacity:layer.options.opacity??1,fillOpacity:layer.options.fillOpacity??.9};if(layer.__countryBaseOpacity===undefined)layer.__countryBaseOpacity=1;const country=filtering?countryForPoint(ll):null,show=!filtering||(!!country&&selectedCountries.has(country));if(layer.setStyle){const base=layer.__countryBaseStyle||{opacity:1,fillOpacity:.9};layer.setStyle(show?base:{opacity:0,fillOpacity:0});}if(layer.setOpacity)layer.setOpacity(show?layer.__countryBaseOpacity:0);layer.options.interactive=show;}));try{localStorage.setItem('atlas-live-selected-countries-v1',JSON.stringify([...selectedCountries]));}catch{}const label=selectedCountries.size===countryFeatures.length?'Alle Länder':selectedCountries.size+' Länder';$('countrySelectedLabel').textContent=label;$('countryStatus').textContent=filtering?(selectedCountries.size+' von '+countryFeatures.length+' Ländern ausgewählt. Kartenpunkte außerhalb der Auswahl werden ausgeblendet.'):'Alle '+countryFeatures.length+' Länder ausgewählt. Alle passenden Kartenpunkte sind sichtbar.';}
-function renderCountryList(){const box=$('countryList'),q=$('countrySearch').value.trim().toLocaleLowerCase('de');box.innerHTML='';countryFeatures.filter(f=>f.__country.toLocaleLowerCase('de').includes(q)).sort((a,b)=>a.__country.localeCompare(b.__country,'de')).forEach(f=>{const label=document.createElement('label');label.className='country-option';const cb=document.createElement('input');cb.type='checkbox';cb.checked=selectedCountries.has(f.__country);cb.addEventListener('change',()=>{if(cb.checked)selectedCountries.add(f.__country);else selectedCountries.delete(f.__country);applyCountryFilter();});const name=document.createElement('span');name.textContent=f.__country;label.append(cb,name);box.appendChild(label);});if(!box.childElementCount)box.textContent='Kein Land gefunden.';}
+async function loadCountryExplorer(){
+ const panel=$('countryExplore');if(!panel)return;
+ const allSelected=countryFeatures.length&&selectedCountries.size===countryFeatures.length;
+ if(!selectedCountries.size||allSelected){panel.innerHTML='<div class="country-status">'+(!selectedCountries.size?'Kein Land ausgewählt.':'Wähle einzelne Länder aus, damit ATLAS LIVE deren Inhalte gezielt zusammenstellt.')+'</div>';return;}
+ panel.innerHTML='<div class="country-status">Lade bekannte Kameras und Entdeckungsorte für die ausgewählten Länder …</div>';
+ try{
+  await setMapLayerVisible('webcams',true);
+  const sources=[...new Map([...(cameraSourceCache||[]),...(typeof citySources!=='undefined'?citySources:[]),...(typeof regionalSources!=='undefined'?regionalSources:[]),...(typeof worldSources!=='undefined'?worldSources:[])].filter(c=>Number.isFinite(Number(c.lat))&&Number.isFinite(Number(c.lon))&&(c.embedUrl||c.imageUrl)).map(c=>[c.name+'|'+c.lat+'|'+c.lon,c])).values()];
+  const places=Object.entries(discoveryPlaces||{}).flatMap(([kind,items])=>items.map(p=>({kind,p})));
+  panel.innerHTML='';
+  [...selectedCountries].sort((a,b)=>a.localeCompare(b,'de')).forEach(country=>{
+   const section=document.createElement('section');section.className='country-explore-section';
+   const h=document.createElement('h4');h.textContent='🌍 '+country;section.appendChild(h);
+   const cams=sources.filter(c=>countryForPoint(L.latLng(Number(c.lat),Number(c.lon)))===country);
+   const sites=places.filter(x=>countryForPoint(L.latLng(x.p[2],x.p[3]))===country);
+   const camHead=document.createElement('div');camHead.className='country-explore-item';camHead.textContent='📷 Kameras · '+cams.length;section.appendChild(camHead);
+   cams.forEach(c=>{const item=document.createElement('div');item.className='country-explore-item';const name=document.createElement('strong');name.textContent=c.name;const sub=document.createElement('div');sub.textContent=(c.place||'')+' · '+(c.source||'Öffentliche Quelle');const btn=document.createElement('button');btn.type='button';btn.textContent='Kamera in ATLAS LIVE öffnen';btn.addEventListener('click',()=>openCameraView(c));item.append(name,sub,btn);section.appendChild(item);});
+   const siteHead=document.createElement('div');siteHead.className='country-explore-item';siteHead.textContent='🏛️ Sehenswürdigkeiten & Natur · '+sites.length;section.appendChild(siteHead);
+   sites.forEach(({kind,p})=>{const item=document.createElement('div');item.className='country-explore-item';const name=document.createElement('strong');name.textContent=(kind==='sights'?'🏛️ ':'🏔️ ')+p[0];const sub=document.createElement('div');sub.textContent=p[1]+' · '+p[4];item.append(name,sub);const img=document.createElement('img');img.alt='Foto von '+p[0];img.loading='lazy';img.hidden=true;item.appendChild(img);const note=document.createElement('div');note.className='country-status';note.textContent='Suche Foto …';item.appendChild(note);findPlacePhoto(p[0]).then(photo=>{if(photo){img.src=photo.image;img.hidden=false;note.textContent='Foto: Wikipedia · '+photo.caption;}else note.textContent='Kein passendes Wikipedia-Foto gefunden.';});const near=nearbyCameraForPlace(p[2],p[3]);if(near){const link=document.createElement('a');link.href=near.camera.url||near.camera.embedUrl||near.camera.imageUrl;link.target='_blank';link.rel='noopener noreferrer';link.textContent='📷 Kamera in der Nähe: '+near.camera.name+' ('+near.distance+' km)';item.appendChild(link);}section.appendChild(item);});
+   if(!cams.length&&!sites.length){const empty=document.createElement('div');empty.className='country-status';empty.textContent='In den aktuell eingebundenen ATLAS-LIVE-Daten sind für dieses Land noch keine verifizierten Kameras oder kuratierten Orte hinterlegt.';section.appendChild(empty);}
+   panel.appendChild(section);
+  });
+ }catch(error){panel.innerHTML='<div class="country-status">Länder-Inhalte konnten gerade nicht geladen werden: '+esc(error.message)+'</div>';}
+}
+function renderCountryList(){const box=$('countryList'),q=$('countrySearch').value.trim().toLocaleLowerCase('de');box.innerHTML='';countryFeatures.filter(f=>f.__country.toLocaleLowerCase('de').includes(q)).sort((a,b)=>a.__country.localeCompare(b.__country,'de')).forEach(f=>{const label=document.createElement('label');label.className='country-option';const cb=document.createElement('input');cb.type='checkbox';cb.checked=selectedCountries.has(f.__country);cb.addEventListener('change',()=>{if(cb.checked)selectedCountries.add(f.__country);else selectedCountries.delete(f.__country);applyCountryFilter();loadCountryExplorer();});const name=document.createElement('span');name.textContent=f.__country;label.append(cb,name);box.appendChild(label);});if(!box.childElementCount)box.textContent='Kein Land gefunden.';}
 async function loadCountryData(){try{const res=await fetch(COUNTRY_GEOJSON_URL,{headers:{accept:'application/geo+json,application/json'}});if(!res.ok)throw new Error('HTTP '+res.status);const data=await res.json();countryFeatures=(data.features||[]).map(f=>({...f,__country:f.properties?.ADMIN||f.properties?.name||f.properties?.NAME})).filter(f=>f.__country&&f.geometry);if(!countryFeatures.length)throw new Error('Keine Ländergrenzen gefunden');let saved=null;try{const raw=localStorage.getItem('atlas-live-selected-countries-v1');if(raw!==null)saved=JSON.parse(raw)}catch{}const validSaved=Array.isArray(saved)?saved.filter(name=>countryFeatures.some(f=>f.__country===name)):countryFeatures.map(f=>f.__country);selectedCountries=new Set(validSaved);countryDataReady=true;renderCountryList();applyCountryFilter();}catch(e){$('countryList').textContent='Ländergrenzen konnten nicht geladen werden. Prüfe deine Internetverbindung und lade die Seite neu.';$('countryStatus').textContent='Länderfilter nicht verfügbar: '+e.message;}}
 $('countrySearch').addEventListener('input',renderCountryList);
-$('countriesAll').addEventListener('click',()=>{selectedCountries=new Set(countryFeatures.map(f=>f.__country));renderCountryList();applyCountryFilter();});
-$('countriesNone').addEventListener('click',()=>{selectedCountries.clear();renderCountryList();applyCountryFilter();});
+$('countriesAll').addEventListener('click',()=>{selectedCountries=new Set(countryFeatures.map(f=>f.__country));renderCountryList();applyCountryFilter();loadCountryExplorer();});
+$('countriesNone').addEventListener('click',()=>{selectedCountries.clear();renderCountryList();applyCountryFilter();loadCountryExplorer();});
 loadCountryData();
 $('mapStyle').addEventListener('change',e=>{
  const style=e.target.value;if(!mapLayers[style])return;
