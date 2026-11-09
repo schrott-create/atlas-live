@@ -606,7 +606,6 @@ function loadBerlinCams(){
  const bounds=L.latLngBounds(all.map(c=>[Number(c.lat),Number(c.lon)]));
  if(all.length)map.fitBounds(bounds.pad(0.18),{maxZoom:12});
  $('count').textContent=String(all.length);filterCameraCards();
- $('berlinMessage').textContent=all.length+' öffentliche Berlin-Quellen geladen. Die offiziellen Panorama-Kameras öffnen beim Betreiber.';
  setMessage('Berlin-Cams angezeigt. Für das aktuelle Bild den jeweiligen öffentlichen Betreiber-Link öffnen.');
 }
 function openFlightHub(){
