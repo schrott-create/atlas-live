@@ -343,7 +343,7 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'&&$('camviewer').clas
 function loadCityCams(){
  updateListStamp();clearMarkers(cityMarkers);clearMarkers(abMarkers);clearMarkers(finMarkers);clearList();
  const allSources=[...citySources,...regionalSources,...worldSources];
- const container=$('autobahnList'),head=document.createElement('div');head.className='note';head.style.cssText='margin:10px 0 6px;color:#7be0f4;font-weight:700';head.textContent='WELTWEITE WEBCAMS · 50 NEUE QUELLEN & BEREICHE';container.appendChild(head);
+ const container=$('autobahnList'),head=document.createElement('div');head.className='note';head.style.cssText='margin:10px 0 6px;color:#7be0f4;font-weight:700';head.textContent='WELTWEITE WEBCAMS · 53 NEUE QUELLEN & BEREICHE';container.appendChild(head);
  $('count').textContent=String(allSources.length);
  allSources.forEach(c=>{
   let marker=null;
@@ -355,7 +355,7 @@ function loadCityCams(){
  });
  window.dispatchEvent(new CustomEvent('atlas-camera-list-loaded',{detail:allSources.length}));
  const localPoints=allSources.filter(c=>c.local!==false&&c.lat>=43.7&&c.lat<=44.5&&c.lon>=-76.35&&c.lon<=-75.65).map(c=>[c.lat,c.lon]);if(localPoints.length)map.fitBounds(L.latLngBounds(localPoints).pad(0.12),{maxZoom:9});else map.setView([44.18,-75.93],9);filterCameraCards();
- $('citymessage').textContent=allSources.length+' öffentliche Kamera- und Portal-Einträge geladen, darunter 50 neue internationale Quellen aus Nordamerika, Europa, Asien, Afrika und Ozeanien. Verzeichnisse und Verkehrsportale sind als solche gekennzeichnet; nicht jeder Link ist ein direkter Livestream.';
+ $('citymessage').textContent=allSources.length+' öffentliche Kamera- und Portal-Einträge geladen, darunter 53 neue internationale Quellen aus Nordamerika, Europa, Asien, Afrika und Ozeanien. Verzeichnisse und Verkehrsportale sind als solche gekennzeichnet; nicht jeder Link ist ein direkter Livestream.';
  filterCameraCards();setMessage('Kameraliste geladen. Favoriten mit ☆ speichern; bestätigte Streams öffnen im Player, Portale direkt beim Betreiber.');
 }
 window.addEventListener('atlas-open-camera',e=>openCameraView(e.detail));
