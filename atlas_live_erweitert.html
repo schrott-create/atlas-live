@@ -28,6 +28,7 @@ button:hover{background:#17465e}
 #cameraList{overflow:auto;padding:0 10px 12px}
 .camera{padding:11px;border:1px solid transparent;border-radius:11px;display:grid;grid-template-columns:82px 1fr;gap:11px;cursor:pointer;margin-bottom:6px}
 .camera:hover,.camera.active{background:#17263a;border-color:#2e526b}
+.camera[hidden]{display:none}
 .thumb{width:82px;height:62px;border-radius:7px;background:#202f43;object-fit:cover}
 .camname{font-weight:700;font-size:12px;margin:2px 0 4px}.cammeta{font-size:11px;color:var(--muted)}
 .empty{padding:20px;color:var(--muted);font-size:12px}
@@ -218,7 +219,7 @@ function loadCityCams(){
  window.dispatchEvent(new CustomEvent('atlas-camera-list-loaded',{detail:allSources.length}));
  map.fitBounds(L.latLngBounds(allSources.map(c=>[c.lat,c.lon])).pad(0.12),{maxZoom:5});
  $('citymessage').textContent=allSources.length+' öffentliche Kameraeinträge geladen, davon 23 zusätzliche Adirondack-Quellen. Nicht jeder Anbieter erlaubt Einbettung oder sendet dauerhaft.';
- setMessage('Kameraliste geladen. Wähle links eine Kamera und dann „Kamera im ATLAS-Player ansehen“.');
+ setMessage('Kameraliste geladen. Wähle links einen Eintrag: bestätigte Streams öffnen im Player, andere Quellen direkt beim Betreiber.');
 }
 window.addEventListener('atlas-open-camera',e=>openCameraView(e.detail));
 
