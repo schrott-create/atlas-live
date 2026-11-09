@@ -654,9 +654,43 @@ function loadFlights(){
   addCameraCard(container,a.name,a.place+' · Flugstatus',()=>{map.setView([a.lat,a.lon],Math.max(map.getZoom(),8));marker.openPopup()},'','Offizielle Flugtafel');
  });
  filterCameraCards();loadedPointLayers.add('airports');
- $('flightmessage').textContent='Zwei offizielle Flugtafeln geladen: BER und Albany. Aktuelle Statusdaten stehen auf den Flughafenseiten.';
+ loadedPointLayers.add('airports');$('flightmessage').textContent='Zwei Flughafen-Standorte mit Kartenpunkten geladen: BER und Albany.';
  setMessage('Flughäfen angezeigt. Öffne einen Eintrag für die offizielle Ankunfts- und Abflugtafel.');
 }
+async function setMapLayerVisible(key,forceVisible=null){
+ const group=pointLayers[key],button=document.querySelector('.map-layer-toggle[data-layer="'+key+'"]');
+ if(!group)return;
+ const visible=forceVisible===null?!map.hasLayer(group):forceVisible;
+ if(!visible){
+  if(map.hasLayer(group))map.removeLayer(group);
+  button?.classList.remove('active');button?.setAttribute('aria-pressed','false');
+  setMessage('Kartenebene ausgeblendet: '+key+'.');return;
+ }
+ if(button)button.disabled=true;
+ try{
+  if(!loadedPointLayers.has(key)){
+   if(['webcams','germany','northsea','usa','harbors'].includes(key))await loadCityCams();
+   else if(key==='radio')await searchRadio({showMap:false,openOverlay:false});
+   else if(key==='autobahn')await loadAutobahn();
+   else if(key==='airports')loadFlights();
+   else if(key==='windy')await loadWindyCams();
+  }
+  if(!loadedPointLayers.has(key)||!group.getLayers().length){
+   button?.classList.remove('active');button?.setAttribute('aria-pressed','false');
+   setMessage(key==='windy'?'Für Windy-Punkte wird ein gültiger persönlicher API-Key benötigt.':'Für diese Ebene sind gerade keine direkt georeferenzierten Punkte verfügbar.');
+   return;
+  }
+  group.addTo(map);button?.classList.add('active');button?.setAttribute('aria-pressed','true');
+  const locations=group.getLayers().map(layer=>layer.getLatLng?.()).filter(Boolean);
+  if(locations.length>1)map.fitBounds(L.latLngBounds(locations).pad(.08),{maxZoom:key==='radio'?5:10});
+  else if(locations.length===1)map.setView(locations[0],Math.max(map.getZoom(),8));
+  setMessage(locations.length+' Kartenpunkte eingeblendet: '+key+'. Du kannst weitere Ebenen dazuschalten.');
+ }catch(error){setMessage('Ebene konnte nicht geladen werden: '+error.message);}
+ finally{if(button)button.disabled=false;}
+}
+document.querySelectorAll('.map-layer-toggle').forEach(button=>{
+ button.addEventListener('click',()=>setMapLayerVisible(button.dataset.layer));
+});
 function openFlightRadar(){
  const url='https://globe.adsbexchange.com/?lat=44.18&lon=-75.93&zoom=8';
  openCameraView({name:'Live-Flugradar · Thousand Islands',place:'La Fargeville / Watertown / Thousand Islands',url,embedUrl:url,source:'ADS-B Exchange · öffentliche ADS-B-Livekarte'});
