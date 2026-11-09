@@ -97,13 +97,16 @@ def autobahn_webcams():
         response = requests.get(
             f"{AUTOBAHN_BASE}/{road}/services/webcam",
             headers={"Accept": "application/json", "User-Agent": "ATLAS-LIVE/1.0"},
-            timeout=(3, 6),
+            timeout=(4, 12),
         )
+        if response.status_code == 204:
+            return []
         response.raise_for_status()
         payload = response.json()
-        return payload.get("webcam", []) if isinstance(payload, dict) else []
+        webcams = payload.get("webcam", []) if isinstance(payload, dict) else []
+        return webcams if isinstance(webcams, list) else []
 
-    with ThreadPoolExecutor(max_workers=32) as pool:
+    with ThreadPoolExecutor(max_workers=10) as pool:
         futures = [pool.submit(fetch_road, road) for road in roads]
         for future in as_completed(futures):
             try:
@@ -111,6 +114,12 @@ def autobahn_webcams():
             except Exception:
                 failed += 1
 
+    webcams = [
+        camera for camera in webcams
+        if isinstance(camera, dict)
+        and str(camera.get("isBlocked", "false")).lower() != "true"
+        and camera.get("future") is not True
+    ]
     result = {
         "webcam": webcams,
         "checked": len(roads),
