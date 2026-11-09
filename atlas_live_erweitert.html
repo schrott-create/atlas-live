@@ -191,32 +191,36 @@ async function loadFintraffic(){
 $('fintraffic').onclick=loadFintraffic;
 
 async function loadAutobahn(){
- const abBase='/api/autobahn';
+ const button=$('autobahn');
+ button.disabled=true;
  abClearMarkers();$('autobahnList').innerHTML='';
- abSetMessage('Lade Liste der Autobahnen …');
+ abSetMessage('Prüfe die offiziellen Autobahn-Kameradaten …');
  try{
-  const roadsData=await fetchJsonSafe(abBase+'/roads');
-  const roads=(roadsData.roads||[]);
-  if(!roads.length)throw new Error('Keine Autobahnen in der Antwort gefunden.');
-  const b=map.getBounds();
-  let found=[],ok=0;
-  const chunk=8;
-  for(let i=0;i<roads.length;i+=chunk){
-   abSetMessage('Lade Webcams … ('+i+'/'+roads.length+' Autobahnen)');
-   const batch=roads.slice(i,i+chunk);
-   const results=await Promise.allSettled(batch.map(r=>fetchJsonSafe(abBase+'/'+encodeURIComponent(r)+'/services/webcam').then(d=>normalizeAutobahn(d,r))));
-   results.forEach(r=>{if(r.status==='fulfilled'){found=found.concat(r.value);ok++}});
-  }
-  if(!ok)throw new Error('Keine Autobahn konnte abgefragt werden. Die API ist evtl. gerade nicht erreichbar.');
-  // Autobahnkameras liegen in Deutschland. Beim Laden automatisch dorthin zoomen,
-  // damit ein vorheriger Finnland-Kartenausschnitt nicht alle deutschen Kameras ausblendet.
+  const data=await fetchJsonSafe('/api/autobahn/webcams');
+  const raw=Array.isArray(data.webcam)?data.webcam:[];
+  const found=raw.map(c=>{
+   const lat=Number(val(c,'coordinate.lat','lat','latitude'));
+   const lon=Number(val(c,'coordinate.long','coordinate.lon','lon','long','longitude'));
+   return {...c,_lat:lat,_lon:lon,
+    _road:val(c,'roadId','road','road_id')||'Deutschland',
+    _name:val(c,'title','description','subtitle','identifier')||'Autobahn-Kamera',
+    _image:val(c,'imageurl','imageUrl','image','img','picture'),
+    _url:val(c,'linkurl','url','link','href','detailsUrl')};
+  }).filter(c=>Number.isFinite(c._lat)&&Number.isFinite(c._lon)&&Math.abs(c._lat)<=90&&Math.abs(c._lon)<=180);
   if(found.length){
    const germanyBounds=L.latLngBounds(found.map(c=>[c._lat,c._lon]));
    map.fitBounds(germanyBounds.pad(0.06),{maxZoom:7});
+   renderAutobahn(found);
+   abSetMessage(found.length+' Autobahn-Kameras gefunden. Klicke links auf eine Kamera.');
+  }else{
+   $('autobahnList').innerHTML='<div class="empty">Die offizielle Autobahn-API liefert im Moment keine Kameras. Das ist kein Fehler beim Laden von ATLAS LIVE.</div>';
+   abSetMessage('Prüfung abgeschlossen: '+data.checked+' Straßen geprüft, aber 0 Kameras von der offiziellen API erhalten.'+(data.failed?' ('+data.failed+' Abfragen fehlgeschlagen.)':''));
   }
-  renderAutobahn(found);
-  abSetMessage(found.length+' Autobahn-Kameras geladen ('+ok+'/'+roads.length+' Straßen erfolgreich abgefragt). Klicke links auf eine Kamera.');
- }catch(e){abSetMessage('Autobahn-Kameras gerade nicht ladbar: '+e.message);}
+ }catch(e){
+  abSetMessage('Autobahn-Daten konnten nicht geladen werden: '+e.message+'. Bitte später erneut versuchen.');
+ }finally{
+  button.disabled=false;
+ }
 }
 $('autobahn').onclick=loadAutobahn;
 // Key-freie Autobahnkameras direkt beim Start laden.
