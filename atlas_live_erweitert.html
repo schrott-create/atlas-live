@@ -150,6 +150,26 @@ footer{padding:10px 16px;border-top:1px solid var(--line);font-size:10px;color:v
 .map-layer-toggle:disabled{opacity:.5;cursor:wait}
 @media(max-width:760px){.layer-picker-grid{grid-template-columns:1fr 1fr}}
 
+
+/* SPACE EXPLORER */
+.space-panel{background:radial-gradient(ellipse at 50% 0%,#18365b 0%,#101a29 58%);color:#eaf4ff}
+.space-hero{padding:20px;border:1px solid #315778;border-radius:14px;background:linear-gradient(120deg,#0b1c31dd,#142b45dd);margin-bottom:14px}
+.space-hero h3{font-size:22px;margin:0 0 6px;color:#e8f7ff}
+.space-hero p,.space-card p{color:#a9bdd2;font-size:12px;line-height:1.5;margin:5px 0}
+.space-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:10px}
+.space-card{background:#0a1524;border:1px solid #2a4561;border-radius:12px;padding:13px;min-width:0}
+.space-card h3{margin:0 0 7px;font-size:14px;color:#c8edff}
+.space-card a,.space-link{display:inline-block;margin:7px 6px 0 0;padding:8px 10px;border:1px solid #3b6b8e;border-radius:8px;color:#d8f3ff;background:#112b42;text-decoration:none;font-size:11px}
+.space-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-top:12px}
+.space-stat{background:#07111e;border:1px solid #29435d;border-radius:8px;padding:8px}
+.space-stat b{display:block;font-size:15px;color:#8ce0ff}.space-stat span{font-size:9px;color:#8fa9c1}
+.space-image-results{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:9px;margin-top:10px}
+.space-image-card{background:#07111e;border:1px solid #29435d;border-radius:9px;overflow:hidden}
+.space-image-card img{width:100%;height:115px;object-fit:cover;display:block}
+.space-image-card strong{display:block;padding:8px;font-size:10px}
+.space-status{font-size:11px;color:#93d9f5;margin-top:8px}
+.space-search{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}.space-search input{flex:1;min-width:160px}
+@media(max-width:600px){.space-stats{grid-template-columns:1fr 1fr}.space-hero h3{font-size:19px}}
 </style>
 </head>
 <body>
@@ -174,6 +194,7 @@ footer{padding:10px 16px;border-top:1px solid var(--line);font-size:10px;color:v
         <button type="button" class="map-layer-toggle" data-layer="radio" aria-pressed="false">📻 Radio</button>
         <button type="button" class="map-layer-toggle" data-layer="airports" aria-pressed="false">✈ Flughäfen</button>
         <button type="button" class="map-layer-toggle" data-layer="windy" aria-pressed="false">🌦 Windy</button>
+        <button type="button" class="map-layer-toggle" data-layer="space" aria-pressed="false">🛰️ ISS / Weltall</button>
       </div>
       <p class="note">Jedes Feld schaltet nur seine eigenen Kartenpunkte ein oder aus. Du kannst mehrere Bereiche gleichzeitig anzeigen.</p>
     </div>
@@ -188,6 +209,7 @@ footer{padding:10px 16px;border-top:1px solid var(--line);font-size:10px;color:v
       <button id="randomCamera" type="button">🎲 Zufallskamera</button>
       <button id="shareAtlas" type="button">↗ ATLAS LIVE teilen</button>
       <button id="openRadio" type="button">🌍 Weltweites Radio</button>
+      <button id="openSpace" type="button">🚀 SPACE EXPLORER</button>
       
       
     </div>
@@ -234,6 +256,42 @@ footer{padding:10px 16px;border-top:1px solid var(--line);font-size:10px;color:v
       </div>
     </section>
   </div>
+
+  <div class="atlas-overlay" id="spaceOverlay" role="dialog" aria-modal="true" aria-label="Space Explorer">
+    <section class="atlas-panel space-panel">
+      <div class="atlas-panel-head"><h2>ATLAS LIVE · SPACE EXPLORER</h2><button id="closeSpace" type="button">Schließen ✕</button></div>
+      <div class="atlas-panel-body">
+        <div class="space-hero">
+          <h3>🌍 Erde. Orbit. Sonnensystem. Weiter.</h3>
+          <p>Weltraum-Dashboard mit aktueller ISS-Position, offiziellen NASA-Livestreams, interaktiven 3D-Missionen und Weltraumbildern. Live-Daten und Simulationen sind deutlich voneinander getrennt.</p>
+          <div class="space-stats">
+            <div class="space-stat"><b id="issAltitude">—</b><span>ISS-HÖHE</span></div>
+            <div class="space-stat"><b id="issVelocity">—</b><span>GESCHWINDIGKEIT</span></div>
+            <div class="space-stat"><b id="issCoords">—</b><span>POSITION · BREITE/LÄNGE</span></div>
+          </div>
+          <div class="space-status" id="issStatus">ISS-Position wird geladen …</div>
+          <button class="space-link" id="focusISS" type="button">🛰️ ISS auf der Weltkarte zeigen</button>
+        </div>
+        <div class="space-grid">
+          <article class="space-card"><h3>🛰️ ISS – Live-Ansicht</h3><p>Offizielle NASA-Seite mit Live-Ansichten der Raumstation. Der Stream kann zeitweise dunkel oder nicht verfügbar sein.</p><a href="https://www.nasa.gov/live/" target="_blank" rel="noopener">NASA Live öffnen ↗</a><a href="https://www.nasa.gov/spot-the-station/" target="_blank" rel="noopener">ISS verfolgen bei NASA ↗</a></article>
+          <article class="space-card"><h3>🌌 Sonnensystem in 3D</h3><p>Planeten, Monde, Asteroiden und Raumsonden mit NASA/JPL-Daten erkunden. Die Darstellung ist eine wissenschaftliche 3D-Simulation, kein Kamerastream.</p><a href="https://eyes.nasa.gov/apps/solar-system/" target="_blank" rel="noopener">NASA Eyes – Sonnensystem ↗</a></article>
+          <article class="space-card"><h3>☄️ Asteroiden & nahe Begegnungen</h3><p>3D-Explorer für erdnahe Asteroiden und ihre Bahnen.</p><a href="https://eyes.nasa.gov/apps/asteroids/" target="_blank" rel="noopener">NASA Eyes – Asteroiden ↗</a></article>
+          <article class="space-card"><h3>🌍 Erde & Satellitenmissionen</h3><p>NASA-Missionen, Erdbeobachtung und globale Umweltmessungen in einer interaktiven 3D-Ansicht.</p><a href="https://eyes.nasa.gov/apps/earth/" target="_blank" rel="noopener">NASA Eyes – Erde ↗</a></article>
+          <article class="space-card"><h3>🔴 Mars & Exoplaneten</h3><p>Erkunde Mars-Missionen, Rover-Erlebnisse und Planetensysteme außerhalb unseres Sonnensystems.</p><a href="https://eyes.nasa.gov/apps/mars/" target="_blank" rel="noopener">NASA Eyes – Mars / Missionen ↗</a><a href="https://eyes.nasa.gov/apps/exo/" target="_blank" rel="noopener">NASA Eyes – Exoplaneten ↗</a></article>
+          <article class="space-card"><h3>📡 Deep Space Network</h3><p>Sieh, welche NASA-Raumsonden gerade mit Antennen auf der Erde kommunizieren.</p><a href="https://eyes.nasa.gov/dsn/dsn.html" target="_blank" rel="noopener">DSN Now öffnen ↗</a></article>
+          <article class="space-card"><h3>🌙 Mond & Planetenoberflächen</h3><p>NASA-Oberflächenkarten und 3D-Erkundungen verschiedener Himmelskörper.</p><a href="https://trek.nasa.gov/" target="_blank" rel="noopener">NASA Solar System Treks ↗</a></article>
+          <article class="space-card"><h3>✨ Bild des Tages</h3><p>Die astronomische Aufnahme des Tages und das NASA-Bildarchiv.</p><a href="https://apod.nasa.gov/apod/astropix.html" target="_blank" rel="noopener">NASA Astronomy Picture of the Day ↗</a><a href="https://images.nasa.gov/" target="_blank" rel="noopener">NASA Bildarchiv ↗</a></article>
+        </div>
+        <article class="space-card" style="margin-top:12px">
+          <h3>🔭 NASA-Bildarchiv durchsuchen</h3>
+          <p>Suche nach Galaxien, Nebeln, Planeten, Raumsonden oder Astronautik. Die Bilder und Beschreibungen stammen aus dem NASA Image and Video Library API.</p>
+          <div class="space-search"><input id="spaceImageQuery" type="search" value="nebula galaxy" placeholder="z. B. Saturn, Mars, nebula …"><button id="spaceImageSearch" type="button">Bilder suchen</button></div>
+          <div id="spaceImageStatus" class="space-status">Noch keine Suche gestartet.</div><div id="spaceImageResults" class="space-image-results"></div>
+        </article>
+        <p class="hub-note" style="margin-top:12px">Quellen: NASA / NASA JPL / NASA Image and Video Library sowie Where the ISS at? (ISS-Bahndaten). Positionen können leicht verzögert sein. NASA-3D-Explorer sind Simulationen mit realen Missionsdaten.</p>
+      </div>
+    </section>
+  </div>
 </main>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
@@ -245,7 +303,7 @@ const mapLayers={
  satellite:L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{attribution:'Tiles &copy; Esri — Source: Esri, Maxar, Earthstar Geographics, and the GIS User Community',maxZoom:19})
 };
 let activeMapStyle='street';mapLayers.street.addTo(map);
-const pointLayers={webcams:L.layerGroup(),germany:L.layerGroup(),northsea:L.layerGroup(),usa:L.layerGroup(),harbors:L.layerGroup(),autobahn:L.layerGroup(),radio:L.layerGroup(),airports:L.layerGroup(),windy:L.layerGroup()};
+const pointLayers={webcams:L.layerGroup(),germany:L.layerGroup(),northsea:L.layerGroup(),usa:L.layerGroup(),harbors:L.layerGroup(),autobahn:L.layerGroup(),radio:L.layerGroup(),airports:L.layerGroup(),windy:L.layerGroup(),space:L.layerGroup()};
 const loadedPointLayers=new Set();
 let flightMarkers=[];
 const $=id=>document.getElementById(id);
@@ -649,6 +707,7 @@ async function setMapLayerVisible(key,forceVisible=null){
    else if(key==='autobahn')await loadAutobahn();
    else if(key==='airports')loadFlights();
    else if(key==='windy')await loadWindyCams();
+   else if(key==='space')await loadSpaceTracker();
   }
   if(!loadedPointLayers.has(key)||!group.getLayers().length){
    button?.classList.remove('active');button?.setAttribute('aria-pressed','false');
@@ -666,6 +725,58 @@ async function setMapLayerVisible(key,forceVisible=null){
 document.querySelectorAll('.map-layer-toggle').forEach(button=>{
  button.addEventListener('click',()=>setMapLayerVisible(button.dataset.layer));
 });
+
+let issMarker=null,issLatest=null,issRefreshTimer=null,issTrail=[];
+async function loadSpaceTracker(){
+ const status=$('issStatus');
+ try{
+  const r=await fetch('https://api.wheretheiss.at/v1/satellites/25544',{headers:{accept:'application/json'},cache:'no-store'});
+  if(!r.ok)throw new Error('HTTP '+r.status);
+  const d=await r.json();
+  const lat=Number(d.latitude),lon=Number(d.longitude),alt=Number(d.altitude),vel=Number(d.velocity);
+  if(!Number.isFinite(lat)||!Number.isFinite(lon)||!Number.isFinite(alt)||!Number.isFinite(vel))throw new Error('Ungültige Positionsdaten');
+  issLatest={lat,lon,alt,vel,timestamp:Number(d.timestamp)||Date.now()/1000};
+  $('issAltitude').textContent=Math.round(alt)+' km';
+  $('issVelocity').textContent=Math.round(vel).toLocaleString('de-DE')+' km/h';
+  $('issCoords').textContent=lat.toFixed(1)+'° / '+lon.toFixed(1)+'°';
+  status.textContent='● Positionsdaten aktuell · '+new Date(issLatest.timestamp*1000).toLocaleTimeString('de-DE')+' · Quelle: Where the ISS at?';
+  if(!issMarker){
+   issMarker=L.circleMarker([lat,lon],{radius:10,color:'#a6edff',weight:3,fillColor:'#168bc2',fillOpacity:1}).bindPopup('<b>🛰️ Internationale Raumstation (ISS)</b><br>Aktuelle Position laut Bahndaten').addTo(pointLayers.space);
+  }else issMarker.setLatLng([lat,lon]);
+  issMarker.setPopupContent('<b>🛰️ Internationale Raumstation (ISS)</b><br>Höhe: '+Math.round(alt)+' km<br>Geschwindigkeit: '+Math.round(vel).toLocaleString('de-DE')+' km/h<br>Position: '+lat.toFixed(3)+'°, '+lon.toFixed(3)+'°');
+  if(!issRefreshTimer)issRefreshTimer=setInterval(()=>{if(map.hasLayer(pointLayers.space))loadSpaceTracker()},10000);
+  loadedPointLayers.add('space');
+ }catch(e){status.textContent='ISS-Positionsdienst gerade nicht erreichbar: '+e.message+'. Bitte später erneut versuchen.';throw e;}
+}
+$('openSpace').onclick=()=>{$('spaceOverlay').classList.add('open');loadSpaceTracker().catch(()=>{});if(!$('spaceImageResults').childElementCount)searchSpaceImages();};
+$('closeSpace').onclick=()=>{$('spaceOverlay').classList.remove('open')};
+$('spaceOverlay').addEventListener('click',e=>{if(e.target===$('spaceOverlay'))$('closeSpace').click()});
+$('focusISS').onclick=()=>{if(issLatest){map.setView([issLatest.lat,issLatest.lon],4);if(!map.hasLayer(pointLayers.space))pointLayers.space.addTo(map);const b=document.querySelector('.map-layer-toggle[data-layer="space"]');b?.classList.add('active');b?.setAttribute('aria-pressed','true');setMessage('ISS-Position auf der Karte angezeigt. Die Position wird alle 10 Sekunden aktualisiert.')}else loadSpaceTracker().then(()=>$('focusISS').click()).catch(()=>{})};
+async function searchSpaceImages(){
+ const q=$('spaceImageQuery').value.trim()||'NASA space';
+ const box=$('spaceImageResults'),status=$('spaceImageStatus'),button=$('spaceImageSearch');
+ button.disabled=true;status.textContent='Suche im NASA-Bildarchiv …';box.innerHTML='';
+ try{
+  const url='https://images-api.nasa.gov/search?q='+encodeURIComponent(q)+'&media_type=image&page_size=12';
+  const r=await fetch(url,{headers:{accept:'application/json'}});
+  if(!r.ok)throw new Error('HTTP '+r.status);
+  const data=await r.json(),items=(data.collection?.items||[]).filter(x=>x.links?.some(l=>l.render==='image')&&x.data?.[0]);
+  items.slice(0,12).forEach(item=>{
+   const d=item.data[0],img=item.links.find(l=>l.render==='image'),card=document.createElement('article');
+   card.className='space-image-card';
+   const image=document.createElement('img');image.loading='lazy';image.src=img.href;image.alt=d.title||'NASA space image';
+   const title=document.createElement('strong');title.textContent=d.title||'NASA-Aufnahme';
+   const link=document.createElement('a');link.href=item.href||'https://images.nasa.gov/';link.target='_blank';link.rel='noopener';link.textContent='Details ↗';link.className='space-link';
+   card.append(image,title,link);box.appendChild(card);
+  });
+  status.textContent=items.length+' passende NASA-Bildtreffer geladen. Bilder können Archivaufnahmen sein, nicht live.';
+  if(!items.length)status.textContent='Keine Bilder gefunden. Versuche einen anderen Suchbegriff.';
+ }catch(e){status.textContent='NASA-Bildarchiv gerade nicht erreichbar: '+e.message;}
+ finally{button.disabled=false;}
+}
+$('spaceImageSearch').onclick=searchSpaceImages;
+$('spaceImageQuery').addEventListener('keydown',e=>{if(e.key==='Enter')searchSpaceImages()});
+
 function openFlightRadar(){
  const url='https://globe.adsbexchange.com/?lat=44.18&lon=-75.93&zoom=8';
  openCameraView({name:'Live-Flugradar · Thousand Islands',place:'La Fargeville / Watertown / Thousand Islands',url,embedUrl:url,source:'ADS-B Exchange · öffentliche ADS-B-Livekarte'});
