@@ -3,7 +3,16 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>ATLAS LIVE</title>
+<title>ATLAS LIVE – Weltweite öffentliche Live-Webcams, Häfen & Schiffe</title>
+<meta name="description" content="ATLAS LIVE: Entdecke öffentliche Live-Webcams aus Städten, Häfen, Küsten, Natur, Verkehr und von Schiffen weltweit. Interaktive Karte, Straßensuche und kostenlose Kamera-Explorer-App.">
+<meta name="keywords" content="Live Webcams, Weltkarte, öffentliche Kameras, Hafen Webcam, Schiffs Webcam, Windy Webcams, Straßenkamera, Wetterkamera, ATLAS LIVE">
+<meta name="robots" content="index,follow,max-image-preview:large">
+<meta name="theme-color" content="#080d16">
+<meta property="og:type" content="website">
+<meta property="og:title" content="ATLAS LIVE – Weltweite Live-Webcams">
+<meta property="og:description" content="Öffentliche Webcams weltweit entdecken: Städte, Häfen, Schiffe, Küsten, Wetter und Verkehr.">
+<meta name="twitter:card" content="summary">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"WebApplication","name":"ATLAS LIVE","applicationCategory":"TravelApplication","operatingSystem":"Any","isAccessibleForFree":true,"description":"Kostenloser Explorer für öffentliche Live-Webcams, Karten, Häfen, Schiffe und Wetterkameras."}</script>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <style>
 :root{color-scheme:dark;--bg:#080d16;--panel:#111a29;--line:#26354a;--muted:#8fa2bb;--cyan:#58c7e8;--green:#48d6a0}
@@ -49,6 +58,38 @@ footer{padding:10px 16px;border-top:1px solid var(--line);font-size:10px;color:v
 @media(max-width:520px){.camviewer{padding:6px}.camviewhead{flex-wrap:wrap}.camviewhead strong{flex-basis:100%}.camviewhead button{flex:1}.camera{grid-template-columns:60px minmax(0,1fr) 28px}.thumb{width:60px;height:54px}}
 .camviewer{display:none;position:fixed;inset:0;z-index:2000;background:#050a12ee;padding:18px;align-items:center;justify-content:center}.camviewer.open{display:flex}.camviewerbox{width:min(1100px,100%);height:min(760px,94vh);background:#111a29;border:1px solid #35516c;border-radius:14px;display:flex;flex-direction:column;overflow:hidden}.camviewhead{display:flex;align-items:center;gap:10px;padding:10px 14px;border-bottom:1px solid var(--line)}.camviewhead strong{flex:1}.camviewhead button{width:auto;padding:8px 12px}.camframe{border:0;width:100%;height:100%;min-height:0;background:#050a12}.camviewfoot{padding:9px 14px;border-top:1px solid var(--line);font-size:11px;color:var(--muted)}.camviewfoot a{color:var(--cyan)}
 @media(max-width:760px){main{grid-template-columns:1fr;grid-template-rows:42vh 1fr;height:auto;min-height:calc(100vh - 64px)}aside{grid-row:2;min-height:420px;border-right:0} .mapwrap{grid-row:1}#map{height:42vh}.status{display:none}}
+
+/* ATLAS LIVE Discovery Hub, Live-Wall und Ideen-Roadmap */
+.hub-actions{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:10px}
+.hub-actions button{font-size:11px;padding:9px 7px}
+.atlas-overlay{display:none;position:fixed;inset:0;z-index:2600;background:#030812ee;padding:14px;overflow:auto;align-items:flex-start;justify-content:center}
+.atlas-overlay.open{display:flex}
+.atlas-panel{width:min(1180px,100%);max-height:calc(100vh - 28px);overflow:auto;margin:auto;background:#101a29;border:1px solid #34516d;border-radius:16px;box-shadow:0 25px 90px #000c}
+.atlas-panel-head{position:sticky;top:0;z-index:2;background:#101a29ed;backdrop-filter:blur(10px);padding:14px 16px;border-bottom:1px solid #2a3d54;display:flex;align-items:center;gap:10px}
+.atlas-panel-head h2{font-size:17px;margin:0;flex:1}
+.atlas-panel-head button{width:auto;padding:8px 12px}
+.atlas-panel-body{padding:16px}
+.roadmap-tools{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+.roadmap-tools input,.roadmap-tools select{flex:1;min-width:180px}
+.roadmap-group{margin:18px 0}
+.roadmap-group h3{font-size:13px;letter-spacing:.8px;color:#8edcf0;margin:0 0 9px}
+.roadmap-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:8px}
+.roadmap-card{border:1px solid #2a3d54;background:#0b1422;border-radius:10px;padding:11px;min-height:90px}
+.roadmap-card strong{display:block;font-size:12px;margin-bottom:5px}
+.roadmap-card p{margin:0;color:#9fb0c5;font-size:11px;line-height:1.45}
+.roadmap-meta{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:9px}
+.roadmap-status{font-size:9px;color:#9fd8b8;border:1px solid #315a4a;border-radius:20px;padding:3px 7px}
+.roadmap-status.idea{color:#b7c4d5;border-color:#3b4b61}
+.roadmap-save{width:auto;padding:4px 8px;font-size:10px}
+.wall-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.wall-grid[data-count="9"],.wall-grid[data-count="16"]{grid-template-columns:repeat(3,minmax(0,1fr))}
+.wall-tile{background:#050a12;border:1px solid #30445b;border-radius:10px;overflow:hidden;min-width:0}
+.wall-tile iframe{display:block;width:100%;height:210px;border:0;background:#050a12}
+.wall-tile div{padding:7px 9px;font-size:10px;color:#b7c7da;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.wall-empty{padding:24px;border:1px dashed #3b536d;border-radius:12px;color:#a9bbd0;font-size:13px}
+.hub-note{font-size:11px;color:#93a8c0;line-height:1.5;margin:0 0 12px}
+@media(max-width:680px){.wall-grid,.wall-grid[data-count="9"],.wall-grid[data-count="16"]{grid-template-columns:1fr}.wall-tile iframe{height:220px}.atlas-panel-head h2{font-size:14px}}
+
 </style>
 </head>
 <body>
@@ -82,6 +123,13 @@ footer{padding:10px 16px;border-top:1px solid var(--line);font-size:10px;color:v
     <input id="windyKey" type="password" autocomplete="off" placeholder="Optionaler persönlicher Windy-API-Key">
     <div class="row"><button id="windyLoad" type="button">Windy-Kameras im Kartenausschnitt laden</button><button id="windyOpen" type="button">Windy-Karte öffnen ↗</button></div>
     <p class="note" id="windyMessage">Mit einem eigenen Windy-Webcams-API-Key erscheinen echte Windy-Kameras als Marker mit Vorschaubild. Der Schlüssel wird nicht gespeichert und bleibt nur bis zum Neuladen in diesem Tab.</p>
+    <div class="hub-actions">
+      <button id="openWall" type="button">▦ Live-Wall öffnen</button>
+      <button id="randomCamera" type="button">🎲 Zufallskamera</button>
+      <button id="openRoadmap" type="button">🚀 80 Ausbauideen</button>
+      <button id="shareAtlas" type="button">↗ ATLAS LIVE teilen</button>
+    </div>
+    <p class="note">Live-Wall zeigt nur Quellen mit hinterlegtem Einbettungslink. Die Roadmap trennt vorhandene Funktionen von geplanten Ideen.</p>
   </section>
   <div class="listhead"><span>Quellen & Kameras</span><span id="count">0</span></div>
   <div class="listupdated" id="listUpdated">Noch nicht geladen</div>
@@ -93,6 +141,26 @@ footer{padding:10px 16px;border-top:1px solid var(--line);font-size:10px;color:v
 </aside>
 <div class="mapwrap"><div class="mapbadge">THOUSAND ISLANDS · LA FARGEVILLE-REGION</div><div id="map"></div></div>
 <div class="camviewer" id="camviewer" role="dialog" aria-modal="true"><div class="camviewerbox"><div class="camviewhead"><strong id="camviewtitle">Kamera</strong><button id="camviewopen" type="button">Beim Betreiber öffnen ↗</button><button id="camviewclose" type="button">Schließen ✕</button></div><iframe class="camframe" id="camframe" title="Öffentliche Live-Kamera" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe><div class="camviewfoot" id="camviewnote">Wenn der Anbieter das Einbetten blockiert, nutze „Beim Betreiber öffnen“.</div></div></div>
+  <div class="atlas-overlay" id="roadmapOverlay" role="dialog" aria-modal="true" aria-label="ATLAS LIVE Ausbauideen">
+    <section class="atlas-panel">
+      <div class="atlas-panel-head"><h2>ATLAS LIVE · 80 Ausbauideen</h2><button id="closeRoadmap" type="button">Schließen ✕</button></div>
+      <div class="atlas-panel-body">
+        <p class="hub-note">Die Liste enthält die 30 zuvor besprochenen Ideen und 50 zusätzliche Vorschläge. „Vorhanden/teilweise“ bedeutet, dass es dafür bereits eine Basis in der App gibt. „Idee“ bedeutet: noch nicht fertig eingebaut.</p>
+        <div class="roadmap-tools"><input id="roadmapSearch" type="search" placeholder="Idee suchen …"><select id="roadmapFilter"><option value="all">Alle 80 Ideen</option><option value="active">Vorhanden / teilweise</option><option value="idea">Noch geplant</option></select></div>
+        <div id="roadmapContent"></div>
+      </div>
+    </section>
+  </div>
+  <div class="atlas-overlay" id="wallOverlay" role="dialog" aria-modal="true" aria-label="Kamera Live-Wall">
+    <section class="atlas-panel">
+      <div class="atlas-panel-head"><h2>ATLAS LIVE · Kamera-Wand</h2><button id="closeWall" type="button">Schließen ✕</button></div>
+      <div class="atlas-panel-body">
+        <p class="hub-note">Hier erscheinen nur Quellen mit einem hinterlegten Einbettungslink. Manche Anbieter blockieren externe Player oder sind zeitweise offline. Öffentliche Originalseiten bleiben über die normale Kameraliste erreichbar.</p>
+        <div class="roadmap-tools"><label for="wallCount" style="align-self:center;color:#9fb0c5">Kacheln</label><select id="wallCount"><option value="4">4 Kameras</option><option value="9">9 Kameras</option><option value="16">16 Kameras</option></select><button id="refreshWall" type="button" style="width:auto">Neu mischen</button></div>
+        <div id="wallGrid" class="wall-grid" data-count="4"></div>
+      </div>
+    </section>
+  </div>
 </main>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
@@ -328,6 +396,74 @@ async function loadWindyCams(){
 }
 $('windyLoad').onclick=loadWindyCams;
 $('windyOpen').onclick=()=>openCameraView({name:'Windy · weltweite Webcam-Karte',url:'https://www.windy.com/webcams',embedUrl:'https://www.windy.com/webcams',source:'Windy · offizielle Webcam-Karte'});
+const roadmapPrevious=[["Weltkarte mit Kamerapunkten auf allen Kontinenten","Öffentliche Kameraquellen auf einer globalen Übersicht bündeln."],["Länder-Auswahl mit eigener Kameraliste","Nach Land filtern und passende Quellen anzeigen."],["Kontinente als eigene Bereiche","Europa, Asien, Afrika, Amerika und Ozeanien getrennt entdecken."],["Kameras automatisch nach Kartenausschnitt laden","Bei Kartenbewegungen passende Kameras suchen, mit Rücksicht auf Anbieterlimits."],["Kamera-Vorschauen direkt über Markern","Wenn Bildquellen vorhanden sind, kleine Vorschauen zeigen."],["Galerie mit mehreren Kamerabildern","Kameraquellen als übersichtliche Galerie öffnen."],["Vollbildmodus für jede Kamera","Eingebettete Streams größer ansehen."],["Nachtkameras und Stadtlichter","Öffentliche Nacht- und Skyline-Ansichten sammeln."],["Strand- und Meereskameras","Küsten, Strände und Brandung entdecken."],["Suche nach Städten und Sehenswürdigkeiten","Orte finden und dort verfügbare öffentliche Kameras aufrufen."],["Eigener Schiffs-Kamera-Bereich","Bordkameras von Schiffen und Fähren bündeln."],["Bordkameras von Kreuzfahrtschiffen","Öffentliche Reederei-Webcams sammeln."],["Fähren und Fährterminals","Öffentliche Terminal- und Fähransichten zeigen."],["Hafen-Einfahrten und Schleusen","Öffentliche Hafen- und Schleusenkameras sortieren."],["Kanäle und große Schifffahrtswege","Öffentliche Ansichten an Wasserstraßen entdecken."],["Marinas und Segelhäfen","Öffentliche Hafenbecken und Marinas sammeln."],["Küsten- und Leuchtturm-Webcams","Küstenlinien und Leuchttürme erkunden."],["Seen, Flüsse und Wasserfälle","Natur- und Wasser-Webcams bündeln."],["Weltkarte mit Hafen-Webcams","Häfen als eigene Kartenebene anzeigen."],["Öffentliche Schiffspositionen","Offizielle, frei verfügbare Positionsseiten verlinken."],["Favoriten zwischen Geräten synchronisieren","Später mit freiwilligem Konto oder Export/Import."],["Eigene Kamera-Sammlungen mit Symbolen","Persönliche Ordner farblich und mit Symbolen gestalten."],["Persönliche Startseite","Lieblingskameras und zuletzt geöffnete Quellen anzeigen."],["Automatische Aktualisierung von Standbildern","Bilder in sinnvollen Abständen neu laden."],["Zeitpunkt des letzten Kamerabildes","Nur anzeigen, wenn der Anbieter einen Zeitstempel liefert."],["Filter für Livevideo, Standbild und Zeitraffer","Kameratypen genauer auswählen."],["Kamera-Wand mit bis zu 16 Ansichten","Mehrere erlaubte Einbettungen nebeneinander ansehen."],["Zufällige Kamera der Welt","Eine zufällige öffentliche Quelle entdecken."],["Weltzeituhr je Kamera","Ortszeit passend zum Kamerastandort anzeigen."],["Entdeckungsstatistik","Gemerkte Länder und besuchte Kameras lokal zählen."]];
+const roadmapNew=[["Kamerakarte nach Ländern einfärben","Länder mit verfügbaren öffentlichen Quellen hervorheben.","Entdecken"],["Regionen-Favoriten","Ganze Regionen wie Alpen, Ostsee oder Great Lakes merken.","Entdecken"],["Kamera-Radar nach Themen","Häfen, Berge, Städte, Natur und Wetter getrennt durchsuchen.","Entdecken"],["Neu hinzugefügte Quellen","Eine Liste mit neu aufgenommenen, geprüften Links.","Entdecken"],["Quelle melden","Defekte oder umgezogene Links für die nächste Prüfung vormerken.","Community"],["Quellenqualität anzeigen","Direktstream, Standbild, Portal oder externe Seite klar unterscheiden.","Qualität"],["Stream-Verfügbarkeit testen","Nur einen schonenden manuellen Verfügbarkeitstest anbieten.","Qualität"],["Bild-Aktualität kennzeichnen","Live, zeitversetzt oder Standbild klar markieren.","Qualität"],["Anbieter- und Lizenzhinweise","Nutzungsregeln und Bildrechte bei Quellen verlinken.","Qualität"],["Kamera-Duplikate erkennen","Doppelte Links und gleiche Kameras zusammenführen.","Qualität"],["Kamerakarten teilen","Eine Sammlung als Link oder Textdatei exportieren.","Teilen"],["Favoriten exportieren","Persönliche Favoriten als JSON-Datei sichern.","Teilen"],["Favoriten importieren","Gesicherte Favoriten wiederherstellen.","Teilen"],["QR-Code für Kamerasammlung","Eine öffentliche Sammlung schnell auf einem zweiten Gerät öffnen.","Teilen"],["Mehrsprachige Oberfläche","Deutsch, Englisch, Französisch und weitere Sprachen.","Komfort"],["Barrierearme Bedienung","Tastatursteuerung, klare Fokusrahmen und Screenreader-Texte.","Komfort"],["Kompaktmodus","Mehr Kamerakarten auf kleinen Bildschirmen darstellen.","Komfort"],["Kartenstil-Auswahl","Dunkle, helle und Satellitenkarten anbieten, sofern verfügbar.","Karte"],["Karten-Layer verwalten","Kameras, Wetter, Verkehr und Häfen einzeln ein- und ausblenden.","Karte"],["Entfernungsmaßstab","Distanzen auf der Karte verständlicher anzeigen.","Karte"],["Ortszeit und Sonnenaufgang","Lokale Zeitinfos passend zum Kamerastandort anzeigen.","Wetter"],["Wetterdaten neben Kameras","Öffentliche Wetterdaten mit klarer Quelle ergänzen.","Wetter"],["Regenradar-Verknüpfung","Offizielle Radarkarten für ausgewählte Regionen öffnen.","Wetter"],["Wind- und Welleninfos","Öffentliche maritime Wetterdaten ergänzen, wo verfügbar.","Wetter"],["Schneehöhen und Skigebiete","Öffentliche Berg- und Pistenkameras mit Schneeinfos kombinieren.","Natur"],["Nationalparks und Schutzgebiete","Offizielle Besucher- und Landschaftskameras sammeln.","Natur"],["Vulkane und Geothermie","Öffentliche wissenschaftliche Beobachtungskameras verlinken.","Natur"],["Polarlichter und Sternwarten","Öffentliche Himmels- und Sternwarten-Webcams entdecken.","Natur"],["Zug- und Bahnhofs-Webcams","Öffentliche Bahnhofs- und Bahnlandschaftskameras sammeln.","Verkehr"],["Flughafen-Aussichts-Webcams","Öffentliche Flughafen- und Vorfeld-Webcams verlinken.","Verkehr"],["Brücken- und Tunnelkameras","Offizielle Verkehrs-Webcams nach Bauwerk sortieren.","Verkehr"],["Fahrplan-Links bei Häfen","Offizielle Fähr- und Hafenfahrpläne verlinken.","Schiffe"],["Schiffsklassen-Filter","Kreuzfahrt, Fähre, Forschung und Segeln getrennt sortieren.","Schiffe"],["Reederei-Quellenübersicht","Öffentliche Bordkamera-Seiten nach Reederei sammeln.","Schiffe"],["Hafen-Statusseiten","Offizielle Hafeninformationen neben Kameras verlinken.","Schiffe"],["Maritime Begriffe erklären","Kleine Hilfe zu Hafen, Schleuse, Reede und Kai.","Lernen"],["Kamera des Tages","Eine öffentliche Kamera als tägliche Entdeckung hervorheben.","Entdecken"],["Weltreise-Modus","Eine zufällige Route über mehrere öffentliche Kamerastandorte bauen.","Entdecken"],["Kamerapuzzle / Geo-Quiz","Raten, in welchem Land eine freigegebene Landschaftskamera steht.","Lernen"],["Länder-Wissenskarten","Kurze Ortsinfos neben öffentlichen touristischen Kameras.","Lernen"],["Offline-Lesezeichen","Gespeicherte Kameranamen und Links auch ohne Netz ansehen.","Komfort"],["Datenverbrauch-Modus","Vorschaubilder und automatische Player-Starts reduzieren.","Komfort"],["Automatische Player-Pause","Nicht sichtbare Kamera-Kacheln pausieren, wenn technisch möglich.","Komfort"],["Datenschutzfreundliche Einstellungen","Keine Nutzerkonten voraussetzen und lokale Daten erklären.","Privatsphäre"],["Transparenzseite zu Quellen","Erklären, wie Quellen ausgewählt und geprüft werden.","Qualität"],["Öffentliche Änderungsnotizen","Neue Quellen und App-Verbesserungen dokumentieren.","Community"],["Feedback ohne Konto","Einfaches Feedbackformular ohne persönliche Daten.","Community"],["Open-Source-Quellenliste","Kamera-Verzeichnis als nachvollziehbare Datei veröffentlichen.","Community"],["Automatische Link-Prüfliste","Manuelle Prüfaufgaben für Betreiberlinks verwalten.","Qualität"],["Startseite mit Schnellzugriffen","Weltkarte, ShipCam, Windy und Favoriten direkt erreichbar machen.","Komfort"]];
+const roadmapSavedKey='atlas-live-roadmap-saved-v1';
+let roadmapSaved=new Set();try{roadmapSaved=new Set(JSON.parse(localStorage.getItem(roadmapSavedKey)||'[]'))}catch{}
+function renderRoadmap(){
+ const q=($('roadmapSearch').value||'').trim().toLocaleLowerCase('de'),filter=$('roadmapFilter').value,root=$('roadmapContent');root.innerHTML='';
+ const groups=[{title:'30 bisherige Ausbauideen',items:roadmapPrevious,offset:0},{title:'50 neue Ideen',items:roadmapNew,offset:30}];
+ groups.forEach(group=>{
+  const wrap=document.createElement('section');wrap.className='roadmap-group';const h=document.createElement('h3');h.textContent=group.title;wrap.appendChild(h);
+  const grid=document.createElement('div');grid.className='roadmap-grid';
+  group.items.forEach((item,i)=>{
+   const n=group.offset+i,key='roadmap-'+n,active=[2,4,5,6,9,10,11,12,13,14,17,18,19,20,21,22,23,24,25,26,27,28,29].includes(n);
+   const status=active?'Vorhanden / teilweise':'Idee';
+   if(filter==='active'&&!active||filter==='idea'&&active||q&&!((item[0]+' '+item[1]+' '+(item[2]||'')).toLocaleLowerCase('de').includes(q)))return;
+   const card=document.createElement('article');card.className='roadmap-card';
+   const title=document.createElement('strong');title.textContent=(n+1)+'. '+item[0];
+   const desc=document.createElement('p');desc.textContent=item[1];
+   const meta=document.createElement('div');meta.className='roadmap-meta';
+   const badge=document.createElement('span');badge.className='roadmap-status'+(active?'':' idea');badge.textContent=status;
+   const save=document.createElement('button');save.className='roadmap-save';save.type='button';save.textContent=roadmapSaved.has(key)?'★ Gemerkt':'☆ Merken';
+   save.onclick=()=>{if(roadmapSaved.has(key))roadmapSaved.delete(key);else roadmapSaved.add(key);try{localStorage.setItem(roadmapSavedKey,JSON.stringify([...roadmapSaved]))}catch{}save.textContent=roadmapSaved.has(key)?'★ Gemerkt':'☆ Merken'};
+   meta.append(badge,save);card.append(title,desc,meta);grid.appendChild(card);
+  });
+  if(grid.children.length){wrap.appendChild(grid);root.appendChild(wrap)}
+ });
+}
+function openOverlay(id){$(id).classList.add('open')}
+function closeOverlay(id){$(id).classList.remove('open')}
+$('openRoadmap').onclick=()=>{renderRoadmap();openOverlay('roadmapOverlay')};
+$('closeRoadmap').onclick=()=>closeOverlay('roadmapOverlay');
+$('roadmapSearch').addEventListener('input',renderRoadmap);$('roadmapFilter').addEventListener('change',renderRoadmap);
+$('roadmapOverlay').addEventListener('click',e=>{if(e.target===$('roadmapOverlay'))closeOverlay('roadmapOverlay')});
+$('openWall').onclick=()=>{buildWall();openOverlay('wallOverlay')};
+$('closeWall').onclick=()=>closeOverlay('wallOverlay');
+$('wallOverlay').addEventListener('click',e=>{if(e.target===$('wallOverlay'))closeOverlay('wallOverlay')});
+function getEmbeddableSources(){
+ const all=[...citySources,...regionalSources,...worldSources],seen=new Set();
+ return all.filter(c=>{const k=c.name+'|'+(c.embedUrl||'');if(!c.embedUrl||seen.has(k))return false;seen.add(k);return true});
+}
+function buildWall(){
+ const grid=$('wallGrid'),count=Number($('wallCount').value)||4,all=getEmbeddableSources();
+ grid.innerHTML='';grid.dataset.count=String(count);
+ if(!all.length){grid.innerHTML='<div class="wall-empty">Aktuell sind keine bestätigten Einbettungslinks in der Quellenliste vorhanden. Lade zuerst öffentliche Kameras oder nutze die normale Kameraliste.</div>';return;}
+ const shuffled=[...all].sort(()=>Math.random()-.5).slice(0,count);
+ shuffled.forEach(c=>{
+  const tile=document.createElement('article');tile.className='wall-tile';
+  const frame=document.createElement('iframe');frame.src=c.embedUrl;frame.title=c.name;frame.loading='lazy';frame.allow='autoplay; encrypted-media; picture-in-picture; fullscreen';frame.allowFullscreen=true;frame.referrerPolicy='strict-origin-when-cross-origin';
+  const label=document.createElement('div');label.textContent=c.name+' · '+c.place;
+  tile.append(frame,label);grid.appendChild(tile);
+ });
+ if(all.length<count){const note=document.createElement('div');note.className='wall-empty';note.textContent='Es gibt derzeit '+all.length+' Quellen mit hinterlegtem Player-Link. Die übrigen Kacheln bleiben frei, bis weitere echte Einbettungslinks geprüft sind.';grid.appendChild(note);}
+}
+$('wallCount').onchange=buildWall;$('refreshWall').onclick=buildWall;
+$('randomCamera').onclick=()=>{
+ const all=[...citySources,...regionalSources,...worldSources],pick=all[Math.floor(Math.random()*all.length)];
+ if(!pick){setMessage('Keine Kameradaten geladen.');return;}
+ if(pick.local!==false&&Number.isFinite(pick.lat)&&Number.isFinite(pick.lon))map.setView([pick.lat,pick.lon],Math.max(map.getZoom(),7));
+ openCameraView(pick);setMessage('Zufallskamera: '+pick.name);
+};
+$('shareAtlas').onclick=async()=>{
+ const c=map.getCenter(),url=new URL(window.location.href);url.hash='map='+c.lat.toFixed(5)+','+c.lng.toFixed(5)+','+map.getZoom();
+ try{if(navigator.share){await navigator.share({title:'ATLAS LIVE',text:'Öffentliche Live-Webcams weltweit entdecken',url:url.toString()});}
+ else if(navigator.clipboard?.writeText){await navigator.clipboard.writeText(url.toString());setMessage('Kartenlink wurde kopiert.');}
+ else{window.prompt('Diesen ATLAS-LIVE-Link kopieren:',url.toString());}}
+ catch(e){if(e.name!=='AbortError')setMessage('Teilen war in diesem Browser nicht möglich.');}
+};
+window.addEventListener('keydown',e=>{if(e.key==='Escape'){closeOverlay('roadmapOverlay');closeOverlay('wallOverlay')}});
+
 function openCameraView(camera){
  if(!camera.embedUrl){window.open(camera.url,'_blank','noopener');setMessage('Diese Quelle öffnet sich direkt beim Betreiber; ein eingebetteter Videostream ist nicht bestätigt.');return;}
  const frame=$('camframe'),viewer=$('camviewer');
