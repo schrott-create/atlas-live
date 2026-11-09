@@ -149,6 +149,77 @@ def autobahn_data(road=None):
         content_type=response.headers.get("Content-Type", "application/json"),
     )
 
+
+@app.route("/api/radio/stations")
+def radio_stations():
+    """Search the public Radio Browser directory; only return secure HTTPS streams."""
+    name = request.args.get("name", "").strip()[:80]
+    country = request.args.get("country", "").strip()[:80]
+    tag = request.args.get("tag", "").strip()[:50]
+    try:
+        limit = max(1, min(int(request.args.get("limit", "24")), 40))
+    except ValueError:
+        return jsonify({"error": "Ungültiges Ergebnislimit."}), 400
+
+    params = {"limit": limit, "hidebroken": "true", "order": "votes", "reverse": "true"}
+    if name:
+        params["name"] = name
+    if country:
+        params["country"] = country
+    if tag:
+        params["tag"] = tag
+    try:
+        response = requests.get(
+            "https://de1.api.radio-browser.info/json/stations/search",
+            params=params,
+            headers={"Accept": "application/json", "User-Agent": "ATLAS-LIVE/1.0 (world radio directory)"},
+            timeout=(4, 12),
+        )
+        response.raise_for_status()
+        payload = response.json()
+        if not isinstance(payload, list):
+            raise ValueError("Unexpected Radio Browser response")
+    except (requests.RequestException, ValueError):
+        return jsonify({"error": "Das weltweite Radio-Verzeichnis ist gerade nicht erreichbar."}), 502
+
+    stations = []
+    for station in payload:
+        if not isinstance(station, dict) or station.get("lastcheckok") != 1:
+            continue
+        stream = station.get("url_resolved") or station.get("url") or ""
+        if not isinstance(stream, str) or not stream.lower().startswith("https://"):
+            continue
+        stations.append({
+            "stationuuid": station.get("stationuuid", ""),
+            "name": str(station.get("name") or "Unbekannter Sender")[:160],
+            "country": str(station.get("country") or "")[:80],
+            "countrycode": str(station.get("countrycode") or "")[:2],
+            "language": str(station.get("language") or "")[:100],
+            "tags": str(station.get("tags") or "")[:180],
+            "codec": str(station.get("codec") or "")[:30],
+            "bitrate": station.get("bitrate") if isinstance(station.get("bitrate"), int) else 0,
+            "homepage": station.get("homepage") if str(station.get("homepage") or "").startswith("https://") else "",
+            "stream": stream,
+        })
+    return jsonify({"stations": stations, "count": len(stations), "source": "Radio Browser"})
+
+
+@app.route("/api/radio/click/<station_uuid>")
+def radio_station_click(station_uuid):
+    """Notify Radio Browser when a directory station is played."""
+    if not re.fullmatch(r"[0-9a-fA-F-]{36}", station_uuid):
+        abort(400)
+    try:
+        response = requests.get(
+            "https://de1.api.radio-browser.info/json/url/" + station_uuid,
+            headers={"Accept": "application/json", "User-Agent": "ATLAS-LIVE/1.0 (world radio directory)"},
+            timeout=(3, 8),
+        )
+        response.raise_for_status()
+    except requests.RequestException:
+        return jsonify({"error": "Sender-Aufruf konnte nicht registriert werden."}), 502
+    return jsonify({"ok": True})
+
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", "10000"))
     app.run(host="0.0.0.0", port=port)
