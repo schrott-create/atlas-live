@@ -199,7 +199,7 @@ async function fetchJsonSafe(url,timeoutMs=12000){
 }
 function addCameraCard(container,name,meta,onClick,image='',tag='Quelle'){
  const el=document.createElement('div');el.className='camera';
- const id=String(name).toLocaleLowerCase('de').replace(/[^a-z0-9]+/g,'-');
+ const baseId=String(name).toLocaleLowerCase('de').replace(/[^a-z0-9]+/g,'-');let id=baseId,suffix=2;while([...container.querySelectorAll('.camera')].some(card=>card.dataset.id===id))id=baseId+'-'+suffix++;
  el.dataset.id=id;el.dataset.category=cameraCategory(tag,meta);el.dataset.search=(name+' '+meta+' '+tag).toLocaleLowerCase('de');
  const img=document.createElement('img');img.className='thumb';img.alt='';
  if(image){img.src=image;img.onerror=()=>{img.style.visibility='hidden'};}else{img.style.visibility='hidden';}
