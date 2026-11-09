@@ -339,7 +339,7 @@ const mapLayers={
  satellite:L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{attribution:'Tiles &copy; Esri — Source: Esri, Maxar, Earthstar Geographics, and the GIS User Community',maxZoom:19})
 };
 let activeMapStyle='street';mapLayers.street.addTo(map);
-const pointLayers={webcams:L.layerGroup(),germany:L.layerGroup(),northsea:L.layerGroup(),usa:L.layerGroup(),harbors:L.layerGroup(),autobahn:L.layerGroup(),radio:L.layerGroup(),airports:L.layerGroup(),windy:L.layerGroup(),space:L.layerGroup(),sights:L.layerGroup(),nature:L.layerGroup()};
+const pointLayers={webcams:L.layerGroup(),germany:L.layerGroup(),northsea:L.layerGroup(),usa:L.layerGroup(),harbors:L.layerGroup(),autobahn:L.layerGroup(),radio:L.layerGroup(),airports:L.layerGroup(),windy:L.layerGroup(),space:L.layerGroup(),sights:L.layerGroup(),nature:L.layerGroup(),countryPOIs:L.layerGroup()};
 const loadedPointLayers=new Set();
 let flightMarkers=[];
 const $=id=>document.getElementById(id);
@@ -352,32 +352,107 @@ function pointInPolygon(point,poly){if(!poly?.length||!pointInRing(point,poly[0]
 function featureContainsPoint(feature,latlng){const g=feature.geometry;if(!g)return false;const p=[latlng.lng,latlng.lat];if(g.type==='Polygon')return pointInPolygon(p,g.coordinates);if(g.type==='MultiPolygon')return g.coordinates.some(poly=>pointInPolygon(p,poly));return false;}
 function countryForPoint(latlng){return countryFeatures.find(f=>featureContainsPoint(f,latlng))?.__country||null;}
 function applyCountryFilter(){if(!countryDataReady)return;const filtering=selectedCountries.size!==countryFeatures.length;Object.values(pointLayers).forEach(group=>group.eachLayer(layer=>{const ll=layer.getLatLng?.();if(!ll)return;if(!layer.__countryBaseStyle&&layer.options)layer.__countryBaseStyle={opacity:layer.options.opacity??1,fillOpacity:layer.options.fillOpacity??.9};if(layer.__countryBaseOpacity===undefined)layer.__countryBaseOpacity=1;const country=filtering?countryForPoint(ll):null,show=!filtering||(!!country&&selectedCountries.has(country));if(layer.setStyle){const base=layer.__countryBaseStyle||{opacity:1,fillOpacity:.9};layer.setStyle(show?base:{opacity:0,fillOpacity:0});}if(layer.setOpacity)layer.setOpacity(show?layer.__countryBaseOpacity:0);layer.options.interactive=show;}));try{localStorage.setItem('atlas-live-selected-countries-v1',JSON.stringify([...selectedCountries]));}catch{}const label=selectedCountries.size===countryFeatures.length?'Alle Länder':selectedCountries.size+' Länder';$('countrySelectedLabel').textContent=label;$('countryStatus').textContent=filtering?(selectedCountries.size+' von '+countryFeatures.length+' Ländern ausgewählt. Kartenpunkte außerhalb der Auswahl werden ausgeblendet.'):'Alle '+countryFeatures.length+' Länder ausgewählt. Alle passenden Kartenpunkte sind sichtbar.';}
+let countryExploreRun=0;
+const countryOSMCache=new Map();
+function countryPoiCategory(tags){
+ if(tags.aeroway==='aerodrome')return 'Flughafen';
+ if(tags.tourism==='museum')return 'Museum';
+ if(tags.tourism==='zoo')return 'Zoo';
+ if(tags.tourism==='viewpoint')return 'Aussichtspunkt';
+ if(tags.tourism==='attraction')return 'Sehenswürdigkeit';
+ if(tags.historic)return 'Historischer Ort';
+ if(tags.natural==='peak')return 'Berg / Gipfel';
+ if(tags.natural==='volcano')return 'Vulkan';
+ if(tags.natural==='waterfall')return 'Wasserfall';
+ if(tags.natural==='glacier')return 'Gletscher';
+ if(tags.natural==='cave')return 'Höhle';
+ if(tags.leisure==='nature_reserve')return 'Naturschutzgebiet';
+ if(tags.leisure==='park')return 'Park';
+ if(tags.man_made==='lighthouse')return 'Leuchtturm';
+ return tags.tourism||tags.natural||tags.leisure||'Ort';
+}
+async function fetchCountryOSMPlaces(feature){
+ const iso=String(feature.__iso2||'').toUpperCase();
+ if(!/^[A-Z]{2}$/.test(iso))return [];
+ if(countryOSMCache.has(iso))return countryOSMCache.get(iso);
+ const query='[out:json][timeout:25];area["ISO3166-1"="'+iso+'"]["admin_level"="2"]->.country;(nwr["tourism"~"attraction|museum|zoo|viewpoint|gallery|theme_park"](area.country);nwr["historic"~"castle|monument|archaeological_site|fort|ruins|memorial"](area.country);nwr["natural"~"peak|volcano|waterfall|cave|glacier|hot_spring|beach"](area.country);nwr["leisure"~"nature_reserve|park"](area.country);nwr["aeroway"="aerodrome"](area.country);nwr["man_made"="lighthouse"](area.country););out center tags 100;';
+ const endpoints=['https://overpass-api.de/api/interpreter','https://overpass.kumi.systems/api/interpreter'];
+ let lastError=null;
+ for(const endpoint of endpoints){
+  try{
+   const response=await fetch(endpoint,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded;charset=UTF-8','Accept':'application/json'},body:new URLSearchParams({data:query}).toString()});
+   if(!response.ok)throw new Error('Overpass HTTP '+response.status);
+   const data=await response.json();
+   const places=(data.elements||[]).map(el=>{const tags=el.tags||{},lat=Number(el.lat??el.center?.lat),lon=Number(el.lon??el.center?.lon),name=tags.name||tags['name:en']||tags['name:de']||tags.operator||tags.ref;if(!name||!Number.isFinite(lat)||!Number.isFinite(lon))return null;return {id:el.id,type:el.type,name,lat,lon,tags,category:countryPoiCategory(tags),url:'https://www.openstreetmap.org/'+el.type+'/'+el.id};}).filter(Boolean);
+   countryOSMCache.set(iso,places);return places;
+  }catch(error){lastError=error;}
+ }
+ throw lastError||new Error('OpenStreetMap ist gerade nicht erreichbar');
+}
 async function loadCountryExplorer(){
- const panel=$('countryExplore');if(!panel)return;
+ const run=++countryExploreRun,panel=$('countryExplore');if(!panel)return;
  const allSelected=countryFeatures.length&&selectedCountries.size===countryFeatures.length;
+ pointLayers.countryPOIs.clearLayers();
+ if(map.hasLayer(pointLayers.countryPOIs))map.removeLayer(pointLayers.countryPOIs);
  if(!selectedCountries.size||allSelected){panel.innerHTML='<div class="country-status">'+(!selectedCountries.size?'Kein Land ausgewählt.':'Wähle einzelne Länder aus, damit ATLAS LIVE deren Inhalte gezielt zusammenstellt.')+'</div>';return;}
- panel.innerHTML='<div class="country-status">Lade bekannte Kameras und Entdeckungsorte für die ausgewählten Länder …</div>';
- try{
-  await setMapLayerVisible('webcams',true);
-  const sources=[...new Map([...(cameraSourceCache||[]),...(typeof citySources!=='undefined'?citySources:[]),...(typeof regionalSources!=='undefined'?regionalSources:[]),...(typeof worldSources!=='undefined'?worldSources:[])].filter(c=>Number.isFinite(Number(c.lat))&&Number.isFinite(Number(c.lon))&&(c.embedUrl||c.imageUrl)).map(c=>[c.name+'|'+c.lat+'|'+c.lon,c])).values()];
-  const places=Object.entries(discoveryPlaces||{}).flatMap(([kind,items])=>items.map(p=>({kind,p})));
-  panel.innerHTML='';
-  [...selectedCountries].sort((a,b)=>a.localeCompare(b,'de')).forEach(country=>{
-   const section=document.createElement('section');section.className='country-explore-section';
-   const h=document.createElement('h4');h.textContent='🌍 '+country;section.appendChild(h);
-   const cams=sources.filter(c=>countryForPoint(L.latLng(Number(c.lat),Number(c.lon)))===country);
-   const sites=places.filter(x=>countryForPoint(L.latLng(x.p[2],x.p[3]))===country);
-   const camHead=document.createElement('div');camHead.className='country-explore-item';camHead.textContent='📷 Kameras · '+cams.length;section.appendChild(camHead);
-   cams.forEach(c=>{const item=document.createElement('div');item.className='country-explore-item';const name=document.createElement('strong');name.textContent=c.name;const sub=document.createElement('div');sub.textContent=(c.place||'')+' · '+(c.source||'Öffentliche Quelle');const btn=document.createElement('button');btn.type='button';btn.textContent='Kamera in ATLAS LIVE öffnen';btn.addEventListener('click',()=>openCameraView(c));item.append(name,sub,btn);section.appendChild(item);});
-   const siteHead=document.createElement('div');siteHead.className='country-explore-item';siteHead.textContent='🏛️ Sehenswürdigkeiten & Natur · '+sites.length;section.appendChild(siteHead);
-   sites.forEach(({kind,p})=>{const item=document.createElement('div');item.className='country-explore-item';const name=document.createElement('strong');name.textContent=(kind==='sights'?'🏛️ ':'🏔️ ')+p[0];const sub=document.createElement('div');sub.textContent=p[1]+' · '+p[4];item.append(name,sub);const img=document.createElement('img');img.alt='Foto von '+p[0];img.loading='lazy';img.hidden=true;item.appendChild(img);const note=document.createElement('div');note.className='country-status';note.textContent='Suche Foto …';item.appendChild(note);findPlacePhoto(p[0]).then(photo=>{if(photo){img.src=photo.image;img.hidden=false;note.textContent='Foto: Wikipedia · '+photo.caption;}else note.textContent='Kein passendes Wikipedia-Foto gefunden.';});const near=nearbyCameraForPlace(p[2],p[3]);if(near){const link=document.createElement('a');link.href=near.camera.url||near.camera.embedUrl||near.camera.imageUrl;link.target='_blank';link.rel='noopener noreferrer';link.textContent='📷 Kamera in der Nähe: '+near.camera.name+' ('+near.distance+' km)';item.appendChild(link);}section.appendChild(item);});
-   if(!cams.length&&!sites.length){const empty=document.createElement('div');empty.className='country-status';empty.textContent='In den aktuell eingebundenen ATLAS-LIVE-Daten sind für dieses Land noch keine verifizierten Kameras oder kuratierten Orte hinterlegt.';section.appendChild(empty);}
-   panel.appendChild(section);
+ const selected=[...selectedCountries].map(name=>countryFeatures.find(f=>f.__country===name)).filter(Boolean);
+ panel.innerHTML='<div class="country-status">Lade Kameras, Sehenswürdigkeiten, Naturziele und weitere Kartendaten …</div>';
+ let cameraLoadNote='';
+ try{if(!loadedPointLayers.has('webcams'))await loadCityCams();}catch(e){cameraLoadNote='Kameraquellen konnten nicht vollständig aktualisiert werden: '+e.message;}
+ const sources=[...new Map([...(cameraSourceCache||[]),...(typeof citySources!=='undefined'?citySources:[]),...(typeof regionalSources!=='undefined'?regionalSources:[]),...(typeof worldSources!=='undefined'?worldSources:[])].filter(c=>Number.isFinite(Number(c.lat))&&Number.isFinite(Number(c.lon))&&(c.embedUrl||c.imageUrl)).map(c=>[c.name+'|'+c.lat+'|'+c.lon,c])).values()];
+ const places=Object.entries(discoveryPlaces||{}).flatMap(([kind,items])=>items.map(p=>({kind,p})));
+ const osmResults=await Promise.allSettled(selected.map(async feature=>({feature,places:await fetchCountryOSMPlaces(feature)})));
+ if(run!==countryExploreRun)return;
+ panel.innerHTML='';
+ let totalMarkers=0;
+ selected.forEach((feature,index)=>{
+  const country=feature.__country,section=document.createElement('section');section.className='country-explore-section';
+  const h=document.createElement('h4');h.textContent='🌍 '+country;section.appendChild(h);
+  const cams=sources.filter(c=>countryForPoint(L.latLng(Number(c.lat),Number(c.lon)))===country);
+  const sites=places.filter(x=>countryForPoint(L.latLng(x.p[2],x.p[3]))===country);
+  const osmEntry=osmResults[index],osmPlaces=osmEntry?.status==='fulfilled'?osmEntry.value.places:[];
+  const camHead=document.createElement('div');camHead.className='country-explore-item';camHead.textContent='📷 Verfügbare Kameras · '+cams.length;section.appendChild(camHead);
+  cams.forEach(c=>{
+   const item=document.createElement('div');item.className='country-explore-item';
+   const name=document.createElement('strong');name.textContent=c.name;
+   const sub=document.createElement('div');sub.textContent=(c.place||'')+' · '+(c.source||'Öffentliche Quelle');
+   const btn=document.createElement('button');btn.type='button';btn.textContent='▶ Kamera in ATLAS LIVE öffnen';btn.addEventListener('click',()=>openCameraView(c));
+   item.append(name,sub,btn);section.appendChild(item);
+   const marker=L.circleMarker([Number(c.lat),Number(c.lon)],{radius:8,color:'#72d9f2',weight:2,fillColor:'#087eaa',fillOpacity:.96}).addTo(pointLayers.countryPOIs);
+   marker.bindPopup('<b>'+esc(c.name)+'</b><br>'+esc(c.place||'')+'<br><small>'+esc(c.source||'Öffentliche Kamera')+'</small><br><button type="button" onclick="window.dispatchEvent(new CustomEvent(\'atlas-open-camera\',{detail:'+JSON.stringify({name:c.name,place:c.place||'',url:c.url||'',embedUrl:c.embedUrl||'',imageUrl:c.imageUrl||'',source:c.source||'Öffentliche Kamera',refreshMs:c.refreshMs||600000}).replace(/</g,'\\u003c')+'}))">In ATLAS LIVE öffnen</button>');
+   marker.on('click',()=>openCameraView(c));totalMarkers++;
   });
- }catch(error){panel.innerHTML='<div class="country-status">Länder-Inhalte konnten gerade nicht geladen werden: '+esc(error.message)+'</div>';}
+  const siteHead=document.createElement('div');siteHead.className='country-explore-item';siteHead.textContent='🏛️ Kuratierte Sehenswürdigkeiten & Natur · '+sites.length;section.appendChild(siteHead);
+  sites.forEach(({kind,p})=>{
+   const item=document.createElement('div');item.className='country-explore-item';const name=document.createElement('strong');name.textContent=(kind==='sights'?'🏛️ ':'🏔️ ')+p[0];const sub=document.createElement('div');sub.textContent=p[1]+' · '+p[4];item.append(name,sub);
+   const img=document.createElement('img');img.alt='Foto von '+p[0];img.loading='lazy';img.hidden=true;item.appendChild(img);const note=document.createElement('div');note.className='country-status';note.textContent='Suche Foto …';item.appendChild(note);
+   findPlacePhoto(p[0]).then(photo=>{if(photo){img.src=photo.image;img.hidden=false;note.textContent='Foto: Wikipedia · '+photo.caption;}else note.textContent='Kein passendes Wikipedia-Foto gefunden.';});
+   const near=nearbyCameraForPlace(p[2],p[3]);if(near){const link=document.createElement('a');link.href=near.camera.url||near.camera.embedUrl||near.camera.imageUrl;link.target='_blank';link.rel='noopener noreferrer';link.textContent='📷 Kamera in der Nähe: '+near.camera.name+' ('+near.distance+' km)';item.appendChild(link);}
+   section.appendChild(item);
+   const marker=L.circleMarker([p[2],p[3]],{radius:7,color:kind==='sights'?'#f0c76a':'#ff947d',weight:2,fillColor:kind==='sights'?'#9c6a1d':'#b94d35',fillOpacity:.95}).addTo(pointLayers.countryPOIs);
+   marker.bindPopup('<b>'+esc(p[0])+'</b><br>'+esc(p[1])+'<br><small>'+esc(p[4])+'</small>');totalMarkers++;
+  });
+  const osmHead=document.createElement('div');osmHead.className='country-explore-item';osmHead.textContent='🗺️ Weitere Orte aus OpenStreetMap · '+osmPlaces.length;section.appendChild(osmHead);
+  if(osmEntry?.status==='rejected'){const err=document.createElement('div');err.className='country-status';err.textContent='OpenStreetMap-Daten gerade nicht erreichbar. Bereits bekannte ATLAS-LIVE-Inhalte bleiben verfügbar.';section.appendChild(err);}
+  osmPlaces.forEach((place,placeIndex)=>{
+   const marker=L.circleMarker([place.lat,place.lon],{radius:6,color:'#b7e28a',weight:2,fillColor:'#477b3b',fillOpacity:.92}).addTo(pointLayers.countryPOIs);
+   marker.bindPopup('<b>'+esc(place.name)+'</b><br>'+esc(place.category)+'<br><small>OpenStreetMap · '+esc(country)+'</small><br><a href="'+place.url+'" target="_blank" rel="noopener">OpenStreetMap-Objekt öffnen ↗</a>');totalMarkers++;
+   if(placeIndex<18){
+    const item=document.createElement('div');item.className='country-explore-item';const name=document.createElement('strong');name.textContent=place.name;const sub=document.createElement('div');sub.textContent=place.category;const link=document.createElement('a');link.href=place.url;link.target='_blank';link.rel='noopener noreferrer';link.textContent='OpenStreetMap-Objekt ↗';item.append(name,sub,link);
+    if(placeIndex<5){const img=document.createElement('img');img.alt='Foto von '+place.name;img.loading='lazy';img.hidden=true;item.appendChild(img);const note=document.createElement('div');note.className='country-status';note.textContent='Suche Foto …';item.appendChild(note);findPlacePhoto(place.name).then(photo=>{if(photo){img.src=photo.image;img.hidden=false;note.textContent='Foto: Wikipedia · '+photo.caption;}else note.textContent='Kein passendes Wikipedia-Foto gefunden.';});}
+    section.appendChild(item);
+   }
+  });
+  if(!cams.length&&!sites.length&&!osmPlaces.length){const empty=document.createElement('div');empty.className='country-status';empty.textContent='Für dieses Land sind in den aktuell erreichbaren Quellen keine passenden Kameras oder Orte gefunden worden.';section.appendChild(empty);}
+  const attribution=document.createElement('div');attribution.className='country-status';attribution.textContent='Kartendaten: © OpenStreetMap-Mitwirkende · Fotos, falls vorhanden: Wikipedia';section.appendChild(attribution);
+  panel.appendChild(section);
+ });
+ if(run!==countryExploreRun)return;
+ if(totalMarkers){pointLayers.countryPOIs.addTo(map);applyCountryFilter();const ll=pointLayers.countryPOIs.getLayers().map(m=>m.getLatLng());if(ll.length)map.fitBounds(L.latLngBounds(ll).pad(.12),{maxZoom:6});}
+ const info=document.createElement('div');info.className='country-status';info.textContent=totalMarkers+' Kartenpunkte aus den ausgewählten Ländern geladen. '+(cameraLoadNote?cameraLoadNote+' ':'')+'Kameras öffnen sich im ATLAS-LIVE-Player; OSM-Daten sind keine Live-Kameras.';panel.appendChild(info);
 }
 function renderCountryList(){const box=$('countryList'),q=$('countrySearch').value.trim().toLocaleLowerCase('de');box.innerHTML='';countryFeatures.filter(f=>f.__country.toLocaleLowerCase('de').includes(q)).sort((a,b)=>a.__country.localeCompare(b.__country,'de')).forEach(f=>{const label=document.createElement('label');label.className='country-option';const cb=document.createElement('input');cb.type='checkbox';cb.checked=selectedCountries.has(f.__country);cb.addEventListener('change',()=>{if(cb.checked)selectedCountries.add(f.__country);else selectedCountries.delete(f.__country);applyCountryFilter();loadCountryExplorer();});const name=document.createElement('span');name.textContent=f.__country;label.append(cb,name);box.appendChild(label);});if(!box.childElementCount)box.textContent='Kein Land gefunden.';}
-async function loadCountryData(){try{const res=await fetch(COUNTRY_GEOJSON_URL,{headers:{accept:'application/geo+json,application/json'}});if(!res.ok)throw new Error('HTTP '+res.status);const data=await res.json();countryFeatures=(data.features||[]).map(f=>({...f,__country:f.properties?.ADMIN||f.properties?.name||f.properties?.NAME})).filter(f=>f.__country&&f.geometry);if(!countryFeatures.length)throw new Error('Keine Ländergrenzen gefunden');let saved=null;try{const raw=localStorage.getItem('atlas-live-selected-countries-v1');if(raw!==null)saved=JSON.parse(raw)}catch{}const validSaved=Array.isArray(saved)?saved.filter(name=>countryFeatures.some(f=>f.__country===name)):countryFeatures.map(f=>f.__country);selectedCountries=new Set(validSaved);countryDataReady=true;renderCountryList();applyCountryFilter();}catch(e){$('countryList').textContent='Ländergrenzen konnten nicht geladen werden. Prüfe deine Internetverbindung und lade die Seite neu.';$('countryStatus').textContent='Länderfilter nicht verfügbar: '+e.message;}}
+async function loadCountryData(){try{const res=await fetch(COUNTRY_GEOJSON_URL,{headers:{accept:'application/geo+json,application/json'}});if(!res.ok)throw new Error('HTTP '+res.status);const data=await res.json();countryFeatures=(data.features||[]).map(f=>({...f,__country:f.properties?.ADMIN||f.properties?.name||f.properties?.NAME,__iso2:f.properties?.ISO_A2||f.properties?.['ISO3166-1-Alpha-2']||f.properties?.iso_a2||null})).filter(f=>f.__country&&f.geometry);if(!countryFeatures.length)throw new Error('Keine Ländergrenzen gefunden');let saved=null;try{const raw=localStorage.getItem('atlas-live-selected-countries-v1');if(raw!==null)saved=JSON.parse(raw)}catch{}const validSaved=Array.isArray(saved)?saved.filter(name=>countryFeatures.some(f=>f.__country===name)):countryFeatures.map(f=>f.__country);selectedCountries=new Set(validSaved);countryDataReady=true;renderCountryList();applyCountryFilter();}catch(e){$('countryList').textContent='Ländergrenzen konnten nicht geladen werden. Prüfe deine Internetverbindung und lade die Seite neu.';$('countryStatus').textContent='Länderfilter nicht verfügbar: '+e.message;}}
 $('countrySearch').addEventListener('input',renderCountryList);
 $('countriesAll').addEventListener('click',()=>{selectedCountries=new Set(countryFeatures.map(f=>f.__country));renderCountryList();applyCountryFilter();loadCountryExplorer();});
 $('countriesNone').addEventListener('click',()=>{selectedCountries.clear();renderCountryList();applyCountryFilter();loadCountryExplorer();});
