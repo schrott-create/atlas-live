@@ -42,7 +42,7 @@ button:hover{background:#17465e}
 .camname{font-weight:700;font-size:12px;margin:2px 0 4px}.cammeta{font-size:11px;color:var(--muted)}
 .empty{padding:20px;color:var(--muted);font-size:12px}
 #map{height:100%;background:#0b1422}
-.leaflet-tile-pane{filter:invert(1) hue-rotate(180deg) brightness(.85) contrast(.9) saturate(.7)}
+.leaflet-tile-pane{filter:none}
 .mapwrap{position:relative;min-width:0}
 .mapbadge{position:absolute;z-index:500;top:14px;left:14px;background:#0b1422dd;border:1px solid var(--line);border-radius:9px;padding:9px 12px;font-size:11px;color:#b9c8dc;backdrop-filter:blur(8px)}
 .leaflet-popup-content-wrapper,.leaflet-popup-tip{background:#111a29;color:#eaf1fb}.leaflet-popup-content{margin:12px;min-width:180px}
@@ -91,8 +91,8 @@ footer{padding:10px 16px;border-top:1px solid var(--line);font-size:10px;color:v
 @media(max-width:680px){.wall-grid,.wall-grid[data-count="9"],.wall-grid[data-count="16"]{grid-template-columns:1fr}.wall-tile iframe{height:220px}.atlas-panel-head h2{font-size:14px}}
 /* Satellitenansicht, Welt-Radio und Hafenübersicht */
 .maptools{position:absolute;z-index:600;top:14px;right:14px;width:auto}
-.maptools button{width:auto;padding:9px 12px;font-size:11px;box-shadow:0 5px 20px #0007}
-#map.satellite-view .leaflet-tile-pane{filter:none}
+.maptools button{width:auto;padding:9px 12px;font-size:11px;box-shadow:0 5px 20px #0007}.maptools{display:flex;align-items:center;gap:7px;background:#0b1422e8;border:1px solid var(--line);border-radius:10px;padding:6px 8px;backdrop-filter:blur(8px)}.maptools select{width:auto;min-width:145px;padding:8px 10px;font-size:11px}.mapstyle-label{font-size:10px;color:#b9c8dc}.statecam-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:8px}.statecam-link,.statecam-extra a{display:flex;justify-content:space-between;align-items:center;padding:11px 12px;border:1px solid #30445b;border-radius:9px;background:#0b1422;color:#d8efff;text-decoration:none;font-size:12px}.statecam-link:hover,.statecam-extra a:hover{border-color:#58c7e8;background:#14283c}.statecam-link span{color:#70d7f1}.statecam-extra{display:flex;gap:9px;flex-wrap:wrap;margin:14px 0}.statecam-extra a{color:#70d7f1}
+#map.map-dark .leaflet-tile-pane{filter:brightness(.82) saturate(.75)}
 .hub-actions{grid-template-columns:repeat(2,minmax(0,1fr))}
 .radio-panel{width:min(1050px,100%)}
 .radio-search{display:grid;grid-template-columns:repeat(3,minmax(0,1fr)) auto;gap:10px;align-items:end}
@@ -110,7 +110,7 @@ footer{padding:10px 16px;border-top:1px solid var(--line);font-size:10px;color:v
 .radio-player audio{width:100%}
 .maritime-links{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}
 .maritime-links a{padding:18px;border:1px solid #30445b;border-radius:12px;background:#0c1726;color:#70d7f1;text-decoration:none}
-@media(max-width:760px){.radio-search{grid-template-columns:1fr 1fr}.radio-search button{grid-column:1/-1;width:100%}.radio-player{grid-template-columns:1fr}.maptools{top:58px;right:10px}.maptools button{font-size:10px;padding:8px}}
+@media(max-width:760px){.radio-search{grid-template-columns:1fr 1fr}.radio-search button{grid-column:1/-1;width:100%}.radio-player{grid-template-columns:1fr}.maptools{top:58px;right:10px}.maptools select{min-width:120px;padding:7px}.mapstyle-label{display:none}}
 @media(max-width:480px){.radio-search{grid-template-columns:1fr}}
 /* Flugzentrum und klarere Navigation */
 .flight-panel{width:min(980px,100%)}
@@ -153,9 +153,6 @@ footer{padding:10px 16px;border-top:1px solid var(--line);font-size:10px;color:v
     <button id="citycams" type="button">Stadt- & Regionskameras laden</button>
     <p class="note" id="citymessage">Berlin, Thousand Islands und Adirondacks: öffentliche Kameraquellen mit eingebettetem Anbieter-Player, soweit erlaubt.</p>
     <div style="height:8px"></div>
-    <button id="berlinCams" type="button">🇩🇪 Berlin-Cams anzeigen</button>
-    <p class="note" id="berlinMessage">Öffentliche Stadtpanoramen aus Berlin, mit direkten Betreiberseiten und Kartenmarkern.</p>
-    <div style="height:8px"></div>
     <button id="flightHub" type="button">✈ Flugzentrum öffnen</button>
     <p class="note" id="flightmessage">Flugstatus, Flughäfen und Live-Flugradar gemeinsam in einem Bereich.</p>
     <div style="height:14px"></div>
@@ -169,6 +166,7 @@ footer{padding:10px 16px;border-top:1px solid var(--line);font-size:10px;color:v
       <button id="shareAtlas" type="button">↗ ATLAS LIVE teilen</button>
       <button id="openRadio" type="button">🌍 Weltweites Radio</button>
       <button id="openMaritime" type="button">⚓ Hafen- & Schiffs-Cams</button>
+      <button id="openStateCams" type="button">🇺🇸 State Cams · alle Bundesstaaten</button>
     </div>
     <p class="note">Live-Wall zeigt nur Quellen mit hinterlegtem Einbettungslink. Die Roadmap trennt vorhandene Funktionen von geplanten Ideen.</p>
   </section>
@@ -180,8 +178,9 @@ footer{padding:10px 16px;border-top:1px solid var(--line);font-size:10px;color:v
   </div>
   <footer>Quellen: Autobahn GmbH · Fintraffic / Digitraffic (CC BY 4.0) · Berlin.de · NYSDOT / 511NY · Flughäfen · Kartendaten © OpenStreetMap-Mitwirkende</footer>
 </aside>
-<div class="mapwrap"><div class="mapbadge">ATLAS LIVE · WELTKARTE</div><div class="maptools"><button id="satelliteToggle" type="button" aria-pressed="false">🛰 Satellitenansicht</button></div><div id="map"></div></div>
+<div class="mapwrap"><div class="mapbadge">ATLAS LIVE · WELTKARTE</div><div class="maptools"><label class="mapstyle-label" for="mapStyle">Kartenstil</label><select id="mapStyle" aria-label="Kartenstil"><option value="street">Straßenkarte</option><option value="dark">Dunkel</option><option value="topo">Gelände</option><option value="satellite">Satellit</option></select></div><div id="map"></div></div>
 <div class="camviewer" id="camviewer" role="dialog" aria-modal="true"><div class="camviewerbox"><div class="camviewhead"><strong id="camviewtitle">Kamera</strong><button id="camviewopen" type="button">Beim Betreiber öffnen ↗</button><button id="camviewclose" type="button">Schließen ✕</button></div><iframe class="camframe" id="camframe" title="Öffentliche Live-Kamera" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe><div class="camviewfoot" id="camviewnote">Wenn der Anbieter das Einbetten blockiert, nutze „Beim Betreiber öffnen“.</div></div></div>
+  <div class="atlas-overlay" id="stateCamsOverlay" role="dialog" aria-modal="true" aria-label="State Cams"><section class="atlas-panel"><div class="atlas-panel-head"><h2>🇺🇸 ATLAS LIVE · State Cams</h2><button id="closeStateCams" type="button">Schließen ✕</button></div><div class="atlas-panel-body"><p class="hub-note">Kamera-Verzeichnis nach US-Bundesstaat. Die Links führen zu den jeweiligen State-Seiten eines externen Kamera-Index. Dort sind öffentliche Verkehrs- und Straßenkameras zusammengefasst; Anzahl und Verfügbarkeit ändern sich. Für New York bleibt zusätzlich das offizielle 511NY-Portal verfügbar.</p><div class="statecam-grid"><a class="statecam-link" href="https://worldeye.app/us-traffic-cameras/alabama" target="_blank" rel="noopener">Alabama <span>↗</span></a><a class="statecam-link" href="https://worldeye.app/us-traffic-cameras/alaska" target="_blank" rel="noopener">Alaska <span>↗</span></a><a class="statecam-link" href="https://worldeye.app/us-traffic-cameras/arizona" target="_blank" rel="noopener">Arizona <span>↗</span></a><a class="statecam-link" href="https://worldeye.app/us-traffic-cameras/arkansas" target="_blank" rel="noopener">Arkansas <span>↗</span></a><a class="statecam-link" href="https://worldeye.app/us-traffic-cameras/california" target="_blank" rel="noopener">California <span>↗</span></a><a class="statecam-link" href="https://worldeye.app/us-traffic-cameras/colorado" target="_blank" rel="noopener">Colorado <span>↗</span></a><a class="statecam-link" href="https://worldeye.app/us-traffic-cameras/connecticut" target="_blank" rel="noopener">Connecticut <span>↗</span></a><a class="statecam-link" href="https://worldeye.app/us-traffic-cameras/delaware" target="_blank" rel="noopener">Delaware <span>↗</span></a><a class="statecam-link" href="https://worldeye.app/us-traffic-cameras/florida" target="_blank" rel="noopener">Florida <span>↗</span></a><a class="statecam-link" href="https://worldeye.app/us-traffic-cameras/georgia" target="_blank" rel="noopener">Georgia <span>↗</span></a><a class="statecam-link" href="https://worldeye.app/us-traffic-cameras/hawaii" target="_blank" rel="noopener">Hawaii <span>↗</span></a><a class="statecam-link" href="https://worldeye.app/us-traffic-cameras/idaho" target="_blank" rel="noopener">Idaho <span>↗</span></a><a class="statecam-link" href="https://worldeye.app/us-traffic-cameras/illinois" target="_blank" rel="noopener">Illinois <span>↗</span></a><a class="statecam-link" href="https://worldeye.app/us-traffic-cameras/indiana" target="_blank" rel="noopener">Indiana <span>↗</span></a><a class="statecam-link" href="https://worldeye.app/us-traffic-cameras/iowa" target="_blank" rel="noopener">Iowa <span>↗</span></a><a class="statecam-link" href="https://worldeye.app/us-traffic-cameras/kansas" target="_blank" rel="noopener">Kansas <span>↗</span></a><a class="statecam-link" href="https://worldeye.app/us-traffic-cameras/kentucky" target="_blank" rel="noopener">Kentucky <span>↗</span></a><a class="statecam-link" href="https://worldeye.app/us-traffic-cameras/louisiana" target="_blank" rel="noopener">Louisiana <span>↗</span></a><a class="statecam-link" href="https://worldeye.app/us-traffic-cameras/maine" target="_blank" rel="noopener">Maine <span>↗</span></a><a class="statecam-link" href="https://worldeye.app/us-traffic-cameras/maryland" target="_blank" rel="noopener">Maryland <span>↗</span></a><a class="statecam-link" href="https://worldeye.app/us-traffic-cameras/massachusetts" target="_blank" rel="noopener">Massachusetts <span>↗</span></a><a class="statecam-link" href="https://worldeye.app/us-traffic-cameras/michigan" target="_blank" rel="noopener">Michigan <span>↗</span></a><a class="statecam-link" href="https://worldeye.app/us-traffic-cameras/minnesota" target="_blank" rel="noopener">Minnesota <span>↗</span></a><a class="statecam-link" href="https://worldeye.app/us-traffic-cameras/mississippi" target="_blank" rel="noopener">Mississippi <span>↗</span></a><a class="statecam-link" href="https://worldeye.app/us-traffic-cameras/missouri" target="_blank" rel="noopener">Missouri <span>↗</span></a><a class="statecam-link" href="https://worldeye.app/us-traffic-cameras/montana" target="_blank" rel="noopener">Montana <span>↗</span></a><a class="statecam-link" href="https://worldeye.app/us-traffic-cameras/nebraska" target="_blank" rel="noopener">Nebraska <span>↗</span></a><a class="statecam-link" href="https://worldeye.app/us-traffic-cameras/nevada" target="_blank" rel="noopener">Nevada <span>↗</span></a><a class="statecam-link" href="https://worldeye.app/us-traffic-cameras/new-hampshire" target="_blank" rel="noopener">New Hampshire <span>↗</span></a><a class="statecam-link" href="https://worldeye.app/us-traffic-cameras/new-jersey" target="_blank" rel="noopener">New Jersey <span>↗</span></a><a class="statecam-link" href="https://worldeye.app/us-traffic-cameras/new-mexico" target="_blank" rel="noopener">New Mexico <span>↗</span></a><a class="statecam-link" href="https://worldeye.app/us-traffic-cameras/new-york" target="_blank" rel="noopener">New York <span>↗</span></a><a class="statecam-link" href="https://worldeye.app/us-traffic-cameras/north-carolina" target="_blank" rel="noopener">North Carolina <span>↗</span></a><a class="statecam-link" href="https://worldeye.app/us-traffic-cameras/north-dakota" target="_blank" rel="noopener">North Dakota <span>↗</span></a><a class="statecam-link" href="https://worldeye.app/us-traffic-cameras/ohio" target="_blank" rel="noopener">Ohio <span>↗</span></a><a class="statecam-link" href="https://worldeye.app/us-traffic-cameras/oklahoma" target="_blank" rel="noopener">Oklahoma <span>↗</span></a><a class="statecam-link" href="https://worldeye.app/us-traffic-cameras/oregon" target="_blank" rel="noopener">Oregon <span>↗</span></a><a class="statecam-link" href="https://worldeye.app/us-traffic-cameras/pennsylvania" target="_blank" rel="noopener">Pennsylvania <span>↗</span></a><a class="statecam-link" href="https://worldeye.app/us-traffic-cameras/rhode-island" target="_blank" rel="noopener">Rhode Island <span>↗</span></a><a class="statecam-link" href="https://worldeye.app/us-traffic-cameras/south-carolina" target="_blank" rel="noopener">South Carolina <span>↗</span></a><a class="statecam-link" href="https://worldeye.app/us-traffic-cameras/south-dakota" target="_blank" rel="noopener">South Dakota <span>↗</span></a><a class="statecam-link" href="https://worldeye.app/us-traffic-cameras/tennessee" target="_blank" rel="noopener">Tennessee <span>↗</span></a><a class="statecam-link" href="https://worldeye.app/us-traffic-cameras/texas" target="_blank" rel="noopener">Texas <span>↗</span></a><a class="statecam-link" href="https://worldeye.app/us-traffic-cameras/utah" target="_blank" rel="noopener">Utah <span>↗</span></a><a class="statecam-link" href="https://worldeye.app/us-traffic-cameras/vermont" target="_blank" rel="noopener">Vermont <span>↗</span></a><a class="statecam-link" href="https://worldeye.app/us-traffic-cameras/virginia" target="_blank" rel="noopener">Virginia <span>↗</span></a><a class="statecam-link" href="https://worldeye.app/us-traffic-cameras/washington" target="_blank" rel="noopener">Washington <span>↗</span></a><a class="statecam-link" href="https://worldeye.app/us-traffic-cameras/west-virginia" target="_blank" rel="noopener">West Virginia <span>↗</span></a><a class="statecam-link" href="https://worldeye.app/us-traffic-cameras/wisconsin" target="_blank" rel="noopener">Wisconsin <span>↗</span></a><a class="statecam-link" href="https://worldeye.app/us-traffic-cameras/wyoming" target="_blank" rel="noopener">Wyoming <span>↗</span></a></div><div class="statecam-extra"><a href="https://worldeye.app/us-traffic-cameras" target="_blank" rel="noopener">Alle US-Bundesstaaten im Kamera-Index ↗</a><a href="https://511ny.org/map" target="_blank" rel="noopener">New York · offizielles 511NY ↗</a></div><p class="hub-note">Hinweis: Das sind externe Verzeichnisse, keine direkt in ATLAS LIVE eingebetteten Feeds. Ein Eintrag bedeutet nicht, dass jede Kamera jederzeit online ist.</p></div></section></div>
   <div class="atlas-overlay" id="radioOverlay" role="dialog" aria-modal="true" aria-label="Weltweites Radio">
     <section class="atlas-panel radio-panel">
       <div class="atlas-panel-head"><h2>ATLAS LIVE · Weltweites Radio</h2><button id="closeRadio" type="button">Schließen ✕</button></div>
@@ -247,18 +246,21 @@ footer{padding:10px 16px;border-top:1px solid var(--line);font-size:10px;color:v
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
 const map=L.map('map',{worldCopyJump:true}).setView([25,8],2);
-const streetLayer=L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'&copy; OpenStreetMap-Mitwirkende',maxZoom:19}).addTo(map);
-const satelliteLayer=L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{attribution:'Tiles &copy; Esri — Source: Esri, Maxar, Earthstar Geographics, and the GIS User Community',maxZoom:19});
-let satelliteEnabled=false;
-const $=id=>document.getElementById(id);
-$('satelliteToggle').onclick=()=>{
- satelliteEnabled=!satelliteEnabled;
- if(satelliteEnabled){map.removeLayer(streetLayer);satelliteLayer.addTo(map);$('map').classList.add('satellite-view');}
- else{map.removeLayer(satelliteLayer);streetLayer.addTo(map);$('map').classList.remove('satellite-view');}
- $('satelliteToggle').setAttribute('aria-pressed',String(satelliteEnabled));
- $('satelliteToggle').textContent=satelliteEnabled?'🗺 Straßenkarte':'🛰 Satellitenansicht';
- setMessage(satelliteEnabled?'Satelliten-/Luftbildansicht aktiv. Die Bilder sind nicht live und können älter sein.':'Straßenkarte aktiv.');
+const mapLayers={
+ street:L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'&copy; OpenStreetMap-Mitwirkende',maxZoom:19}),
+ dark:L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',{attribution:'&copy; OpenStreetMap &copy; CARTO',subdomains:'abcd',maxZoom:20}),
+ topo:L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}',{attribution:'Tiles &copy; Esri — World Topographic Map',maxZoom:19}),
+ satellite:L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{attribution:'Tiles &copy; Esri — Source: Esri, Maxar, Earthstar Geographics, and the GIS User Community',maxZoom:19})
 };
+let activeMapStyle='street';mapLayers.street.addTo(map);
+const $=id=>document.getElementById(id);
+$('mapStyle').addEventListener('change',e=>{
+ const style=e.target.value;if(!mapLayers[style])return;
+ if(map.hasLayer(mapLayers[activeMapStyle]))map.removeLayer(mapLayers[activeMapStyle]);
+ mapLayers[style].addTo(map);activeMapStyle=style;
+ $('map').classList.toggle('map-dark',style==='dark');
+ setMessage(({street:'Straßenkarte aktiv.',dark:'Dunkle Kartenansicht aktiv.',topo:'Gelände- und Höhenkartenansicht aktiv. Keine echte 3D-Darstellung.',satellite:'Satelliten-/Luftbildansicht aktiv. Die Bilder sind nicht live und können älter sein.'})[style]);
+});
 let abMarkers=[],finMarkers=[],cityMarkers=[],windyMarkers=[],radioMarkers=[];let windyApiKey='';
 const FAVORITES_KEY='atlas-live-favorites-v1',FOLDERS_KEY='atlas-live-folders-v1',ASSIGN_KEY='atlas-live-folder-assignments-v1';
 let favorites=new Set(),folders=[],folderAssignments={};try{favorites=new Set(JSON.parse(localStorage.getItem(FAVORITES_KEY)||'[]'))}catch{}try{folders=JSON.parse(localStorage.getItem(FOLDERS_KEY)||'[]');if(!Array.isArray(folders))folders=[]}catch{}try{folderAssignments=JSON.parse(localStorage.getItem(ASSIGN_KEY)||'{}')}catch{}
@@ -588,6 +590,7 @@ function openFlightRadar(){
  setMessage('Live-Flugradar wird im ATLAS-LIVE-Player geöffnet. Sichtbare Flugzeuge hängen von empfangenen ADS-B-Signalen in der Region ab.');
 }
 $('citycams').onclick=loadCityCams;
+$('openStateCams').onclick=()=>openOverlay('stateCamsOverlay');$('closeStateCams').onclick=()=>closeOverlay('stateCamsOverlay');
 function loadBerlinCams(){
  updateListStamp();clearMarkers(cityMarkers);clearMarkers(abMarkers);clearMarkers(finMarkers);clearList();
  const all=[...citySources,...worldSources].filter(c=>/berlin/i.test([c.name,c.place].join(' ')) && c.local!==false);
