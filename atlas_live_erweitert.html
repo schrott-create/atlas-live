@@ -56,8 +56,9 @@ footer{padding:10px 16px;border-top:1px solid var(--line);font-size:10px;color:v
 <main>
 <aside>
   <section class="tools">
-    <label class="label" for="search">Ort suchen</label>
-    <input id="search" placeholder="z. B. Berlin, Hamburg, München">
+    <label class="label" for="search">Ort oder Straße suchen</label>
+    <input id="search" placeholder="z. B. Main Street, La Fargeville oder Berlin">
+    <p class="note">Suche Orte und Straßen weltweit. Erkannte Straßen werden – wenn Kartendaten vorhanden sind – auf der Karte hervorgehoben.</p>
     <div class="row"><button id="locate" type="button">Weltkarte</button><button id="regionHome" type="button">La Fargeville & Umgebung</button></div>
     <p class="note" id="message">ATLAS LIVE startet in der Thousand-Islands-Region rund um La Fargeville. Wähle öffentliche Livekameras oder regionale Betreiber- und Verkehrsportale.</p>
     <div style="height:14px"></div>
@@ -215,7 +216,14 @@ const regionalSources=[
  {name:'La Fargeville – Wetter & Regenradar',place:'La Fargeville · lokale Wettervorhersage und Radar',lat:44.18,lon:-75.96,url:'https://forecast.weather.gov/MapClick.php?lat=44.194&lon=-75.9655',source:'National Weather Service · offizieller lokaler Wetterbericht und Radarlink',category:'portal',local:false},
  {name:'La Fargeville – Verkehrslage',place:'La Fargeville und Umgebung · Verkehrsmeldungen',lat:44.18,lon:-75.96,url:'https://511ny.org/map',source:'New York 511 · offizielle Verkehrskarte; Kameraabdeckung je Straße unterschiedlich',category:'traffic',local:false},
  {name:'La Fargeville – Wetterstationen & Beobachtungen',place:'La Fargeville · Messwerte aus umliegenden offiziellen Stationen',lat:44.18,lon:-75.96,url:'https://forecast.weather.gov/obslocal.php?local_place=La+Fargeville+NY&offset=14400&warnzone=NYZ007&zoneid=EDT',source:'National Weather Service · Beobachtungen umliegender Wetterstationen, keine Webcam',category:'portal',local:false}
-];
+,
+ {name:'Weltweite öffentliche Kamerakarte – OpenCam',place:'Weltweit · öffentliche Straßen-, Wetter-, Hafen- und Stadtkameras',lat:20,lon:0,url:'https://opencam.live/',source:'OpenCam · internationale öffentliche Kameraübersicht, Verfügbarkeit je Feed unterschiedlich',category:'portal',local:false},
+ {name:'Weltweite öffentliche Kameras – OpenCCTV',place:'Weltweit · Verkehr, Wetter, Häfen, Flughäfen und Natur',lat:20,lon:0,url:'https://opencctv.org/open-cameras',source:'OpenCCTV · Verzeichnis öffentlich freigegebener Kameras',category:'portal',local:false},
+ {name:'Internationale Live-Webcams – Overlook Cams',place:'92 Länder · Städte, Strände, Häfen, Skigebiete und Natur',lat:20,lon:0,url:'https://overlookcams.com/',source:'Overlook Cams · öffentliches Webcam-Verzeichnis; Streams können offline gehen',category:'portal',local:false},
+ {name:'Live-Webcams aus vielen Ländern',place:'Weltweit · Städte, Strände, Natur, Bahn und Häfen',lat:20,lon:0,url:'https://livepublicwebcams.com/de/',source:'LivePublicWebcams · öffentliche YouTube-Livestreams, zuletzt laut Anbieter geprüft am 4. Oktober 2026',category:'portal',local:false},
+ {name:'Internationale Hafen-Webcams',place:'Hamburg, Kiel, Warnemünde, Genua, Barcelona, Miami und mehr',lat:53.55,lon:9.99,url:'https://kreuzfahrtradar24.de/webcams/',source:'Kreuzfahrtradar24 · Links zu öffentlichen Hafen-Webcams',category:'portal',local:false},
+ {name:'Expeditionsschiffe – Bordkameras live',place:'Öffentliche Bugkameras der HANSEATIC-Expeditionsschiffe',lat:0,lon:0,url:'https://www.hl-cruises.de/flotte/expeditionsschiffe/schiffsrundgang/webcam-schiffsposition',source:'Hapag-Lloyd Cruises · offizielle öffentliche Bord-Webcams',category:'video',local:false},
+ {name:'Internationale Webcam-Sammlung – Scenic Views',place:'72 Länder und Gebiete · Landschaft, Küsten und Städte',lat:20,lon:0,url:'https://iicsm.com/views/',source:'Scenic Views · internationales Verzeichnis; viele Kameras öffnen beim Betreiber',category:'portal',local:false}];
 const flightSources=[
  {name:'Flughafen Berlin Brandenburg (BER)',place:'Berlin · Ankünfte und Abflüge',lat:52.3667,lon:13.5033,url:'https://ber.berlin-airport.de/en/flying/departures-arrivals.html',source:'BER · offizielle Flugtafel'},
  {name:'Albany International Airport (ALB)',place:'Upstate New York · Ankünfte und Abflüge',lat:42.7483,lon:-73.8017,url:'https://www.albanyairport.com/flights',source:'Albany Airport · offizielle Flugtafel'}
@@ -294,10 +302,26 @@ $('autobahn').onclick=loadAutobahn;
 window.addEventListener('load',()=>setTimeout(()=>{map.setView([44.18,-75.93],9);loadCityCams()},650));
 $('regionHome').onclick=()=>{map.setView([44.18,-75.93],9);loadCityCams();setMessage('La Fargeville und die öffentliche Thousand-Islands-Region werden angezeigt.');};
 $('locate').addEventListener('click',()=>{map.setView([25,8],2);setMessage('Weltkarte angezeigt. Wähle eine Kameraquelle.')});
+let searchMarker=null,roadLayer=L.geoJSON(null,{style:{color:'#ffbf47',weight:6,opacity:.95}}).addTo(map);
 $('search').addEventListener('keydown',async e=>{
- if(e.key!=='Enter')return;const q=e.target.value.trim();if(!q)return;
- try{const r=await fetch('https://nominatim.openstreetmap.org/search?format=json&limit=1&q='+encodeURIComponent(q)),d=await r.json();if(!d.length){setMessage('Ort nicht gefunden.');return}map.setView([+d[0].lat,+d[0].lon],8);setMessage('Ort gefunden. Wähle eine Kameraquelle.')}
- catch{setMessage('Ortssuche gerade nicht verfügbar.')}
+ if(e.key!=='Enter')return;
+ const q=e.target.value.trim();if(!q)return;
+ setMessage('Suche Ort oder Straße …');
+ try{
+  const r=await fetch('https://nominatim.openstreetmap.org/search?format=jsonv2&limit=5&addressdetails=1&q='+encodeURIComponent(q),{headers:{'Accept':'application/json'}});
+  if(!r.ok)throw new Error('Suchdienst antwortet gerade nicht');
+  const d=await r.json();if(!d.length){setMessage('Kein passender Ort oder keine Straße gefunden.');return;}
+  const hit=d[0],lat=Number(hit.lat),lon=Number(hit.lon);if(!Number.isFinite(lat)||!Number.isFinite(lon))throw new Error('Ungültige Koordinaten');
+  if(searchMarker)map.removeLayer(searchMarker);roadLayer.clearLayers();
+  const isRoad=(hit.class==='highway'||/road|street|highway/i.test((hit.type||'')+' '+(hit.addresstype||'')));
+  let zoom=isRoad?16:Math.max(8,Math.min(14,Number(hit.zoom)||11));
+  if(hit.boundingbox&&hit.boundingbox.length===4){const b=hit.boundingbox.map(Number);if(b.every(Number.isFinite)&&Math.abs(b[0]-b[1])>0.0001&&Math.abs(b[2]-b[3])>0.0001)map.fitBounds([[b[0],b[2]],[b[1],b[3]]],{maxZoom:isRoad?16:14});else map.setView([lat,lon],zoom)}else map.setView([lat,lon],zoom);
+  searchMarker=L.marker([lat,lon]).addTo(map).bindPopup('<b>'+esc(hit.name||q)+'</b><br>'+esc(hit.display_name||'')).openPopup();
+  if(isRoad&&hit.osm_type==='way'&&hit.osm_id){
+   try{const overpass='https://overpass-api.de/api/interpreter?data='+encodeURIComponent('[out:json][timeout:12];way('+Number(hit.osm_id)+');out geom;');const rr=await fetch(overpass),jj=await rr.json(),way=jj.elements?.find(x=>x.type==='way'&&Array.isArray(x.geometry));if(way){const coords=way.geometry.map(p=>[p.lat,p.lon]);roadLayer.addData({type:'Feature',geometry:{type:'LineString',coordinates:coords.map(p=>[p[1],p[0]])},properties:{}});map.fitBounds(roadLayer.getBounds().pad(0.08));}}catch(err){console.warn('Straßenlinie konnte nicht geladen werden',err);}
+  }
+  setMessage((isRoad?'Straße':'Ort')+' gefunden: '+(hit.display_name||hit.name||q)+'. '+(isRoad?'Wenn Kartendaten vorliegen, ist der Straßenverlauf gelb markiert.':'Du kannst jetzt Kameraquellen laden.'));
+ }catch(err){setMessage('Suche gerade nicht verfügbar: '+err.message);}
 });
 </script>
 </body>
