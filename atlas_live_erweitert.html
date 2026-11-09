@@ -147,9 +147,6 @@ footer{padding:10px 16px;border-top:1px solid var(--line);font-size:10px;color:v
     <button id="autobahn" type="button">Autobahn-Kameras (DE) laden</button>
     <p class="note" id="abmessage">Verkehrskameras der Autobahn GmbH, offene Daten.</p>
     <div style="height:8px"></div>
-    <button id="fintraffic" type="button">Wetter- & Straßenkameras (Finnland) laden</button>
-    <p class="note" id="finmessage">Fintraffic / Digitraffic – öffentliche Wetterkameras, Bildaktualisierung etwa alle 10 Minuten.</p>
-    <div style="height:8px"></div>
     <button id="citycams" type="button">Stadt- & Regionskameras laden</button>
     <p class="note" id="citymessage">Berlin, Thousand Islands und Adirondacks: öffentliche Kameraquellen mit eingebettetem Anbieter-Player, soweit erlaubt.</p>
     <div style="height:8px"></div>
@@ -176,7 +173,7 @@ footer{padding:10px 16px;border-top:1px solid var(--line);font-size:10px;color:v
   <div class="foldertools"><button id="newFolder" type="button">＋ Ordner erstellen</button><button id="renameFolder" type="button">Umbenennen</button><button id="deleteFolder" type="button">Löschen</button></div><div class="folderbar" id="folderBar"></div><div class="folderhint" id="folderHint">Eigene Ordner bleiben auf diesem Gerät gespeichert.</div><div id="cameraList">
    <div id="autobahnList"></div>
   </div>
-  <footer>Quellen: Autobahn GmbH · Fintraffic / Digitraffic (CC BY 4.0) · Berlin.de · NYSDOT / 511NY · Flughäfen · Kartendaten © OpenStreetMap-Mitwirkende</footer>
+  <footer>Quellen: Autobahn GmbH · Berlin.de · NYSDOT / 511NY · Flughäfen · Kartendaten © OpenStreetMap-Mitwirkende</footer>
 </aside>
 <div class="mapwrap"><div class="mapbadge">ATLAS LIVE · WELTKARTE</div><div class="maptools"><label class="mapstyle-label" for="mapStyle">Kartenstil</label><select id="mapStyle" aria-label="Kartenstil"><option value="street">Straßenkarte</option><option value="dark">Dunkel</option><option value="topo">Gelände</option><option value="satellite">Satellit</option></select></div><div id="map"></div></div>
 <div class="camviewer" id="camviewer" role="dialog" aria-modal="true"><div class="camviewerbox"><div class="camviewhead"><strong id="camviewtitle">Kamera</strong><button id="camviewopen" type="button">Beim Betreiber öffnen ↗</button><button id="camviewclose" type="button">Schließen ✕</button></div><iframe class="camframe" id="camframe" title="Öffentliche Live-Kamera" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe><div class="camviewfoot" id="camviewnote">Wenn der Anbieter das Einbetten blockiert, nutze „Beim Betreiber öffnen“.</div></div></div>
@@ -316,34 +313,6 @@ function renderAutobahn(list){
   addCameraCard(container,c._name,'Autobahn '+c._road,()=>{map.setView([c._lat,c._lon],Math.max(map.getZoom(),9));marker.openPopup()},c._image||'',c._image?'Standbild':'Verkehrsportal');
  });
 }
-function renderFintraffic(features){
- updateListStamp();clearMarkers(finMarkers);clearMarkers(abMarkers);clearMarkers(cityMarkers);clearList();
- const container=$('autobahnList'),head=document.createElement('div');head.className='note';head.style.cssText='margin:10px 0 6px;color:#7be0f4;font-weight:700';head.textContent='FINTRAFFIC · '+features.length+' KAMERAS';container.appendChild(head);
- $('count').textContent=String(features.length);
- features.forEach(c=>{
-  const marker=L.circleMarker([c.lat,c.lon],{radius:6,color:'#7be0f4',weight:2,fillColor:'#1689aa',fillOpacity:.9}).addTo(map),image=c.image||'';
-  marker.bindPopup('<b>'+esc(c.name)+'</b><br>Finnland · Fintraffic'+(image?'<a href="'+esc(image)+'" target="_blank" rel="noopener"><img class="popupimg" src="'+esc(image)+'" alt="Aktuelles Kamerabild" style="max-height:240px"></a>':'')+'<p style="font-size:10px;color:#9aacc2">Standbild · Quelle: Fintraffic / Digitraffic · CC BY 4.0</p>');
-  finMarkers.push(marker);
-  addCameraCard(container,c.name,'Finnland · aktuelles Standbild',()=>{map.setView([c.lat,c.lon],Math.max(map.getZoom(),7));marker.openPopup()},image,'Standbild / Wetter');
- });
-}
-async function loadFintraffic(){
- finSetMessage('Lade öffentliche Kamerastationen aus Finnland …');
- try{
-  const data=await fetchJsonSafe('/api/fintraffic/stations',28000),features=Array.isArray(data.features)?data.features:[],cameras=[];
-  for(const feature of features){
-   const props=feature.properties||{};if(props.collectionStatus&&props.collectionStatus!=='GATHERING')continue;
-   const coords=feature.geometry?.coordinates||[],lon=Number(coords[0]),lat=Number(coords[1]);if(!Number.isFinite(lat)||!Number.isFinite(lon))continue;
-   for(const preset of (Array.isArray(props.presets)?props.presets:[])){
-    if(preset.inCollection!==true)continue;const id=preset.id||preset.presetId;if(!id)continue;
-    cameras.push({lat,lon,name:(props.name||'Fintraffic-Kamera')+' · '+id,image:'https://weathercam.digitraffic.fi/'+encodeURIComponent(id)+'.jpg'});
-   }
-  }
-  if(!cameras.length)throw new Error('Die API hat keine aktiven Kameras geliefert.');
-  map.fitBounds(L.latLngBounds(cameras.map(c=>[c.lat,c.lon])).pad(0.08),{maxZoom:7});renderFintraffic(cameras);filterCameraCards();
-  finSetMessage(cameras.length+' aktive Kameras geladen. Die Bilder sind Standbilder, keine Videostreams.');
- }catch(e){finSetMessage('Fintraffic konnte gerade nicht geladen werden: '+e.message)}
-}
 const citySources=[
  {name:'Berlin – offizielles Webcam-Portal',place:'Berlin · zwei bestätigte Stadtpanoramen',lat:52.52,lon:13.405,url:'https://www.berlin.de/webcams/',source:'Berlin.de · offizielle Übersicht; RBB-Fernsehzentrum und Rotes Rathaus'},
  {name:'RBB-Fernsehzentrum – Stadtpanorama',place:'Berlin-Westend · Theodor-Heuss-Platz',lat:52.507,lon:13.282,url:'https://www.berlin.de/webcams/4350926-4350835-rbb-fernsehzentrum.html',source:'RBB / Berlin.de · öffentliche schwenkbare Panorama-Webcam'},
@@ -439,7 +408,6 @@ const worldSources=[
  {name:'Frankreich – Bison Futé Verkehr',place:'Frankreich · landesweite Verkehrsübersicht',lat:46.2,lon:2.2,url:'https://www.bison-fute.gouv.fr/',source:'Bison Futé · offizielles Verkehrsportal',category:'traffic',local:false},
  {name:'Spanien – DGT Verkehrskarte',place:'Spanien · Straßen und Autobahnen',lat:40.4,lon:-3.7,url:'https://www.dgt.es/',source:'Dirección General de Tráfico · offizielle Verkehrsinformationen',category:'traffic',local:false},
  {name:'Portugal – Infraestruturas de Portugal',place:'Portugal · Straßen- und Verkehrsinformationen',lat:39.5,lon:-8.0,url:'https://www.infraestruturasdeportugal.pt/',source:'Infraestruturas de Portugal · offizielles Verkehrsportal',category:'traffic',local:false},
- {name:'Finnland – Digitraffic Wetterkameras',place:'Finnland · Straßen und Wetterstationen',lat:64.0,lon:26.0,url:'https://www.digitraffic.fi/en/road-traffic/',source:'Fintraffic / Digitraffic · öffentliche Wetterkameras und Verkehrsdaten',category:'traffic',local:false},
  {name:'Schweiz – Schweiz Tourismus Webcams',place:'Schweiz · Alpen, Seen und Bergorte',lat:46.8,lon:8.2,url:'https://www.myswitzerland.com/en-us/experiences/summer/water-sports/webcams/',source:'My Switzerland · Webcam-Übersicht',category:'portal',local:false},
  {name:'Österreich – Feratel Livecams',place:'Österreich und Alpenraum · Berge und Orte',lat:47.3,lon:11.4,url:'https://www.feratel.com/en/webcams.html',source:'Feratel · Livecam-Verzeichnis',category:'portal',local:false},
  {name:'Japan – NEXCO Central Verkehr',place:'Japan · Straßen und Autobahnen',lat:36.2,lon:138.3,url:'https://www.c-nexco.co.jp/en/',source:'NEXCO Central · offizielles Straßenportal',category:'traffic',local:false},
@@ -677,8 +645,6 @@ $('closeFlightHub').onclick=()=>{$('flightOverlay').classList.remove('open');$('
 $('flightOverlay').addEventListener('click',e=>{if(e.target===$('flightOverlay'))$('closeFlightHub').click()});
 $('flightBoardsTab').onclick=()=>setFlightHubTab('boards');
 $('flightRadarTab').onclick=()=>setFlightHubTab('radar');
-$('fintraffic').onclick=loadFintraffic;
-$('fintraffic').onclick=loadFintraffic;
 async function loadAutobahn(){
  const button=$('autobahn');button.disabled=true;clearMarkers(finMarkers);clearMarkers(cityMarkers);clearMarkers(abMarkers);clearList();abSetMessage('Prüfe die offiziellen Autobahn-Kameradaten …');
  try{
