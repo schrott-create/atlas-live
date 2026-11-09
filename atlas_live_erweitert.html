@@ -92,10 +92,14 @@ async function fetchJsonSafe(url,timeoutMs=12000){
  catch(error){if(error.name==='AbortError')throw new Error('Zeitüberschreitung beim Laden');throw error}
  finally{clearTimeout(timer)}
 }
-function addCameraCard(container,name,meta,onClick,image=''){
+function addCameraCard(container,name,meta,onClick,image='',tag='Quelle'){
  const el=document.createElement('div');el.className='camera';
- el.innerHTML='<img class="thumb" src="'+esc(image)+'" alt="" '+(image?'':'style="visibility:hidden"')+' onerror="this.style.visibility=\'hidden\'"><div><div class="camname">'+esc(name)+'</div><div class="cammeta">'+esc(meta)+'</div></div>';
- el.onclick=onClick;container.appendChild(el);
+ el.dataset.search=(name+' '+meta+' '+tag).toLocaleLowerCase('de');
+ const img=document.createElement('img');img.className='thumb';img.alt='';
+ if(image){img.src=image;img.onerror=()=>{img.style.visibility='hidden'};}else{img.style.visibility='hidden';}
+ const body=document.createElement('div'),title=document.createElement('div'),detail=document.createElement('div'),badge=document.createElement('span');
+ title.className='camname';title.textContent=name;detail.className='cammeta';detail.textContent=meta;badge.className='camtag';badge.textContent=tag;
+ body.append(title,detail,badge);el.append(img,body);el.onclick=onClick;container.appendChild(el);
 }
 function renderAutobahn(list){
  clearMarkers(abMarkers);clearMarkers(finMarkers);clearMarkers(cityMarkers);clearList();
