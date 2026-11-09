@@ -1,5 +1,6 @@
 import os
 import re
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 import requests
 from flask import Flask, jsonify, send_from_directory, abort, Response
@@ -40,6 +41,45 @@ def fintraffic_stations():
         content_type=response.headers.get("Content-Type", "application/json"),
     )
 
+
+@app.route("/api/autobahn/webcams")
+def autobahn_webcams():
+    """Fetch webcam lists from motorway roads concurrently, with a bounded timeout."""
+    try:
+        roads_response = requests.get(
+            AUTOBahn_BASE + "/",
+            headers={"Accept": "application/json", "User-Agent": "ATLAS-LIVE/1.0"},
+            timeout=10,
+        )
+        roads_response.raise_for_status()
+        roads = roads_response.json().get("roads", [])
+    except (requests.RequestException, ValueError):
+        return jsonify({"error": "Die Autobahn-Straßenliste ist gerade nicht erreichbar."}), 502
+
+    webcams = []
+    failed = 0
+
+    def fetch_road(road):
+        if not re.fullmatch(r"[A-Za-z0-9_-]{1,12}", str(road)):
+            return []
+        response = requests.get(
+            f"{AUTOBahn_BASE}/{road}/services/webcam",
+            headers={"Accept": "application/json", "User-Agent": "ATLAS-LIVE/1.0"},
+            timeout=10,
+        )
+        response.raise_for_status()
+        payload = response.json()
+        return payload.get("webcam", []) if isinstance(payload, dict) else []
+
+    with ThreadPoolExecutor(max_workers=12) as pool:
+        futures = {pool.submit(fetch_road, road): road for road in roads}
+        for future in as_completed(futures):
+            try:
+                webcams.extend(future.result())
+            except Exception:
+                failed += 1
+
+    return jsonify({"webcam": webcams, "checked": len(roads), "failed": failed})
 
 @app.route("/api/autobahn/roads")
 @app.route("/api/autobahn/<road>/services/webcam")
