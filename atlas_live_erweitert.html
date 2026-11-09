@@ -40,6 +40,13 @@ button:hover{background:#17465e}
 .popupimg{width:100%;max-height:120px;object-fit:cover;border-radius:6px;margin:7px 0}
 .popup a{color:var(--cyan)}
 footer{padding:10px 16px;border-top:1px solid var(--line);font-size:10px;color:var(--muted)}
+/* Aufgeräumte Kamera-Karten und Player-Overlay */
+.camera{grid-template-columns:70px minmax(0,1fr) 30px;align-items:start}
+.camera>div{min-width:0}
+.camera .folderpick{grid-column:2/4;min-width:0}
+.camviewerbox{box-shadow:0 24px 80px #000b}
+.camviewhead button{white-space:nowrap}
+@media(max-width:520px){.camviewer{padding:6px}.camviewhead{flex-wrap:wrap}.camviewhead strong{flex-basis:100%}.camviewhead button{flex:1}.camera{grid-template-columns:60px minmax(0,1fr) 28px}.thumb{width:60px;height:54px}}
 .camviewer{display:none;position:fixed;inset:0;z-index:2000;background:#050a12ee;padding:18px;align-items:center;justify-content:center}.camviewer.open{display:flex}.camviewerbox{width:min(1100px,100%);height:min(760px,94vh);background:#111a29;border:1px solid #35516c;border-radius:14px;display:flex;flex-direction:column;overflow:hidden}.camviewhead{display:flex;align-items:center;gap:10px;padding:10px 14px;border-bottom:1px solid var(--line)}.camviewhead strong{flex:1}.camviewhead button{width:auto;padding:8px 12px}.camframe{border:0;width:100%;height:100%;min-height:0;background:#050a12}.camviewfoot{padding:9px 14px;border-top:1px solid var(--line);font-size:11px;color:var(--muted)}.camviewfoot a{color:var(--cyan)}
 @media(max-width:760px){main{grid-template-columns:1fr;grid-template-rows:42vh 1fr;height:auto;min-height:calc(100vh - 64px)}aside{grid-row:2;min-height:420px;border-right:0} .mapwrap{grid-row:1}#map{height:42vh}.status{display:none}}
 </style>
@@ -66,6 +73,9 @@ footer{padding:10px 16px;border-top:1px solid var(--line);font-size:10px;color:v
     <div style="height:8px"></div>
     <button id="flights" type="button">Flugstatus & Flughäfen laden</button>
     <p class="note" id="flightmessage">Offizielle Ankunfts- und Abflugtafeln für BER und Albany (Upstate New York).</p>
+    <div style="height:8px"></div>
+    <button id="flightRadar" type="button">✈ Live-Flugradar in ATLAS LIVE öffnen</button>
+    <p class="note">Live-Positionen öffentlicher ADS-B-Meldungen rund um La Fargeville. Die Karte öffnet im ATLAS-LIVE-Fenster; falls der Anbieter Einbettung sperrt, gibt es den Direktaufruf.</p>
   </section>
   <div class="listhead"><span>Quellen & Kameras</span><span id="count">0</span></div>
   <div class="listupdated" id="listUpdated">Noch nicht geladen</div>
@@ -184,7 +194,15 @@ const citySources=[
  {name:'Watertown – Public Square Livecam',place:'Öffentlicher Stadtplatz · Watertown, NY',lat:43.9748,lon:-75.9108,url:'https://overlookcams.com/cam/public-square-watertown/',embedUrl:'https://www.youtube-nocookie.com/embed/Zz9hMrxl20I',source:'nny.live · bestätigter öffentlicher YouTube-Livestream'},
  {name:'Dry Hill Ski Area – Pistenkamera',place:'Öffentliche Skipistenansicht · Watertown, NY',lat:43.93,lon:-75.901,url:'https://camstreamer.com/live/stream/257660114-dry-hill-ski-area',embedUrl:'https://camstreamer.com/embed/JEweqzBnXVIybwdvL6ygjnQZx9UkJX0WzwcmoJog?rel=0',source:'Dry Hill Ski Area · öffentlicher Live-Stream',category:'resort'},
  {name:'Watertown International Airport – Webcam',place:'Öffentliche Flughafenansicht · Hounsfield, Jefferson County',lat:43.994,lon:-76.026,url:'https://www.livewebcamstream.com/webcam/watertown-airport-webcam-in-ny-837',embedUrl:'https://livewebcamstream.com/embed/watertown-airport-webcam-in-ny-837',source:'Watertown Airport · öffentlicher Webcam-Stream'},
- {name:'1000 Islands Bridge – Webcam',place:'Öffentlicher Fluss- und Brückenblick · Alexandria Bay',lat:44.35,lon:-75.91,url:'https://webcamlivestream.com/usa/new-york/1000-islands-bridge-alexandria-bay/',source:'Webcam Live Stream · Betreiberseite, Einbettung nicht bestätigt'}
+ {name:'1000 Islands Bridge – Webcam',place:'Öffentlicher Fluss- und Brückenblick · Alexandria Bay',lat:44.35,lon:-75.91,url:'https://webcamlivestream.com/usa/new-york/1000-islands-bridge-alexandria-bay/',source:'Webcam Live Stream · Betreiberseite, Einbettung nicht bestätigt'},
+ {name:'NY 3 at I-81 – Verkehrskamera',place:'Watertown · öffentliche Straßenkamera',lat:43.98,lon:-75.91,url:'https://godsviewai.com/world/cameras/ax_opencctv_ny511_ny511-Skyline-14077',embedUrl:'https://godsviewai.com/world/cameras/ax_opencctv_ny511_ny511-Skyline-14077',source:'NY 511 · öffentliche Verkehrskamera, Ansicht über GodsView',category:'traffic',local:false},
+ {name:'Brownville – Wetterkamera',place:'Brownville · Blick Richtung New York 12',lat:44.00,lon:-75.98,url:'https://godsviewai.com/world/cameras/ax_opencctv_windy_windy-1793895638',embedUrl:'https://godsviewai.com/world/cameras/ax_opencctv_windy_windy-1793895638',source:'Windy · öffentliche Wetterkamera, Ansicht über GodsView',category:'still',local:false},
+ {name:'Sanfords Four Corners – Wetterkamera',place:'Jefferson County · Wetter- und Landschaftsansicht',lat:44.02,lon:-75.90,url:'https://godsviewai.com/world/cameras/ax_windy_1793872271',embedUrl:'https://godsviewai.com/world/cameras/ax_windy_1793872271',source:'Windy · öffentliche Wetterkamera, Ansicht über GodsView',category:'still',local:false},
+ {name:'Adams – Wetterkamera',place:'Adams · Jefferson County',lat:43.81,lon:-76.02,url:'https://godsviewai.com/world/cameras/ax_windy_1793872275',embedUrl:'https://godsviewai.com/world/cameras/ax_windy_1793872275',source:'Windy · öffentliche Wetterkamera, Ansicht über GodsView',category:'still',local:false},
+ {name:'Copenhagen / Carthage – NY Mesonet',place:'Carthage · Wetterstation mit Kamera',lat:43.98,lon:-75.61,url:'https://godsviewai.com/world/cameras/ax_opencctv_nysmesonet_nysmesonet-nysm-COPE',embedUrl:'https://godsviewai.com/world/cameras/ax_opencctv_nysmesonet_nysmesonet-nysm-COPE',source:'NY Mesonet · öffentliche Wetterkamera, Ansicht über GodsView',category:'still',local:false},
+ {name:'Harrisburg – NY Mesonet',place:'Harrisburg · öffentliche Wetterstation',lat:43.82,lon:-75.69,url:'https://godsviewai.com/world/cameras/ax_opencctv_nysmesonet_nysmesonet-nysm-HARR',embedUrl:'https://godsviewai.com/world/cameras/ax_opencctv_nysmesonet_nysmesonet-nysm-HARR',source:'NY Mesonet · öffentliche Wetterkamera, Ansicht über GodsView',category:'still',local:false},
+ {name:'Belleville – NY Mesonet',place:'Belleville · öffentliche Wetterstation',lat:43.79,lon:-76.11,url:'https://godsviewai.com/world/cameras/ax_opencctv_nysmesonet_nysmesonet-nysm-BELL',embedUrl:'https://godsviewai.com/world/cameras/ax_opencctv_nysmesonet_nysmesonet-nysm-BELL',source:'NY Mesonet · öffentliche Wetterkamera, Ansicht über GodsView',category:'still',local:false},
+ {name:'Philadelphia – NY Mesonet',place:'Philadelphia · öffentliche Wetterstation',lat:44.15,lon:-75.71,url:'https://godsviewai.com/world/cameras/ax_opencctv_nysmesonet_nysmesonet-nysm-PHIL',embedUrl:'https://godsviewai.com/world/cameras/ax_opencctv_nysmesonet_nysmesonet-nysm-PHIL',source:'NY Mesonet · öffentliche Wetterkamera, Ansicht über GodsView',category:'still',local:false}
 ];
 const regionalSources=[
  {name:'Thousand Islands – öffentliche Webcam-Übersicht',place:'Region La Fargeville · Alexandria Bay und Clayton',lat:44.18,lon:-75.93,url:'https://1000islandslive.com/live-cams/',source:'1000 Islands Live · Betreiberübersicht',category:'portal',local:false},
@@ -246,6 +264,12 @@ function loadFlights(){
  $('flightmessage').textContent='Zwei offizielle Flugtafeln geladen: BER und Albany. Aktuelle Statusdaten stehen auf den Flughafenseiten.';
  setMessage('Flughäfen angezeigt. Öffne einen Eintrag für die offizielle Ankunfts- und Abflugtafel.');
 }
+function openFlightRadar(){
+ const url='https://globe.adsbexchange.com/?lat=44.18&lon=-75.93&zoom=8';
+ openCameraView({name:'Live-Flugradar · Thousand Islands',place:'La Fargeville / Watertown / Thousand Islands',url,embedUrl:url,source:'ADS-B Exchange · öffentliche ADS-B-Livekarte'});
+ setMessage('Live-Flugradar wird im ATLAS-LIVE-Player geöffnet. Sichtbare Flugzeuge hängen von empfangenen ADS-B-Signalen in der Region ab.');
+}
+$('flightRadar').onclick=openFlightRadar;
 $('citycams').onclick=loadCityCams;
 $('flights').onclick=loadFlights;
 $('fintraffic').onclick=loadFintraffic;
