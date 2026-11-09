@@ -47,7 +47,7 @@ class AtlasServerTests(unittest.TestCase):
         self.assertIn(b"Sitemap: https://atlas.example/sitemap.xml", robots.data)
         self.assertEqual(sitemap.status_code, 200)
         self.assertIn(b"https://atlas.example/", sitemap.data)
-        self.assertIn(b"application/xml", sitemap.content_type)
+        self.assertIn("application/xml", sitemap.content_type)
 
     def test_fintraffic_proxy_returns_upstream_data(self):
         payload = b'{"features":[]}'
