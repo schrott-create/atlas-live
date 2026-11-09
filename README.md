@@ -16,7 +16,6 @@ ATLAS LIVE verbindet eine interaktive Weltkarte mit einer durchsuchbaren Sammlun
 - Zufallskamera
 - Kamera-Live-Wall für Quellen mit bestätigtem Einbettungslink
 - Teilbare Kartenansicht
-- Roadmap mit 30 bisherigen und 50 zusätzlichen Ausbauideen
 - Dynamische `robots.txt` und `sitemap.xml`
 
 ## Nutzung
@@ -40,10 +39,6 @@ Das Projekt ist für einen kostenlosen Hobbybetrieb ausgelegt. Der Render-Free-W
 
 Bitte die Nutzungsbedingungen und Bildrechte der jeweiligen Anbieter beachten. ATLAS LIVE ist ein unabhängiger Webcam-Explorer und nicht mit Windy, Reedereien oder den aufgeführten Kamerabetreibern verbunden.
 
-## Roadmap
-
-Die Roadmap in der App zeigt den aktuellen Funktionsstand und weitere geplante Ideen. Ein Roadmap-Eintrag ist nicht automatisch eine bereits implementierte Funktion. Neue Kameraquellen werden nur dann als direkte Live-Player dargestellt, wenn dafür ein geeigneter öffentlicher Einbettungslink vorhanden ist.
-
 ## Automatische Prüfungen
 
 Bei jedem Push und Pull Request führt GitHub Actions diese Prüfungen aus:
@@ -53,7 +48,7 @@ Bei jedem Push und Pull Request führt GitHub Actions diese Prüfungen aus:
 - JavaScript-Syntaxprüfung und JSON-LD-Validierung
 - Prüfung aller festen DOM-Referenzen
 - Prüfung von Kamera-Links, Koordinaten und Player-Links
-- Kontrolle der 30 bisherigen und 50 neuen Roadmap-Einträge
+- Prüfung der Radio-Senderdaten und Kartenkoordinaten
 
 Lokal ausführbar:
 
