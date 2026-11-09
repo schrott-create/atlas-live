@@ -17,6 +17,30 @@ def home():
 def health():
     return jsonify({"status": "online", "app": "ATLAS LIVE"})
 
+@app.route("/api/fintraffic/stations")
+def fintraffic_stations():
+    upstream = "https://tie.digitraffic.fi/api/weathercam/v1/stations"
+    try:
+        response = requests.get(
+            upstream,
+            headers={
+                "Accept": "application/json",
+                "Digitraffic-User": "ATLAS-LIVE/1.0 (public webcam map)",
+                "Accept-Encoding": "gzip",
+            },
+            timeout=25,
+        )
+        response.raise_for_status()
+    except requests.RequestException:
+        return jsonify({"error": "Fintraffic-Daten sind gerade nicht erreichbar."}), 502
+
+    return Response(
+        response.content,
+        status=response.status_code,
+        content_type=response.headers.get("Content-Type", "application/json"),
+    )
+
+
 @app.route("/api/autobahn/roads")
 @app.route("/api/autobahn/<road>/services/webcam")
 def autobahn_data(road=None):
