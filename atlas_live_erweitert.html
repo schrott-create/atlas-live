@@ -8,7 +8,7 @@
 <style>
 :root{color-scheme:dark;--bg:#080d16;--panel:#111a29;--line:#26354a;--muted:#8fa2bb;--cyan:#58c7e8;--green:#48d6a0}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:#eaf1fb;font:14px/1.45 Inter,system-ui,Arial,sans-serif}
-header{height:64px;display:flex;align-items:center;gap:12px;padding:0 20px;border-bottom:1px solid var(--line);background:#0b1220}
+header{height:64px;display:flex;align-items:center;gap:12px;padding:0 20px;border-bottom:1px solid var(--line);background:linear-gradient(110deg,#0b1220,#102338)}
 .logo{width:34px;height:34px;border:1px solid #3a6680;border-radius:10px;display:grid;place-items:center;color:var(--cyan);font-size:19px}
 h1{font-size:16px;letter-spacing:2px;margin:0;font-weight:800}.sub{color:var(--muted);font-size:11px;letter-spacing:1px}
 .status{margin-left:auto;color:var(--green);font-size:11px;letter-spacing:1px}
@@ -23,7 +23,7 @@ button:hover{background:#17465e}
 .row{display:flex;gap:8px;margin-top:9px}.row button{width:auto;flex:1}
 .note{font-size:11px;color:var(--muted);margin:9px 0 0}
 .listhead{display:flex;justify-content:space-between;padding:14px 16px 8px;color:var(--muted);font-size:10px;letter-spacing:1.4px;text-transform:uppercase}
-.filterbox{padding:0 12px 10px}.filterbox input{padding:9px 11px;font-size:12px}
+.filterbox{padding:0 12px 10px;display:grid;gap:7px}.filterbox input,.filterbox select{padding:9px 11px;font-size:12px}.filteractions{display:flex;gap:7px}.filteractions button{padding:7px 9px;font-size:11px}.filteractions button.selected{background:#24516a;border-color:#58c7e8}.favbtn{align-self:start;justify-self:end;width:28px;height:28px;padding:0;border-radius:8px;background:#0c1726;border:1px solid #34465d;color:#9eb4cc;font-size:16px}.favbtn.on{color:#ffd76a;border-color:#80652a;background:#2b2414}.camera{grid-template-columns:70px 1fr 28px}.thumb{width:70px;height:58px}.listupdated{padding:0 14px 9px;color:#8298b1;font-size:10px}
 .camtag{display:inline-block;margin-top:5px;padding:2px 6px;border:1px solid #31556a;border-radius:20px;color:#9bdcf0;font-size:9px;letter-spacing:.3px}
 #cameraList{overflow:auto;padding:0 10px 12px}
 .camera{padding:11px;border:1px solid transparent;border-radius:11px;display:grid;grid-template-columns:82px 1fr;gap:11px;cursor:pointer;margin-bottom:6px}
@@ -51,7 +51,7 @@ footer{padding:10px 16px;border-top:1px solid var(--line);font-size:10px;color:v
   <section class="tools">
     <label class="label" for="search">Ort suchen</label>
     <input id="search" placeholder="z. B. Berlin, Hamburg, München">
-    <div class="row"><button id="locate" type="button">Weltkarte</button></div>
+    <div class="row"><button id="locate" type="button">Weltkarte</button><button id="regionHome" type="button">La Fargeville & Umgebung</button></div>
     <p class="note" id="message">Öffentliche Autobahnkameras in Deutschland werden automatisch geladen. Weitere öffentliche Quellen können später ergänzt werden.</p>
     <div style="height:14px"></div>
     <label class="label">Zusätzliche Quelle (kein Key nötig)</label>
@@ -67,8 +67,9 @@ footer{padding:10px 16px;border-top:1px solid var(--line);font-size:10px;color:v
     <button id="flights" type="button">Flugstatus & Flughäfen laden</button>
     <p class="note" id="flightmessage">Offizielle Ankunfts- und Abflugtafeln für BER und Albany (Upstate New York).</p>
   </section>
-  <div class="listhead"><span>Einträge geladen</span><span id="count">0</span></div>
-  <div class="filterbox"><input id="cameraFilter" type="search" placeholder="Kamera, Ort oder Quelle filtern …" aria-label="Kameraeinträge filtern"></div>
+  <div class="listhead"><span>Quellen & Kameras</span><span id="count">0</span></div>
+  <div class="listupdated" id="listUpdated">Noch nicht geladen</div>
+  <div class="filterbox"><input id="cameraFilter" type="search" placeholder="Kamera, Ort oder Quelle filtern …" aria-label="Kameraeinträge filtern"><select id="categoryFilter" aria-label="Kategorie filtern"><option value="all">Alle Kategorien</option><option value="video">Bestätigte Videostreams</option><option value="still">Standbild / Wetterkamera</option><option value="traffic">Verkehr / Straßen</option><option value="portal">Kamera-Portale / Betreiberseiten</option><option value="resort">Resort / Landschaft</option></select><div class="filteractions"><button id="favoritesOnly" type="button" aria-pressed="false">☆ Nur Favoriten</button><button id="resetFilters" type="button">Filter zurücksetzen</button></div></div>
   <div id="cameraList">
    <div id="autobahnList"></div>
   </div>
@@ -83,15 +84,24 @@ const map=L.map('map',{worldCopyJump:true}).setView([25,8],2);
 L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'&copy; OpenStreetMap-Mitwirkende',maxZoom:19}).addTo(map);
 const $=id=>document.getElementById(id);
 let abMarkers=[],finMarkers=[],cityMarkers=[];
+const FAVORITES_KEY='atlas-live-favorites-v1';
+let favorites=new Set();try{favorites=new Set(JSON.parse(localStorage.getItem(FAVORITES_KEY)||'[]'))}catch{}
+let favoritesOnly=false;
+function saveFavorites(){try{localStorage.setItem(FAVORITES_KEY,JSON.stringify([...favorites]))}catch{setMessage('Favoriten können in diesem Browser nicht dauerhaft gespeichert werden.')}}
+function cameraCategory(tag,meta){const t=(tag+' '+meta).toLowerCase();if(t.includes('bestätigter video'))return 'video';if(t.includes('standbild'))return 'still';if(t.includes('autobahn')||t.includes('verkehr')||t.includes('traffic'))return 'traffic';if(t.includes('resort')||t.includes('ski')||t.includes('landschaft'))return 'resort';return 'portal'}
+function updateListStamp(){const d=new Date();$('listUpdated').textContent='Liste zuletzt geladen: '+d.toLocaleString('de-DE',{dateStyle:'medium',timeStyle:'short'});}
+
 function esc(s){return String(s??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]))}
 function val(o,...paths){for(const p of paths){let x=o;for(const k of p.split('.'))x=x?.[k];if(x!==undefined&&x!==null)return x}return ''}
 function setMessage(t){$('message').textContent=t}
 function abSetMessage(t){$('abmessage').textContent=t}
 function finSetMessage(t){$('finmessage').textContent=t}
 function clearMarkers(arr){arr.forEach(m=>map.removeLayer(m));arr.length=0}
-function clearList(){ $('autobahnList').innerHTML=''; $('count').textContent='0'; $('cameraFilter').value=''; }
-function filterCameraCards(){const q=$('cameraFilter').value.trim().toLocaleLowerCase('de');document.querySelectorAll('#autobahnList .camera').forEach(card=>{card.hidden=!!q&&!card.dataset.search.includes(q)});}
-$('cameraFilter').addEventListener('input',filterCameraCards);
+function clearList(){ $('autobahnList').innerHTML=''; $('count').textContent='0'; $('cameraFilter').value=''; $('categoryFilter').value='all';favoritesOnly=false;$('favoritesOnly').classList.remove('selected');$('favoritesOnly').setAttribute('aria-pressed','false');$('favoritesOnly').textContent='☆ Nur Favoriten'; }
+function filterCameraCards(){const q=$('cameraFilter').value.trim().toLocaleLowerCase('de'),cat=$('categoryFilter').value;let visible=0;document.querySelectorAll('#autobahnList .camera').forEach(card=>{const showText=!q||card.dataset.search.includes(q),showCat=cat==='all'||card.dataset.category===cat,showFav=!favoritesOnly||favorites.has(card.dataset.id);card.hidden=!(showText&&showCat&&showFav);if(!card.hidden)visible++;});$('count').textContent=String(visible);}
+$('cameraFilter').addEventListener('input',filterCameraCards);$('categoryFilter').addEventListener('change',filterCameraCards);
+$('favoritesOnly').onclick=()=>{favoritesOnly=!favoritesOnly;$('favoritesOnly').classList.toggle('selected',favoritesOnly);$('favoritesOnly').setAttribute('aria-pressed',String(favoritesOnly));$('favoritesOnly').textContent=favoritesOnly?'★ Favoriten aktiv':'☆ Nur Favoriten';filterCameraCards();};
+$('resetFilters').onclick=()=>{$('cameraFilter').value='';$('categoryFilter').value='all';favoritesOnly=false;$('favoritesOnly').classList.remove('selected');$('favoritesOnly').setAttribute('aria-pressed','false');$('favoritesOnly').textContent='☆ Nur Favoriten';filterCameraCards();};
 async function fetchJsonSafe(url,timeoutMs=12000){
  const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),timeoutMs);
  try{const res=await fetch(url,{headers:{accept:'application/json'},signal:controller.signal});if(!res.ok)throw new Error('HTTP '+res.status);return await res.json()}
@@ -100,15 +110,18 @@ async function fetchJsonSafe(url,timeoutMs=12000){
 }
 function addCameraCard(container,name,meta,onClick,image='',tag='Quelle'){
  const el=document.createElement('div');el.className='camera';
- el.dataset.search=(name+' '+meta+' '+tag).toLocaleLowerCase('de');
+ const id=(name+'|'+meta).toLocaleLowerCase('de');
+ el.dataset.id=id;el.dataset.category=cameraCategory(tag,meta);el.dataset.search=(name+' '+meta+' '+tag).toLocaleLowerCase('de');
  const img=document.createElement('img');img.className='thumb';img.alt='';
  if(image){img.src=image;img.onerror=()=>{img.style.visibility='hidden'};}else{img.style.visibility='hidden';}
- const body=document.createElement('div'),title=document.createElement('div'),detail=document.createElement('div'),badge=document.createElement('span');
+ const body=document.createElement('div'),title=document.createElement('div'),detail=document.createElement('div'),badge=document.createElement('span'),fav=document.createElement('button');
  title.className='camname';title.textContent=name;detail.className='cammeta';detail.textContent=meta;badge.className='camtag';badge.textContent=tag;
- body.append(title,detail,badge);el.append(img,body);el.onclick=onClick;container.appendChild(el);
+ fav.type='button';fav.className='favbtn'+(favorites.has(id)?' on':'');fav.textContent=favorites.has(id)?'★':'☆';fav.title=favorites.has(id)?'Favorit entfernen':'Als Favorit speichern';fav.setAttribute('aria-label',fav.title);
+ fav.onclick=e=>{e.stopPropagation();if(favorites.has(id))favorites.delete(id);else favorites.add(id);saveFavorites();fav.classList.toggle('on',favorites.has(id));fav.textContent=favorites.has(id)?'★':'☆';fav.title=favorites.has(id)?'Favorit entfernen':'Als Favorit speichern';filterCameraCards();};
+ body.append(title,detail,badge);el.append(img,body,fav);el.onclick=onClick;container.appendChild(el);
 }
 function renderAutobahn(list){
- clearMarkers(abMarkers);clearMarkers(finMarkers);clearMarkers(cityMarkers);clearList();
+ updateListStamp();clearMarkers(abMarkers);clearMarkers(finMarkers);clearMarkers(cityMarkers);clearList();
  const container=$('autobahnList');
  const head=document.createElement('div');head.className='note';head.style.cssText='margin:10px 0 6px;color:#ffb020;font-weight:700';head.textContent='AUTOBAHN GMBH · '+list.length;container.appendChild(head);
  $('count').textContent=String(list.length);
@@ -116,18 +129,18 @@ function renderAutobahn(list){
   const marker=L.circleMarker([c._lat,c._lon],{radius:6,color:'#ffd27f',weight:2,fillColor:'#c97a1a',fillOpacity:.9}).addTo(map);
   marker.bindPopup('<b>'+esc(c._name)+'</b><br>Autobahn '+esc(c._road)+(c._image?'<a href="'+esc(c._image)+'" target="_blank" rel="noopener"><img class="popupimg" src="'+esc(c._image)+'" alt="Aktuelles Kamerabild"></a>':'')+(c._url?'<br><a href="'+esc(c._url)+'" target="_blank" rel="noopener">Kamera / Live-Ansicht öffnen ↗</a>':'')+'<p style="font-size:10px;color:#9aacc2">Quelle: Autobahn GmbH / zuständiger Landesanbieter</p>');
   abMarkers.push(marker);
-  addCameraCard(container,c._name,'Autobahn '+c._road,()=>{map.setView([c._lat,c._lon],Math.max(map.getZoom(),9));marker.openPopup()},c._image||'',c._image?'Standbild':'Betreiberquelle');
+  addCameraCard(container,c._name,'Autobahn '+c._road,()=>{map.setView([c._lat,c._lon],Math.max(map.getZoom(),9));marker.openPopup()},c._image||'',c._image?'Standbild':'Verkehrsportal');
  });
 }
 function renderFintraffic(features){
- clearMarkers(finMarkers);clearMarkers(abMarkers);clearMarkers(cityMarkers);clearList();
+ updateListStamp();clearMarkers(finMarkers);clearMarkers(abMarkers);clearMarkers(cityMarkers);clearList();
  const container=$('autobahnList'),head=document.createElement('div');head.className='note';head.style.cssText='margin:10px 0 6px;color:#7be0f4;font-weight:700';head.textContent='FINTRAFFIC · '+features.length+' KAMERAS';container.appendChild(head);
  $('count').textContent=String(features.length);
  features.forEach(c=>{
   const marker=L.circleMarker([c.lat,c.lon],{radius:6,color:'#7be0f4',weight:2,fillColor:'#1689aa',fillOpacity:.9}).addTo(map),image=c.image||'';
   marker.bindPopup('<b>'+esc(c.name)+'</b><br>Finnland · Fintraffic'+(image?'<a href="'+esc(image)+'" target="_blank" rel="noopener"><img class="popupimg" src="'+esc(image)+'" alt="Aktuelles Kamerabild" style="max-height:240px"></a>':'')+'<p style="font-size:10px;color:#9aacc2">Standbild · Quelle: Fintraffic / Digitraffic · CC BY 4.0</p>');
   finMarkers.push(marker);
-  addCameraCard(container,c.name,'Finnland · aktuelles Standbild',()=>{map.setView([c.lat,c.lon],Math.max(map.getZoom(),7));marker.openPopup()},image,'Standbild');
+  addCameraCard(container,c.name,'Finnland · aktuelles Standbild',()=>{map.setView([c.lat,c.lon],Math.max(map.getZoom(),7));marker.openPopup()},image,'Standbild / Wetter');
  });
 }
 async function loadFintraffic(){
@@ -143,7 +156,7 @@ async function loadFintraffic(){
    }
   }
   if(!cameras.length)throw new Error('Die API hat keine aktiven Kameras geliefert.');
-  map.fitBounds(L.latLngBounds(cameras.map(c=>[c.lat,c.lon])).pad(0.08),{maxZoom:7});renderFintraffic(cameras);
+  map.fitBounds(L.latLngBounds(cameras.map(c=>[c.lat,c.lon])).pad(0.08),{maxZoom:7});renderFintraffic(cameras);filterCameraCards();
   finSetMessage(cameras.length+' aktive Kameras geladen. Die Bilder sind Standbilder, keine Videostreams.');
  }catch(e){finSetMessage('Fintraffic konnte gerade nicht geladen werden: '+e.message)}
 }
@@ -162,32 +175,18 @@ const citySources=[
  {name:'Alexandria Bay – River View Livecam',place:'Öffentlicher Flussblick · Thousand Islands',lat:44.336,lon:-75.918,url:'https://overlookcams.com/de/cam/alexandria-bay/',embedUrl:'https://www.youtube-nocookie.com/embed/H_EbNSqfoso',source:'Alexandria Bay Chamber of Commerce · bestätigter öffentlicher YouTube-Livestream'},
  {name:'Alexandria Bay – Dock-Kamera',place:'Öffentlicher Hafenblick · Thousand Islands',lat:44.336,lon:-75.918,url:'https://visitalexbay.org/area-videos/',source:'Alexandria Bay Chamber of Commerce · Betreiberseite mit Kameralink'},
  {name:'Clayton – Frink Park Riverfront Livecam',place:'Öffentliche Uferansicht · Clayton, NY',lat:44.240,lon:-76.086,url:'https://overlookcams.com/cam/clayton-riverfront/',embedUrl:'https://www.youtube-nocookie.com/embed/3f0KT17hmyk',source:'Cameras of Clayton NY · bestätigter öffentlicher YouTube-Livestream'},
- {name:'Watertown – Public Square Livecam',place:'Öffentlicher Stadtplatz · Watertown, NY',lat:43.9748,lon:-75.9108,url:'https://overlookcams.com/cam/public-square-watertown/',embedUrl:'https://www.youtube-nocookie.com/embed/Zz9hMrxl20I',source:'nny.live · bestätigter öffentlicher YouTube-Livestream'}
+ {name:'Watertown – Public Square Livecam',place:'Öffentlicher Stadtplatz · Watertown, NY',lat:43.9748,lon:-75.9108,url:'https://overlookcams.com/cam/public-square-watertown/',embedUrl:'https://www.youtube-nocookie.com/embed/Zz9hMrxl20I',source:'nny.live · bestätigter öffentlicher YouTube-Livestream'},
+ {name:'Dry Hill Ski Area – Pistenkamera',place:'Öffentliche Skipistenansicht · Watertown, NY',lat:43.93,lon:-75.901,url:'https://camstreamer.com/live/stream/257660114-dry-hill-ski-area',embedUrl:'https://camstreamer.com/embed/JEweqzBnXVIybwdvL6ygjnQZx9UkJX0WzwcmoJog?rel=0',source:'Dry Hill Ski Area · öffentlicher Live-Stream',category:'resort'},
+ {name:'Watertown International Airport – Webcam',place:'Öffentliche Flughafenansicht · Hounsfield, Jefferson County',lat:43.994,lon:-76.026,url:'https://www.livewebcamstream.com/webcam/watertown-airport-webcam-in-ny-837',embedUrl:'https://livewebcamstream.com/embed/watertown-airport-webcam-in-ny-837',source:'Watertown Airport · öffentlicher Webcam-Stream'},
+ {name:'1000 Islands Bridge – Webcam',place:'Öffentlicher Fluss- und Brückenblick · Alexandria Bay',lat:44.35,lon:-75.91,url:'https://webcamlivestream.com/usa/new-york/1000-islands-bridge-alexandria-bay/',source:'Webcam Live Stream · Betreiberseite, Einbettung nicht bestätigt'}
 ];
-const adirondackSources=[
- {name:'ADK Experience – Blue Mountain Lake',place:'Blue Mountain Lake · See- und Bergblick',lat:43.86,lon:-74.42,url:'https://www.theadkx.org/',source:'Adirondack Experience · EarthCam'},
- {name:'Garnet Hill – Nordic Trails',place:'North River · Wald- und Loipenblick',lat:43.72,lon:-74.00,url:'https://www.garnet-hill.com/',source:'Garnet Hill Lodge'},
- {name:'Gore Mountain – Base Cam',place:'North Creek · Bergstation',lat:43.67,lon:-74.00,url:'https://goremountain.com/',source:'Gore Mountain'},
- {name:'Pine’s Country Store – Indian Lake',place:'Indian Lake · Orts- und Straßenblick',lat:43.78,lon:-74.27,url:'https://ilsnow.com/',source:'ILSnow'},
- {name:'The Mountaineer – Keene Valley',place:'Keene Valley · Ortsblick',lat:44.19,lon:-73.79,url:'https://www.microseven.com/',source:'The Mountaineer'},
- {name:'Lake George – Region Cams',place:'Lake George · mehrere öffentliche See- und Ortsblicke',lat:43.43,lon:-73.71,url:'https://www.lakegeorge.com/webcams/',source:'LakeGeorge.com'},
- {name:'The Lake Motel – Waterfront',place:'Lake George · Seeufer',lat:43.42,lon:-73.71,url:'https://www.lakegeorgelakemotel.com/',source:'The Lake Motel'},
- {name:'Lake Placid Lodge',place:'Lake Placid · See- und Bergpanorama',lat:44.28,lon:-73.98,url:'https://www.wildcenter.org/',source:'The Wild Center / Lake Placid Lodge'},
- {name:'Lake Placid Olympic Center',place:'Lake Placid · öffentlicher Sportstättenblick',lat:44.285,lon:-73.985,url:'https://lakeplacidolympiccenter.com/',source:'Lake Placid Olympic Center'},
- {name:'Mirror Lake – Webcam-Quelle',place:'Lake Placid · Seeufer',lat:44.285,lon:-73.986,url:'https://www.youtube.com/',source:'Ausable Freshwater Center · Streamstatus nicht bestätigt'},
- {name:'Mt. Van Hoevenberg',place:'Lake Placid · Berg- und Streckenblick',lat:44.20,lon:-73.90,url:'https://mtvanhoevenberg.com/',source:'Mt. Van Hoevenberg / ORDA'},
- {name:'Whiteface Mountain – Resort',place:'Wilmington · Bergstationen',lat:44.36,lon:-73.90,url:'https://whiteface.com/',source:'Whiteface Mountain'},
- {name:'Whiteface Summit Cam',place:'Wilmington · Gipfelpanorama',lat:44.36,lon:-73.90,url:'https://whiteface.com/',source:'Whiteface Mountain'},
- {name:'Mt. Sabattis Lookout',place:'Long Lake · Aussicht auf die Berge',lat:43.97,lon:-74.42,url:'https://mylonglake.com/',source:'My Long Lake'},
- {name:'Inlet – Town Webcams',place:'Inlet · Orts- und Seenansichten',lat:43.75,lon:-74.79,url:'https://www.inletny.com/',source:'Town of Inlet'},
- {name:'McCauley Mountain Base',place:'Old Forge · Bergblick',lat:43.70,lon:-74.98,url:'https://www.oldforge.net/',source:'OldForge.net'},
- {name:'Stillwater Reservoir',place:'Stillwater · Reservoir- und Naturblick',lat:43.85,lon:-75.00,url:'https://www.oldforge.net/',source:'OldForge.net'},
- {name:'Hoel Pond',place:'Santa Clara · Natur- und Seeblick',lat:44.30,lon:-74.30,url:'https://www.windy.com/',source:'Windy.com'},
- {name:'Hotel Saranac – Rooftop',place:'Saranac Lake · Orts- und Dachblick',lat:44.33,lon:-74.13,url:'https://hotelsaranac.com/',source:'Hotel Saranac'},
- {name:'Lake Clear Lodge',place:'Lake Clear · See- und Uferblick',lat:44.34,lon:-74.30,url:'https://www.lakeclearlodge.com/',source:'Lake Clear Lodge'},
- {name:'Upper Saranac Lake',place:'Upper Saranac Lake · See- und Naturblick',lat:44.30,lon:-74.30,url:'https://uppersaranac.com/',source:'Upper Saranac Lake Association'},
- {name:'Upper St. Regis Lake',place:'Brighton · See- und Waldpanorama',lat:44.40,lon:-74.30,url:'https://www.windy.com/',source:'Windy.com'},
- {name:'The Wild Center – Grounds',place:'Tupper Lake · Natur- und Waldansicht',lat:44.23,lon:-74.46,url:'https://www.wildcenter.org/',source:'The Wild Center'}
+const regionalSources=[
+ {name:'Thousand Islands – öffentliche Webcam-Übersicht',place:'Region La Fargeville · Alexandria Bay und Clayton',lat:44.18,lon:-75.93,url:'https://1000islandslive.com/live-cams/',source:'1000 Islands Live · Betreiberübersicht',category:'portal'},
+ {name:'New York 511 – Verkehrskameras',place:'Jefferson County und North Country · regionale Verkehrskarte',lat:44.18,lon:-75.93,url:'https://511ny.org/map',source:'New York State · offizielles Verkehrsportal',category:'traffic'},
+ {name:'Jefferson County – Wetter-Webcams',place:'Nördlich von Watertown · regionale Wetteransichten',lat:44.02,lon:-75.92,url:'https://hmienterprises.com/webcam/',source:'HMI Enterprises · öffentliche Wetter-Standbilder, Updates tagsüber',category:'still'},
+ {name:'Watertown – Kameraübersicht',place:'Jefferson County · Public Square, Dry Hill und Flughafen',lat:43.9748,lon:-75.9108,url:'https://www.webcamny.com/en-US/category/watertown',source:'Webcam NY · Verzeichnis öffentlicher Kameras',category:'portal'},
+ {name:'New York State – Webcam-Verzeichnis',place:'North Country und Adirondacks · regionale Übersicht',lat:44.18,lon:-75.93,url:'https://www.webcamny.com/en-US',source:'Webcam NY · kuratiertes öffentliches Verzeichnis',category:'portal'},
+ {name:'Adirondacks – Webcam-Übersicht',place:'Adirondack Region · Lake Placid, Old Forge und mehr',lat:44.18,lon:-75.93,url:'https://www.adirondackregion.com/webcams',source:'AdirondackRegion · Betreiberlinks, Status je Kamera unterschiedlich',category:'portal'}
 ];
 const flightSources=[
  {name:'Flughafen Berlin Brandenburg (BER)',place:'Berlin · Ankünfte und Abflüge',lat:52.3667,lon:13.5033,url:'https://ber.berlin-airport.de/en/flying/departures-arrivals.html',source:'BER · offizielle Flugtafel'},
@@ -206,25 +205,25 @@ $('camviewclose').onclick=()=>{$('camviewer').classList.remove('open');$('camfra
 $('camviewer').addEventListener('click',e=>{if(e.target===$('camviewer'))$('camviewclose').click()});
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&$('camviewer').classList.contains('open'))$('camviewclose').click()});
 function loadCityCams(){
- clearMarkers(cityMarkers);clearMarkers(abMarkers);clearMarkers(finMarkers);clearList();
- const allSources=[...citySources,...adirondackSources];
+ updateListStamp();clearMarkers(cityMarkers);clearMarkers(abMarkers);clearMarkers(finMarkers);clearList();
+ const allSources=[...citySources,...regionalSources];
  const container=$('autobahnList'),head=document.createElement('div');head.className='note';head.style.cssText='margin:10px 0 6px;color:#7be0f4;font-weight:700';head.textContent='STADT-, FLUSS- & ADIRONDACK-WEBCAMS';container.appendChild(head);
  $('count').textContent=String(allSources.length);
  allSources.forEach(c=>{
   const marker=L.circleMarker([c.lat,c.lon],{radius:7,color:'#7be0f4',weight:2,fillColor:'#1689aa',fillOpacity:.9}).addTo(map);
   marker.bindPopup('<b>'+esc(c.name)+'</b><br>'+esc(c.place)+'<br><small>'+esc(c.source)+'</small><br><a href="'+esc(c.url)+'" target="_blank" rel="noopener">Betreiberseite ↗</a><br><small>Zum eingebetteten Player: Eintrag links anklicken.</small>');
   cityMarkers.push(marker);
-  addCameraCard(container,c.name,c.place+' · '+c.source,()=>{map.setView([c.lat,c.lon],Math.max(map.getZoom(),8));openCameraView(c)},'',c.embedUrl?'Bestätigter Video-Player':'Betreiberseite / Quelle');
+  addCameraCard(container,c.name,c.place+' · '+c.source,()=>{map.setView([c.lat,c.lon],Math.max(map.getZoom(),8));openCameraView(c)},'',c.embedUrl?'Bestätigter Video-Player':(c.category==='traffic'?'Verkehrsportal':c.category==='resort'?'Resort / Landschaft':c.category==='still'?'Standbild / Wetter':'Betreiberseite / Quelle'));
  });
  window.dispatchEvent(new CustomEvent('atlas-camera-list-loaded',{detail:allSources.length}));
- map.fitBounds(L.latLngBounds(allSources.map(c=>[c.lat,c.lon])).pad(0.12),{maxZoom:5});
- $('citymessage').textContent=allSources.length+' öffentliche Kameraeinträge geladen, davon 23 zusätzliche Adirondack-Quellen. Nicht jeder Anbieter erlaubt Einbettung oder sendet dauerhaft.';
- setMessage('Kameraliste geladen. Wähle links einen Eintrag: bestätigte Streams öffnen im Player, andere Quellen direkt beim Betreiber.');
+ map.fitBounds(L.latLngBounds(allSources.filter(c=>c.local!==false).map(c=>[c.lat,c.lon])).pad(0.12),{maxZoom:9});filterCameraCards();
+ $('citymessage').textContent=allSources.length+' öffentliche Kamera- und Portal-Einträge geladen. Im Nahbereich sind Alexandria Bay, Clayton, Watertown und Dry Hill enthalten; Portale sind als solche gekennzeichnet.';
+ filterCameraCards();setMessage('Kameraliste geladen. Favoriten mit ☆ speichern; bestätigte Streams öffnen im Player, Portale direkt beim Betreiber.');
 }
 window.addEventListener('atlas-open-camera',e=>openCameraView(e.detail));
 
 function loadFlights(){
- clearMarkers(cityMarkers);clearMarkers(abMarkers);clearMarkers(finMarkers);clearList();
+ updateListStamp();clearMarkers(cityMarkers);clearMarkers(abMarkers);clearMarkers(finMarkers);clearList();
  const container=$('autobahnList'),head=document.createElement('div');
  head.className='note';head.style.cssText='margin:10px 0 6px;color:#7be0f4;font-weight:700';
  head.textContent='FLUGHÄFEN · OFFIZIELLE FLUGTAFELN';container.appendChild(head);
@@ -235,7 +234,7 @@ function loadFlights(){
   cityMarkers.push(marker);
   addCameraCard(container,a.name,a.place+' · Flugstatus',()=>{map.setView([a.lat,a.lon],Math.max(map.getZoom(),8));marker.openPopup()},'','Offizielle Flugtafel');
  });
- map.fitBounds(L.latLngBounds(flightSources.map(a=>[a.lat,a.lon])).pad(0.18),{maxZoom:5});
+ filterCameraCards();map.fitBounds(L.latLngBounds(flightSources.map(a=>[a.lat,a.lon])).pad(0.18),{maxZoom:5});
  $('flightmessage').textContent='Zwei offizielle Flugtafeln geladen: BER und Albany. Aktuelle Statusdaten stehen auf den Flughafenseiten.';
  setMessage('Flughäfen angezeigt. Öffne einen Eintrag für die offizielle Ankunfts- und Abflugtafel.');
 }
@@ -256,7 +255,8 @@ async function loadAutobahn(){
  finally{button.disabled=false}
 }
 $('autobahn').onclick=loadAutobahn;
-window.addEventListener('load',()=>setTimeout(loadAutobahn,900));
+window.addEventListener('load',()=>setTimeout(()=>{map.setView([44.18,-75.93],9);loadCityCams()},650));
+$('regionHome').onclick=()=>{map.setView([44.18,-75.93],9);loadCityCams();setMessage('La Fargeville und die öffentliche Thousand-Islands-Region werden angezeigt.');};
 $('locate').addEventListener('click',()=>{map.setView([25,8],2);setMessage('Weltkarte angezeigt. Wähle eine Kameraquelle.')});
 $('search').addEventListener('keydown',async e=>{
  if(e.key!=='Enter')return;const q=e.target.value.trim();if(!q)return;
