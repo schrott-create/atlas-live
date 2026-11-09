@@ -5,7 +5,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from threading import Lock
 
 import requests
-from flask import Flask, jsonify, send_from_directory, abort, Response
+from flask import Flask, jsonify, send_from_directory, abort, Response, request
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 AUTOBAHN_BASE = "https://verkehr.autobahn.de/o/autobahn"
@@ -19,6 +19,25 @@ def home():
 @app.route("/health")
 def health():
     return jsonify({"status": "online", "app": "ATLAS LIVE"})
+
+@app.route("/robots.txt")
+def robots_txt():
+    # Dynamic host keeps this correct for the Render URL or a later custom domain.
+    body = "User-agent: *\\nAllow: /\\nSitemap: " + request.host_url.rstrip("/") + "/sitemap.xml\\n"
+    return Response(body, content_type="text/plain; charset=utf-8")
+
+
+@app.route("/sitemap.xml")
+def sitemap_xml():
+    # The app currently has one public landing page at /.
+    location = request.host_url.rstrip("/") + "/"
+    body = (
+        '<?xml version="1.0" encoding="UTF-8"?>'
+        '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'
+        '<url><loc>' + location + '</loc><changefreq>weekly</changefreq><priority>1.0</priority></url>'
+        '</urlset>'
+    )
+    return Response(body, content_type="application/xml; charset=utf-8")
 
 @app.route("/api/fintraffic/stations")
 def fintraffic_stations():
