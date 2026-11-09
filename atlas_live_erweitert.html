@@ -251,7 +251,7 @@ function loadCityCams(){
    marker=L.circleMarker([c.lat,c.lon],{radius:7,color:'#7be0f4',weight:2,fillColor:'#1689aa',fillOpacity:.9}).addTo(map);
    marker.bindPopup('<b>'+esc(c.name)+'</b><br>'+esc(c.place)+'<br><small>'+esc(c.source)+'</small><br><a href="'+esc(c.url)+'" target="_blank" rel="noopener">Betreiberseite ↗</a><br><small>Zum eingebetteten Player: Eintrag links anklicken.</small>');cityMarkers.push(marker);
   }
-  addCameraCard(container,c.name,c.place+' · '+c.source,()=>{if(marker){map.setView([c.lat,c.lon],Math.max(map.getZoom(),8));marker.openPopup()}else map.setView([44.18,-75.93],9);openCameraView(c)},'',c.embedUrl?'Player-Link vorhanden':(c.category==='traffic'?'Verkehrsportal':c.category==='resort'?'Resort / Landschaft':c.category==='still'?'Standbild / Wetter':'Betreiberseite / Quelle'));
+  addCameraCard(container,c.name,c.place+' · '+c.source,()=>{if(marker){map.setView([c.lat,c.lon],Math.max(map.getZoom(),8));marker.openPopup()}else if(c.local!==false)map.setView([44.18,-75.93],9);openCameraView(c)},'',c.embedUrl?'Player-Link vorhanden':(c.category==='traffic'?'Verkehrsportal':c.category==='resort'?'Resort / Landschaft':c.category==='still'?'Standbild / Wetter':'Betreiberseite / Quelle'));
  });
  window.dispatchEvent(new CustomEvent('atlas-camera-list-loaded',{detail:allSources.length}));
  const localPoints=allSources.filter(c=>c.local!==false&&c.lat>=43.7&&c.lat<=44.5&&c.lon>=-76.35&&c.lon<=-75.65).map(c=>[c.lat,c.lon]);if(localPoints.length)map.fitBounds(L.latLngBounds(localPoints).pad(0.12),{maxZoom:9});else map.setView([44.18,-75.93],9);filterCameraCards();
