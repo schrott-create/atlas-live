@@ -465,7 +465,7 @@ $('shareAtlas').onclick=async()=>{
 window.addEventListener('keydown',e=>{if(e.key==='Escape'){closeOverlay('roadmapOverlay');closeOverlay('wallOverlay')}});
 
 function getSharedMapView(){
- const match=window.location.hash.match(/^#map=(-?\\d+(?:\\.\\d+)?),(-?\\d+(?:\\.\\d+)?),(\\d+)$/);
+ const match=window.location.hash.match(/^#map=(-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?),(\d+)$/);
  if(!match)return null;
  const lat=Number(match[1]),lon=Number(match[2]),zoom=Number(match[3]);
  if(!Number.isFinite(lat)||!Number.isFinite(lon)||!Number.isFinite(zoom)||Math.abs(lat)>90||Math.abs(lon)>180)return null;
