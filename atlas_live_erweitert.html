@@ -23,6 +23,8 @@ button:hover{background:#17465e}
 .row{display:flex;gap:8px;margin-top:9px}.row button{width:auto;flex:1}
 .note{font-size:11px;color:var(--muted);margin:9px 0 0}
 .listhead{display:flex;justify-content:space-between;padding:14px 16px 8px;color:var(--muted);font-size:10px;letter-spacing:1.4px;text-transform:uppercase}
+.filterbox{padding:0 12px 10px}.filterbox input{padding:9px 11px;font-size:12px}
+.camtag{display:inline-block;margin-top:5px;padding:2px 6px;border:1px solid #31556a;border-radius:20px;color:#9bdcf0;font-size:9px;letter-spacing:.3px}
 #cameraList{overflow:auto;padding:0 10px 12px}
 .camera{padding:11px;border:1px solid transparent;border-radius:11px;display:grid;grid-template-columns:82px 1fr;gap:11px;cursor:pointer;margin-bottom:6px}
 .camera:hover,.camera.active{background:#17263a;border-color:#2e526b}
@@ -64,7 +66,8 @@ footer{padding:10px 16px;border-top:1px solid var(--line);font-size:10px;color:v
     <button id="flights" type="button">Flugstatus & Flughäfen laden</button>
     <p class="note" id="flightmessage">Offizielle Ankunfts- und Abflugtafeln für BER und Albany (Upstate New York).</p>
   </section>
-  <div class="listhead"><span>Kameras geladen</span><span id="count">0</span></div>
+  <div class="listhead"><span>Einträge geladen</span><span id="count">0</span></div>
+  <div class="filterbox"><input id="cameraFilter" type="search" placeholder="Kamera, Ort oder Quelle filtern …" aria-label="Kameraeinträge filtern"></div>
   <div id="cameraList">
    <div id="autobahnList"></div>
   </div>
@@ -85,7 +88,9 @@ function setMessage(t){$('message').textContent=t}
 function abSetMessage(t){$('abmessage').textContent=t}
 function finSetMessage(t){$('finmessage').textContent=t}
 function clearMarkers(arr){arr.forEach(m=>map.removeLayer(m));arr.length=0}
-function clearList(){ $('autobahnList').innerHTML=''; $('count').textContent='0'; }
+function clearList(){ $('autobahnList').innerHTML=''; $('count').textContent='0'; $('cameraFilter').value=''; }
+function filterCameraCards(){const q=$('cameraFilter').value.trim().toLocaleLowerCase('de');document.querySelectorAll('#autobahnList .camera').forEach(card=>{card.hidden=!!q&&!card.dataset.search.includes(q)});}
+$('cameraFilter').addEventListener('input',filterCameraCards);
 async function fetchJsonSafe(url,timeoutMs=12000){
  const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),timeoutMs);
  try{const res=await fetch(url,{headers:{accept:'application/json'},signal:controller.signal});if(!res.ok)throw new Error('HTTP '+res.status);return await res.json()}
@@ -110,7 +115,7 @@ function renderAutobahn(list){
   const marker=L.circleMarker([c._lat,c._lon],{radius:6,color:'#ffd27f',weight:2,fillColor:'#c97a1a',fillOpacity:.9}).addTo(map);
   marker.bindPopup('<b>'+esc(c._name)+'</b><br>Autobahn '+esc(c._road)+(c._image?'<a href="'+esc(c._image)+'" target="_blank" rel="noopener"><img class="popupimg" src="'+esc(c._image)+'" alt="Aktuelles Kamerabild"></a>':'')+(c._url?'<br><a href="'+esc(c._url)+'" target="_blank" rel="noopener">Kamera / Live-Ansicht öffnen ↗</a>':'')+'<p style="font-size:10px;color:#9aacc2">Quelle: Autobahn GmbH / zuständiger Landesanbieter</p>');
   abMarkers.push(marker);
-  addCameraCard(container,c._name,'Autobahn '+c._road,()=>{map.setView([c._lat,c._lon],Math.max(map.getZoom(),9));marker.openPopup()},c._image||'');
+  addCameraCard(container,c._name,'Autobahn '+c._road,()=>{map.setView([c._lat,c._lon],Math.max(map.getZoom(),9));marker.openPopup()},c._image||'',c._image?'Standbild':'Betreiberquelle');
  });
 }
 function renderFintraffic(features){
@@ -121,7 +126,7 @@ function renderFintraffic(features){
   const marker=L.circleMarker([c.lat,c.lon],{radius:6,color:'#7be0f4',weight:2,fillColor:'#1689aa',fillOpacity:.9}).addTo(map),image=c.image||'';
   marker.bindPopup('<b>'+esc(c.name)+'</b><br>Finnland · Fintraffic'+(image?'<a href="'+esc(image)+'" target="_blank" rel="noopener"><img class="popupimg" src="'+esc(image)+'" alt="Aktuelles Kamerabild" style="max-height:240px"></a>':'')+'<p style="font-size:10px;color:#9aacc2">Standbild · Quelle: Fintraffic / Digitraffic · CC BY 4.0</p>');
   finMarkers.push(marker);
-  addCameraCard(container,c.name,'Finnland · aktuelles Standbild',()=>{map.setView([c.lat,c.lon],Math.max(map.getZoom(),7));marker.openPopup()},image);
+  addCameraCard(container,c.name,'Finnland · aktuelles Standbild',()=>{map.setView([c.lat,c.lon],Math.max(map.getZoom(),7));marker.openPopup()},image,'Standbild');
  });
 }
 async function loadFintraffic(){
@@ -154,7 +159,7 @@ const citySources=[
  {name:'Lake George – Webcams',place:'Upstate New York · Lake George',lat:43.4262,lon:-73.7123,url:'https://www.lakegeorge.com/webcams/',source:'LakeGeorge.com · Webcam-Übersicht'},
  {name:'NYC – öffentliche Verkehrskameras',place:'New York City · fünf Boroughs',lat:40.7128,lon:-74.0060,url:'https://www.nyc.gov/html/dot/html/motorist/atis.shtml',source:'NYC DOT · offizielle Verkehrskamera-Informationen'},
  {name:'Alexandria Bay – River View Livecam',place:'Öffentlicher Flussblick · Thousand Islands',lat:44.336,lon:-75.918,url:'https://overlookcams.com/de/cam/alexandria-bay/',embedUrl:'https://www.youtube-nocookie.com/embed/H_EbNSqfoso',source:'Alexandria Bay Chamber of Commerce · bestätigter öffentlicher YouTube-Livestream'},
- {name:'Alexandria Bay – Dock Livecam',place:'Öffentlicher Hafenblick · Thousand Islands',lat:44.336,lon:-75.918,url:'https://visitalexbay.org/area-videos/',embedUrl:'https://www.youtube.com/embed/6DDfSIMfi0c',source:'Alexandria Bay Chamber of Commerce · offizieller Dock-Livestream'},
+ {name:'Alexandria Bay – Dock-Kamera',place:'Öffentlicher Hafenblick · Thousand Islands',lat:44.336,lon:-75.918,url:'https://visitalexbay.org/area-videos/',source:'Alexandria Bay Chamber of Commerce · Betreiberseite mit Kameralink'},
  {name:'Clayton – Frink Park Riverfront Livecam',place:'Öffentliche Uferansicht · Clayton, NY',lat:44.240,lon:-76.086,url:'https://overlookcams.com/cam/clayton-riverfront/',embedUrl:'https://www.youtube-nocookie.com/embed/3f0KT17hmyk',source:'Cameras of Clayton NY · bestätigter öffentlicher YouTube-Livestream'},
  {name:'Watertown – Public Square Livecam',place:'Öffentlicher Stadtplatz · Watertown, NY',lat:43.9748,lon:-75.9108,url:'https://overlookcams.com/cam/public-square-watertown/',embedUrl:'https://www.youtube-nocookie.com/embed/Zz9hMrxl20I',source:'nny.live · bestätigter öffentlicher YouTube-Livestream'}
 ];
@@ -168,7 +173,7 @@ const adirondackSources=[
  {name:'The Lake Motel – Waterfront',place:'Lake George · Seeufer',lat:43.42,lon:-73.71,url:'https://www.lakegeorgelakemotel.com/',source:'The Lake Motel'},
  {name:'Lake Placid Lodge',place:'Lake Placid · See- und Bergpanorama',lat:44.28,lon:-73.98,url:'https://www.wildcenter.org/',source:'The Wild Center / Lake Placid Lodge'},
  {name:'Lake Placid Olympic Center',place:'Lake Placid · öffentlicher Sportstättenblick',lat:44.285,lon:-73.985,url:'https://lakeplacidolympiccenter.com/',source:'Lake Placid Olympic Center'},
- {name:'Mirror Lake – Ausable Live',place:'Lake Placid · Seeufer',lat:44.285,lon:-73.986,url:'https://www.youtube.com/embed/jB4Iwn2GJS4',embedUrl:'https://www.youtube-nocookie.com/embed/jB4Iwn2GJS4',source:'Ausable Freshwater Center'},
+ {name:'Mirror Lake – Webcam-Quelle',place:'Lake Placid · Seeufer',lat:44.285,lon:-73.986,url:'https://www.youtube.com/',source:'Ausable Freshwater Center · Streamstatus nicht bestätigt'},
  {name:'Mt. Van Hoevenberg',place:'Lake Placid · Berg- und Streckenblick',lat:44.20,lon:-73.90,url:'https://mtvanhoevenberg.com/',source:'Mt. Van Hoevenberg / ORDA'},
  {name:'Whiteface Mountain – Resort',place:'Wilmington · Bergstationen',lat:44.36,lon:-73.90,url:'https://whiteface.com/',source:'Whiteface Mountain'},
  {name:'Whiteface Summit Cam',place:'Wilmington · Gipfelpanorama',lat:44.36,lon:-73.90,url:'https://whiteface.com/',source:'Whiteface Mountain'},
@@ -188,6 +193,7 @@ const flightSources=[
  {name:'Albany International Airport (ALB)',place:'Upstate New York · Ankünfte und Abflüge',lat:42.7483,lon:-73.8017,url:'https://www.albanyairport.com/flights',source:'Albany Airport · offizielle Flugtafel'}
 ];
 function openCameraView(camera){
+ if(!camera.embedUrl){window.open(camera.url,'_blank','noopener');setMessage('Diese Quelle öffnet sich direkt beim Betreiber; ein eingebetteter Videostream ist nicht bestätigt.');return;}
  const frame=$('camframe'),viewer=$('camviewer');
  $('camviewtitle').textContent=camera.name;
  $('camviewopen').onclick=()=>window.open(camera.url,'_blank','noopener');
@@ -197,6 +203,7 @@ function openCameraView(camera){
 }
 $('camviewclose').onclick=()=>{$('camviewer').classList.remove('open');$('camframe').src='about:blank'};
 $('camviewer').addEventListener('click',e=>{if(e.target===$('camviewer'))$('camviewclose').click()});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&$('camviewer').classList.contains('open'))$('camviewclose').click()});
 function loadCityCams(){
  clearMarkers(cityMarkers);clearMarkers(abMarkers);clearMarkers(finMarkers);clearList();
  const allSources=[...citySources,...adirondackSources];
@@ -206,7 +213,7 @@ function loadCityCams(){
   const marker=L.circleMarker([c.lat,c.lon],{radius:7,color:'#7be0f4',weight:2,fillColor:'#1689aa',fillOpacity:.9}).addTo(map);
   marker.bindPopup('<b>'+esc(c.name)+'</b><br>'+esc(c.place)+'<br><small>'+esc(c.source)+'</small><br><a href="'+esc(c.url)+'" target="_blank" rel="noopener">Betreiberseite ↗</a><br><small>Zum eingebetteten Player: Eintrag links anklicken.</small>');
   cityMarkers.push(marker);
-  addCameraCard(container,c.name,c.place+' · '+c.source,()=>{map.setView([c.lat,c.lon],Math.max(map.getZoom(),8));openCameraView(c)});
+  addCameraCard(container,c.name,c.place+' · '+c.source,()=>{map.setView([c.lat,c.lon],Math.max(map.getZoom(),8));openCameraView(c)},'',c.embedUrl?'Bestätigter Video-Player':'Betreiberseite / Quelle');
  });
  window.dispatchEvent(new CustomEvent('atlas-camera-list-loaded',{detail:allSources.length}));
  map.fitBounds(L.latLngBounds(allSources.map(c=>[c.lat,c.lon])).pad(0.12),{maxZoom:5});
@@ -225,7 +232,7 @@ function loadFlights(){
   const marker=L.circleMarker([a.lat,a.lon],{radius:8,color:'#b5a2ff',weight:2,fillColor:'#7157c8',fillOpacity:.9}).addTo(map);
   marker.bindPopup('<b>'+esc(a.name)+'</b><br>'+esc(a.place)+'<br><small>'+esc(a.source)+'</small><br><a href="'+esc(a.url)+'" target="_blank" rel="noopener">Ankünfte und Abflüge öffnen ↗</a><p style="font-size:10px;color:#9aacc2">Hier werden Flugnummern und Status auf der offiziellen Flughafenseite angezeigt. Keine Live-Verfolgung einzelner Personen.</p>');
   cityMarkers.push(marker);
-  addCameraCard(container,a.name,a.place+' · Flugstatus',()=>{map.setView([a.lat,a.lon],Math.max(map.getZoom(),8));marker.openPopup()});
+  addCameraCard(container,a.name,a.place+' · Flugstatus',()=>{map.setView([a.lat,a.lon],Math.max(map.getZoom(),8));marker.openPopup()},'','Offizielle Flugtafel');
  });
  map.fitBounds(L.latLngBounds(flightSources.map(a=>[a.lat,a.lon])).pad(0.18),{maxZoom:5});
  $('flightmessage').textContent='Zwei offizielle Flugtafeln geladen: BER und Albany. Aktuelle Statusdaten stehen auf den Flughafenseiten.';
