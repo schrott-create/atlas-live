@@ -648,7 +648,7 @@ async function loadCityCams(){
   webcams:()=>true,
   germany:c=>/Deutschland|Germany|Berlin|Hamburg|Husum|Kiel|Büsum|Borkum|Norddeich|Langeoog|Nordstrand|St\. Peter/i.test([c.name,c.place].join(' ')),
   northsea:c=>/Nordsee|Husum|Büsum|Borkum|Norddeich|Langeoog|Nordstrand|St\. Peter|Amrum|Helgoland|Sylt|Föhr/i.test([c.name,c.place].join(' ')),
-  usa:c=>/USA|New York|NY\b|Watertown|Alexandria Bay|Clayton|Lake George|Albany|Thousand Islands|Adirondack|La Fargeville|California/i.test([c.name,c.place].join(' ')),
+  usa:c=>/\bUSA\b|United States|\bNew York\b|\bNY\b|Watertown|Alexandria Bay|Clayton|Lake George|Albany|Thousand Islands|Adirondack|La Fargeville|California/i.test([c.name,c.place].join(' '))&&!/Schweden|Sweden|Norwegen|Norway|Deutschland|Germany|Island|Iceland|Finnland|Finland|Dänemark|Denmark|Niederlande|Netherlands|Österreich|Austria|Schweiz|Switzerland/i.test([c.name,c.place].join(' ')),
   harbors:c=>/Hafen|Harbor|Harbour|River|Dock|Marina|Port|Pier|Waterfront|Kiel|Büsum|Norddeich|Alexandria Bay|Clayton/i.test([c.name,c.place].join(' '))
  };
  const styles={webcams:['#7be0f4','#1689aa'],germany:['#a9d6ff','#2876b4'],northsea:['#6ee7d0','#0b9b8b'],usa:['#f0c76a','#b88725'],harbors:['#c6a7ff','#7653bd']};
