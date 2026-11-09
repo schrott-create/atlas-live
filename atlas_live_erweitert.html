@@ -192,6 +192,7 @@ async function loadAutobahn(){
 $('autobahn').onclick=loadAutobahn;
 // Key-freie Autobahnkameras direkt beim Start laden.
 window.addEventListener('load',()=>setTimeout(loadAutobahn,900));
+$('locate').addEventListener('click',()=>{map.setView([25,8],2);setMessage('Weltkarte angezeigt. Wähle eine Kameraquelle.');});
 $('search').addEventListener('keydown',async e=>{
  if(e.key!=='Enter')return;
  const q=e.target.value.trim();if(!q)return;
