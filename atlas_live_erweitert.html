@@ -170,6 +170,23 @@ footer{padding:10px 16px;border-top:1px solid var(--line);font-size:10px;color:v
 .space-status{font-size:11px;color:#93d9f5;margin-top:8px}
 .space-search{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}.space-search input{flex:1;min-width:160px}
 @media(max-width:600px){.space-stats{grid-template-columns:1fr 1fr}.space-hero h3{font-size:19px}}
+
+/* Weltweite Länder-Auswahl */
+.country-picker{margin-top:10px;padding:11px;border:1px solid var(--line);border-radius:12px;background:#0b1422}
+.country-picker summary{cursor:pointer;list-style:none;display:flex;justify-content:space-between;gap:8px;font-size:11px;font-weight:800;color:#dceaf7}
+.country-picker summary::-webkit-details-marker{display:none}
+.country-picker summary:after{content:'＋';color:var(--cyan)}
+.country-picker[open] summary:after{content:'−'}
+.country-picker-tools{display:flex;gap:6px;margin:9px 0}
+.country-picker-tools button{width:auto;flex:1;padding:7px 8px;font-size:10px}
+.country-picker input{margin-top:8px;padding:8px 10px;font-size:11px}
+.country-picker-list{display:grid;grid-template-columns:1fr 1fr;gap:5px;max-height:250px;overflow:auto;margin-top:9px;padding-right:3px}
+.country-option{display:flex;align-items:center;gap:7px;padding:6px 7px;border:1px solid #253950;border-radius:7px;background:#101e30;color:#c4d3e3;font-size:10px;min-width:0}
+.country-option input{width:auto;margin:0;accent-color:#58c7e8}
+.country-option span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.country-status{font-size:10px;color:#91a8c0;margin-top:8px}
+@media(max-width:760px){.country-picker-list{grid-template-columns:1fr 1fr}}
+
 </style>
 </head>
 <body>
@@ -200,6 +217,13 @@ footer{padding:10px 16px;border-top:1px solid var(--line);font-size:10px;color:v
       </div>
       <p class="note">Jedes Feld schaltet nur seine eigenen Kartenpunkte ein oder aus. Du kannst mehrere Bereiche gleichzeitig anzeigen.</p>
     </div>
+    <details class="country-picker" id="countryPicker">
+      <summary><span>🌐 LÄNDER-FILTER · WELTWEIT</span><span id="countrySelectedLabel">Alle Länder</span></summary>
+      <div class="country-picker-tools"><button type="button" id="countriesAll">Alle auswählen</button><button type="button" id="countriesNone">Alle abwählen</button></div>
+      <input id="countrySearch" type="search" placeholder="Land suchen …" aria-label="Land suchen">
+      <div id="countryList" class="country-picker-list"><div class="country-status">Länderdaten werden geladen …</div></div>
+      <div class="country-status" id="countryStatus">Standardmäßig sind alle Länder ausgewählt.</div>
+    </details>
     <p class="note" id="abmessage" hidden></p><p class="note" id="citymessage" hidden></p><p class="note" id="flightmessage" hidden></p>
     <div style="height:14px"></div>
     <label class="label" for="windyKey">Windy-Webcams direkt auf der Karte</label>
@@ -309,6 +333,21 @@ const pointLayers={webcams:L.layerGroup(),germany:L.layerGroup(),northsea:L.laye
 const loadedPointLayers=new Set();
 let flightMarkers=[];
 const $=id=>document.getElementById(id);
+
+// Weltweite Ländergrenzen: Auswahl filtert alle georeferenzierten Kartenpunkte.
+const COUNTRY_GEOJSON_URL='https://raw.githubusercontent.com/datasets/geo-countries/master/data/countries.geojson';
+let countryFeatures=[],selectedCountries=new Set(),countryDataReady=false;
+function pointInRing(point,ring){let inside=false;for(let i=0,j=ring.length-1;i<ring.length;j=i++){const xi=ring[i][0],yi=ring[i][1],xj=ring[j][0],yj=ring[j][1];const hit=((yi>point[1])!==(yj>point[1]))&&(point[0]<(xj-xi)*(point[1]-yi)/(yj-yi||1e-12)+xi);if(hit)inside=!inside;}return inside;}
+function pointInPolygon(point,poly){if(!poly?.length||!pointInRing(point,poly[0]))return false;for(let i=1;i<poly.length;i++)if(pointInRing(point,poly[i]))return false;return true;}
+function featureContainsPoint(feature,latlng){const g=feature.geometry;if(!g)return false;const p=[latlng.lng,latlng.lat];if(g.type==='Polygon')return pointInPolygon(p,g.coordinates);if(g.type==='MultiPolygon')return g.coordinates.some(poly=>pointInPolygon(p,poly));return false;}
+function countryForPoint(latlng){return countryFeatures.find(f=>featureContainsPoint(f,latlng))?.__country||null;}
+function applyCountryFilter(){if(!countryDataReady)return;const filtering=selectedCountries.size!==countryFeatures.length;Object.values(pointLayers).forEach(group=>group.eachLayer(layer=>{const ll=layer.getLatLng?.();if(!ll)return;const country=countryForPoint(ll),show=!filtering||(country&&selectedCountries.has(country));if(layer.setStyle)layer.setStyle({opacity:show?1:0,fillOpacity:show?(layer.options.fillOpacity??.9):0});if(layer.setOpacity)layer.setOpacity(show?1:0);layer.options.interactive=show;}));const label=selectedCountries.size===countryFeatures.length?'Alle Länder':selectedCountries.size+' Länder';$('countrySelectedLabel').textContent=label;$('countryStatus').textContent=filtering?(selectedCountries.size+' von '+countryFeatures.length+' Ländern ausgewählt. Kartenpunkte außerhalb der Auswahl werden ausgeblendet.'):'Alle '+countryFeatures.length+' Länder ausgewählt. Alle passenden Kartenpunkte sind sichtbar.';}
+function renderCountryList(){const box=$('countryList'),q=$('countrySearch').value.trim().toLocaleLowerCase('de');box.innerHTML='';countryFeatures.filter(f=>f.__country.toLocaleLowerCase('de').includes(q)).sort((a,b)=>a.__country.localeCompare(b.__country,'de')).forEach(f=>{const label=document.createElement('label');label.className='country-option';const cb=document.createElement('input');cb.type='checkbox';cb.checked=selectedCountries.has(f.__country);cb.addEventListener('change',()=>{if(cb.checked)selectedCountries.add(f.__country);else selectedCountries.delete(f.__country);applyCountryFilter();});const name=document.createElement('span');name.textContent=f.__country;label.append(cb,name);box.appendChild(label);});if(!box.childElementCount)box.textContent='Kein Land gefunden.';}
+async function loadCountryData(){try{const res=await fetch(COUNTRY_GEOJSON_URL,{headers:{accept:'application/geo+json,application/json'}});if(!res.ok)throw new Error('HTTP '+res.status);const data=await res.json();countryFeatures=(data.features||[]).map(f=>({...f,__country:f.properties?.ADMIN||f.properties?.name||f.properties?.NAME})).filter(f=>f.__country&&f.geometry);if(!countryFeatures.length)throw new Error('Keine Ländergrenzen gefunden');selectedCountries=new Set(countryFeatures.map(f=>f.__country));countryDataReady=true;renderCountryList();applyCountryFilter();}catch(e){$('countryList').textContent='Ländergrenzen konnten nicht geladen werden. Prüfe deine Internetverbindung und lade die Seite neu.';$('countryStatus').textContent='Länderfilter nicht verfügbar: '+e.message;}}
+$('countrySearch').addEventListener('input',renderCountryList);
+$('countriesAll').addEventListener('click',()=>{selectedCountries=new Set(countryFeatures.map(f=>f.__country));renderCountryList();applyCountryFilter();});
+$('countriesNone').addEventListener('click',()=>{selectedCountries.clear();renderCountryList();applyCountryFilter();});
+loadCountryData();
 $('mapStyle').addEventListener('change',e=>{
  const style=e.target.value;if(!mapLayers[style])return;
  if(map.hasLayer(mapLayers[activeMapStyle]))map.removeLayer(mapLayers[activeMapStyle]);
@@ -781,7 +820,7 @@ async function setMapLayerVisible(key,forceVisible=null){
    setMessage(key==='windy'?'Für Windy-Punkte wird ein gültiger persönlicher API-Key benötigt.':'Für diese Ebene sind gerade keine direkt georeferenzierten Punkte verfügbar.');
    return;
   }
-  group.addTo(map);button?.classList.add('active');button?.setAttribute('aria-pressed','true');
+  group.addTo(map);applyCountryFilter();button?.classList.add('active');button?.setAttribute('aria-pressed','true');
   const locations=group.getLayers().map(layer=>layer.getLatLng?.()).filter(Boolean);
   if(locations.length>1)map.fitBounds(L.latLngBounds(locations).pad(.08),{maxZoom:key==='radio'?5:10});
   else if(locations.length===1)map.setView(locations[0],Math.max(map.getZoom(),8));
