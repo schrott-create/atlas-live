@@ -93,6 +93,33 @@ class AtlasServerTests(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data, payload)
 
+    def test_radio_stations_only_returns_online_https_streams(self):
+        payload = [
+            {"stationuuid": "12345678-1234-1234-1234-123456789012", "name": "Secure Radio",
+             "lastcheckok": 1, "url_resolved": "https://stream.example/radio", "country": "Germany"},
+            {"stationuuid": "22345678-1234-1234-1234-123456789012", "name": "Insecure Radio",
+             "lastcheckok": 1, "url_resolved": "http://stream.example/radio"},
+            {"stationuuid": "32345678-1234-1234-1234-123456789012", "name": "Offline Radio",
+             "lastcheckok": 0, "url_resolved": "https://stream.example/offline"},
+        ]
+        with patch.object(atlas_server.requests, "get", return_value=FakeResponse(payload)):
+            response = self.client.get("/api/radio/stations?country=Germany&tag=jazz")
+        self.assertEqual(response.status_code, 200)
+        data = response.get_json()
+        self.assertEqual(data["count"], 1)
+        self.assertEqual(data["stations"][0]["name"], "Secure Radio")
+
+    def test_radio_click_rejects_invalid_station_uuid(self):
+        response = self.client.get("/api/radio/click/not-a-uuid")
+        self.assertEqual(response.status_code, 400)
+
+    def test_radio_click_registers_valid_station(self):
+        station_uuid = "12345678-1234-1234-1234-123456789012"
+        with patch.object(atlas_server.requests, "get", return_value=FakeResponse({"ok": True})):
+            response = self.client.get("/api/radio/click/" + station_uuid)
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.get_json()["ok"])
+
 
 if __name__ == "__main__":
     unittest.main()
