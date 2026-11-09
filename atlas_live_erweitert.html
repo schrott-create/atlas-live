@@ -138,6 +138,18 @@ footer{padding:10px 16px;border-top:1px solid var(--line);font-size:10px;color:v
 .atlas-overlay{justify-content:flex-end;align-items:stretch;padding:0}
 .atlas-panel{width:min(1040px,94vw);height:100vh;max-height:100vh;margin:0 0 0 auto;border-radius:18px 0 0 18px}
 @media(max-width:760px){.camviewer,.atlas-overlay{padding:0}.camviewerbox,.atlas-panel{width:100vw;height:100dvh;max-height:100dvh;border-radius:0}}
+
+.layer-picker{margin-top:12px;padding:11px;border:1px solid var(--line);border-radius:12px;background:#0b1422}
+.layer-picker-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:9px;color:#dceaf7;font-size:10px;letter-spacing:1px}
+.layer-picker-head span{color:#7890aa;font-size:9px;letter-spacing:.2px;text-transform:none}
+.layer-picker-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.map-layer-toggle{padding:9px 7px;font-size:11px;text-align:left;background:#101e30;border:1px solid #293c52;color:#b8c9db}
+.map-layer-toggle.active{background:#12445a;border-color:#4bc7e7;color:#e8fbff;box-shadow:inset 0 0 0 1px #4bc7e733}
+.map-layer-toggle:after{content:'+';float:right;color:#6e8ba4}
+.map-layer-toggle.active:after{content:'✓';color:#7ee4c2}
+.map-layer-toggle:disabled{opacity:.5;cursor:wait}
+@media(max-width:760px){.layer-picker-grid{grid-template-columns:1fr 1fr}}
+
 </style>
 </head>
 <body>
@@ -150,16 +162,22 @@ footer{padding:10px 16px;border-top:1px solid var(--line);font-size:10px;color:v
     <p class="note">Suche Orte und Straßen weltweit. Erkannte Straßen werden – wenn Kartendaten vorhanden sind – auf der Karte hervorgehoben.</p>
     <div class="row"><button id="locate" type="button">Weltkarte</button><button id="regionHome" type="button">La Fargeville & Umgebung</button></div>
     <p class="note" id="message">ATLAS LIVE startet in der Thousand-Islands-Region rund um La Fargeville. Wähle öffentliche Livekameras oder regionale Betreiber- und Verkehrsportale.</p>
-    <div style="height:14px"></div>
-    <label class="label">Zusätzliche Quelle (kein Key nötig)</label>
-    <button id="autobahn" type="button">Autobahn-Kameras (DE) laden</button>
-    <p class="note" id="abmessage">Verkehrskameras der Autobahn GmbH, offene Daten.</p>
-    <div style="height:8px"></div>
-    <button id="citycams" type="button">Stadt- & Regionskameras laden</button>
-    <p class="note" id="citymessage">Berlin, Thousand Islands und Adirondacks: öffentliche Kameraquellen mit eingebettetem Anbieter-Player, soweit erlaubt.</p>
-    <div style="height:8px"></div>
-    <button id="flightHub" type="button">✈ Flugzentrum öffnen</button>
-    <p class="note" id="flightmessage">Flugstatus, Flughäfen und Live-Flugradar gemeinsam in einem Bereich.</p>
+    <div class="layer-picker">
+      <div class="layer-picker-head"><strong>AUF DER KARTE ANZEIGEN</strong><span>Mehrfachauswahl</span></div>
+      <div class="layer-picker-grid">
+        <button type="button" class="map-layer-toggle" data-layer="webcams" aria-pressed="false">📷 Webcams</button>
+        <button type="button" class="map-layer-toggle" data-layer="germany" aria-pressed="false">🇩🇪 Deutschland</button>
+        <button type="button" class="map-layer-toggle" data-layer="northsea" aria-pressed="false">🌊 Nordsee</button>
+        <button type="button" class="map-layer-toggle" data-layer="usa" aria-pressed="false">🇺🇸 USA</button>
+        <button type="button" class="map-layer-toggle" data-layer="harbors" aria-pressed="false">⚓ Häfen</button>
+        <button type="button" class="map-layer-toggle" data-layer="autobahn" aria-pressed="false">🛣 Autobahn</button>
+        <button type="button" class="map-layer-toggle" data-layer="radio" aria-pressed="false">📻 Radio</button>
+        <button type="button" class="map-layer-toggle" data-layer="airports" aria-pressed="false">✈ Flughäfen</button>
+        <button type="button" class="map-layer-toggle" data-layer="windy" aria-pressed="false">🌦 Windy</button>
+      </div>
+      <p class="note">Jedes Feld schaltet nur seine eigenen Kartenpunkte ein oder aus. Du kannst mehrere Bereiche gleichzeitig anzeigen.</p>
+    </div>
+    <p class="note" id="abmessage" hidden></p><p class="note" id="citymessage" hidden></p><p class="note" id="flightmessage" hidden></p>
     <div style="height:14px"></div>
     <label class="label" for="windyKey">Windy-Webcams direkt auf der Karte</label>
     <input id="windyKey" type="password" autocomplete="off" placeholder="Optionaler persönlicher Windy-API-Key">
@@ -252,12 +270,15 @@ footer{padding:10px 16px;border-top:1px solid var(--line);font-size:10px;color:v
 <script>
 const map=L.map('map',{worldCopyJump:true}).setView([25,8],2);
 const mapLayers={
- street:L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'&copy; OpenStreetMap-Mitwirkende',maxZoom:19}),
+ street:L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',{attribution:'&copy; OpenStreetMap-Mitwirkende &copy; CARTO',subdomains:'abcd',maxZoom:20}),
  dark:L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',{attribution:'&copy; OpenStreetMap-Mitwirkende &copy; CARTO',subdomains:'abcd',maxZoom:20}),
  topo:L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}',{attribution:'Tiles &copy; Esri — World Topographic Map',maxZoom:19}),
  satellite:L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{attribution:'Tiles &copy; Esri — Source: Esri, Maxar, Earthstar Geographics, and the GIS User Community',maxZoom:19})
 };
 let activeMapStyle='street';mapLayers.street.addTo(map);
+const pointLayers={webcams:L.layerGroup(),germany:L.layerGroup(),northsea:L.layerGroup(),usa:L.layerGroup(),harbors:L.layerGroup(),autobahn:L.layerGroup(),radio:L.layerGroup(),airports:L.layerGroup(),windy:L.layerGroup()};
+const loadedPointLayers=new Set();
+let flightMarkers=[];
 const $=id=>document.getElementById(id);
 $('mapStyle').addEventListener('change',e=>{
  const style=e.target.value;if(!mapLayers[style])return;
