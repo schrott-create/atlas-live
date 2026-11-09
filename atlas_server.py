@@ -194,6 +194,8 @@ def radio_stations():
             "name": str(station.get("name") or "Unbekannter Sender")[:160],
             "country": str(station.get("country") or "")[:80],
             "countrycode": str(station.get("countrycode") or "")[:2],
+            "geo_lat": station.get("geo_lat"),
+            "geo_long": station.get("geo_long"),
             "language": str(station.get("language") or "")[:100],
             "tags": str(station.get("tags") or "")[:180],
             "codec": str(station.get("codec") or "")[:30],
