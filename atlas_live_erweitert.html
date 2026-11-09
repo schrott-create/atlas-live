@@ -57,14 +57,17 @@ footer{padding:10px 16px;border-top:1px solid var(--line);font-size:10px;color:v
     <button id="fintraffic" type="button">Wetter- & Straßenkameras (Finnland) laden</button>
     <p class="note" id="finmessage">Fintraffic / Digitraffic – öffentliche Wetterkameras, Bildaktualisierung etwa alle 10 Minuten.</p>
     <div style="height:8px"></div>
-    <button id="citycams" type="button">Stadt- & Weltkameras laden</button>
-    <p class="note" id="citymessage">Öffentliche Stadt-Webcams für Berlin und Upstate New York sowie weitere Kamera-Portale.</p>
+    <button id="citycams" type="button">Stadt- & Regionskameras laden</button>
+    <p class="note" id="citymessage">Berlin, Brandenburg, Upstate New York und New York City: öffentliche Kamera-Karten und Webcam-Portale.</p>
+    <div style="height:8px"></div>
+    <button id="flights" type="button">Flugstatus & Flughäfen laden</button>
+    <p class="note" id="flightmessage">Offizielle Ankunfts- und Abflugtafeln für BER und Albany (Upstate New York).</p>
   </section>
   <div class="listhead"><span>Kameras geladen</span><span id="count">0</span></div>
   <div id="cameraList">
    <div id="autobahnList"></div>
   </div>
-  <footer>Quellen: Autobahn GmbH · Fintraffic / Digitraffic (CC BY 4.0) · Kartendaten © OpenStreetMap-Mitwirkende</footer>
+  <footer>Quellen: Autobahn GmbH · Fintraffic / Digitraffic (CC BY 4.0) · Berlin.de · NYSDOT / 511NY · Flughäfen · Kartendaten © OpenStreetMap-Mitwirkende</footer>
 </aside>
 <div class="mapwrap"><div class="mapbadge">WELTKARTE · öffentliche Webcams</div><div id="map"></div></div>
 </main>
@@ -133,15 +136,19 @@ async function loadFintraffic(){
  }catch(e){finSetMessage('Fintraffic konnte gerade nicht geladen werden: '+e.message)}
 }
 const citySources=[
- {name:'RBB-Fernsehzentrum',place:'Berlin · Theodor-Heuss-Platz',lat:52.507,lon:13.282,url:'https://www.berlin.de/webcams/4350926-4350835-rbb-fernsehzentrum.html',source:'Berlin.de / RBB'},
- {name:'Rotes Rathaus',place:'Berlin-Mitte',lat:52.5186,lon:13.4081,url:'https://www.berlin.de/webcams/4350944-4350835-webcam-am-rotes-rathaus.html',source:'Berlin.de / RBB'},
- {name:'Berlin & Umgebung – Webcam-Übersicht',place:'Berlin und Brandenburg',lat:52.52,lon:13.405,url:'https://www.berlin-webcams.de/webcams/',source:'Berlin-Webcams.de · Verzeichnis'},
- {name:'Brandenburger Tor – Panorama',place:'Berlin-Mitte',lat:52.5163,lon:13.3777,url:'https://www.earthtv.com/de/webcam/berlin-brandenburger-tor',source:'earthTV'},
- {name:'Adirondack-Region – Webcams',place:'Upstate New York · Lake Placid / Adirondacks',lat:44.2795,lon:-73.9799,url:'https://www.adirondackregion.com/webcams',source:'AdirondackRegion.com · Verzeichnis'},
- {name:'Old Forge & Fulton Chain',place:'Upstate New York · Old Forge',lat:43.7101,lon:-74.9746,url:'https://www.adirondackregion.com/webcams',source:'AdirondackRegion.com · Verzeichnis'},
- {name:'Lake George – Verkehrskameras',place:'Upstate New York · Lake George',lat:43.4262,lon:-73.7123,url:'https://www.lakegeorge.com/webcams/',source:'LakeGeorge.com · Kamera-Übersicht'},
- {name:'New York State – Verkehrskameras',place:'Upstate New York und gesamter Bundesstaat',lat:42.6526,lon:-73.7562,url:'https://www.dot.ny.gov/divisions/operating/oom/transportation-systems/systems-optimization-section/ny-moves/traffic-cameras',source:'New York State DOT'},
- {name:'Ski- und Bergkameras in New York',place:'Viele Orte in Upstate New York',lat:43.5,lon:-75.1,url:'https://www.iskiny.com/webcams/',source:'Ski NY · Verzeichnis'}
+ {name:'Webcams Berlin – offizielles Stadtportal',place:'Berlin · RBB-Fernsehzentrum und Rotes Rathaus',lat:52.52,lon:13.405,url:'https://www.berlin.de/webcams/',source:'Berlin.de · zwei aktive Stadtpanoramen'},
+ {name:'RBB-Fernsehzentrum',place:'Berlin-Westend · Theodor-Heuss-Platz',lat:52.507,lon:13.282,url:'https://www.berlin.de/webcams/',source:'Berlin.de / RBB · Kamerabild auf dem Stadtportal'},
+ {name:'Rotes Rathaus',place:'Berlin-Mitte',lat:52.5186,lon:13.4081,url:'https://www.berlin.de/webcams/',source:'Berlin.de / RBB · Kamerabild auf dem Stadtportal'},
+ {name:'Berlin & Umgebung – Webcam-Verzeichnis',place:'Berlin und Brandenburg',lat:52.52,lon:13.405,url:'https://www.berlin-webcams.de/webcams/',source:'Öffentliches Webcam-Verzeichnis · Betreiber können Kameras ändern'},
+ {name:'511NY – öffentliche Verkehrskameras',place:'Upstate New York und gesamter Bundesstaat',lat:42.6526,lon:-73.7562,url:'https://511ny.org/map',source:'New York State · offizielle Verkehrskarte'},
+ {name:'NYSDOT – Traffic Monitoring Cameras',place:'Upstate New York · Bundesstaat New York',lat:42.6526,lon:-73.7562,url:'https://www.dot.ny.gov/divisions/operating/oom/transportation-systems/systems-optimization-section/ny-moves/traffic-cameras',source:'New York State Department of Transportation'},
+ {name:'Adirondack-Region – Webcams',place:'Upstate New York · Lake Placid / Adirondacks',lat:44.2795,lon:-73.9799,url:'https://www.adirondackregion.com/webcams',source:'Adirondack Region · Webcam-Übersicht'},
+ {name:'Lake George – Webcams',place:'Upstate New York · Lake George',lat:43.4262,lon:-73.7123,url:'https://www.lakegeorge.com/webcams/',source:'LakeGeorge.com · Webcam-Übersicht'},
+ {name:'NYC – öffentliche Verkehrskameras',place:'New York City · fünf Boroughs',lat:40.7128,lon:-74.0060,url:'https://www.nyc.gov/html/dot/html/motorist/atis.shtml',source:'NYC DOT · offizielle Verkehrskamera-Informationen'}
+];
+const flightSources=[
+ {name:'Flughafen Berlin Brandenburg (BER)',place:'Berlin · Ankünfte und Abflüge',lat:52.3667,lon:13.5033,url:'https://ber.berlin-airport.de/en/flying/departures-arrivals.html',source:'BER · offizielle Flugtafel'},
+ {name:'Albany International Airport (ALB)',place:'Upstate New York · Ankünfte und Abflüge',lat:42.7483,lon:-73.8017,url:'https://www.albanyairport.com/flights',source:'Albany Airport · offizielle Flugtafel'}
 ];
 function loadCityCams(){
  clearMarkers(cityMarkers);clearMarkers(abMarkers);clearMarkers(finMarkers);clearList();
@@ -157,7 +164,24 @@ function loadCityCams(){
  $('citymessage').textContent='Berlin und Upstate New York: '+citySources.length+' Kamera-Standorte und öffentliche Verzeichnisse geladen. Klicke links auf einen Eintrag.';
  setMessage('Stadt- und Regionskameras geladen. Einige Anbieter zeigen Einzelbilder, andere Videostreams oder Kameralisten.');
 }
+function loadFlights(){
+ clearMarkers(cityMarkers);clearMarkers(abMarkers);clearMarkers(finMarkers);clearList();
+ const container=$('autobahnList'),head=document.createElement('div');
+ head.className='note';head.style.cssText='margin:10px 0 6px;color:#7be0f4;font-weight:700';
+ head.textContent='FLUGHÄFEN · OFFIZIELLE FLUGTAFELN';container.appendChild(head);
+ $('count').textContent=String(flightSources.length);
+ flightSources.forEach(a=>{
+  const marker=L.circleMarker([a.lat,a.lon],{radius:8,color:'#b5a2ff',weight:2,fillColor:'#7157c8',fillOpacity:.9}).addTo(map);
+  marker.bindPopup('<b>'+esc(a.name)+'</b><br>'+esc(a.place)+'<br><small>'+esc(a.source)+'</small><br><a href="'+esc(a.url)+'" target="_blank" rel="noopener">Ankünfte und Abflüge öffnen ↗</a><p style="font-size:10px;color:#9aacc2">Hier werden Flugnummern und Status auf der offiziellen Flughafenseite angezeigt. Keine Live-Verfolgung einzelner Personen.</p>');
+  cityMarkers.push(marker);
+  addCameraCard(container,a.name,a.place+' · Flugstatus',()=>{map.setView([a.lat,a.lon],Math.max(map.getZoom(),8));marker.openPopup()});
+ });
+ map.fitBounds(L.latLngBounds(flightSources.map(a=>[a.lat,a.lon])).pad(0.18),{maxZoom:5});
+ $('flightmessage').textContent='Zwei offizielle Flugtafeln geladen: BER und Albany. Aktuelle Statusdaten stehen auf den Flughafenseiten.';
+ setMessage('Flughäfen angezeigt. Öffne einen Eintrag für die offizielle Ankunfts- und Abflugtafel.');
+}
 $('citycams').onclick=loadCityCams;
+$('flights').onclick=loadFlights;
 $('fintraffic').onclick=loadFintraffic;
 async function loadAutobahn(){
  const button=$('autobahn');button.disabled=true;clearMarkers(finMarkers);clearMarkers(cityMarkers);clearMarkers(abMarkers);clearList();abSetMessage('Prüfe die offiziellen Autobahn-Kameradaten …');
