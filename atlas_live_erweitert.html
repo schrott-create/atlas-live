@@ -1593,16 +1593,20 @@ function globalCameraCoordinates(row){
   [row?.location?.coordinates?.[1],row?.location?.coordinates?.[0]]
  ];
  for(const pair of candidates){
+  if(pair[0]==null||pair[1]==null||pair[0]===''||pair[1]==='')continue;
   const lat=Number(pair[0]),lon=Number(pair[1]);
   if(Number.isFinite(lat)&&Number.isFinite(lon)&&Math.abs(lat)<=90&&Math.abs(lon)<=180&&(lat!==0||lon!==0))return {lat,lon};
  }
  return null;
 }
 function normalizeGlobalCameraRows(data){
- const rows=Array.isArray(data.items)?data.items:
+ const rows=Array.isArray(data)?data:
+  Array.isArray(data.items)?data.items:
   Array.isArray(data.results)?data.results:
-  Array.isArray(data.cameras)?data.cameras:[];
- return rows.filter(row=>row&&row.id&&row.is_free!==false).map(row=>{
+  Array.isArray(data.cameras)?data.cameras:
+  Array.isArray(data.webcams)?data.webcams:
+  Array.isArray(data.data)?data.data:[];
+ return rows.filter(row=>row&&row.id!=null&&row.is_free!==false).map(row=>{
   const coords=globalCameraCoordinates(row);
   return coords?{...row,lat:coords.lat,lon:coords.lon}:row;
  });
@@ -1843,7 +1847,7 @@ async function searchGlobalCity(city){
 const GLOBAL_CAM_CITIES=[
  'New York City','Miami Florida','Orlando Florida','Los Angeles','San Francisco','Las Vegas','Chicago',
  'Toronto','Vancouver','Mexico City','Rio de Janeiro','London','Paris','Amsterdam','Rome','Dubai',
- 'Abu Dhabi','Tokyo Shibuya Crossing','Osaka','Seoul','Shanghai China','Hong Kong','Bangkok Thailand',
+ 'Abu Dhabi','Shibuya Crossing Tokyo','Osaka','Seoul','Shanghai China','Hong Kong','Bangkok Thailand',
  'Singapore','Sydney','Auckland','Cape Town','Honolulu','San Diego','Seattle','Vancouver Island',
  'Barcelona','Venice','Istanbul','Reykjavik','Bali','Phuket','Queenstown','Vail Colorado'
 ];
