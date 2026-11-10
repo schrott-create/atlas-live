@@ -837,7 +837,6 @@ header{position:relative;z-index:2701}
           <article class="command-card"><div class="command-icon">✈️</div><div><h4>Flug-Radar</h4><p>Öffentliche ADS-B-Flugkarte. Sichtbarkeit hängt von Empfängern und regionaler Abdeckung ab.</p></div><button id="commandFlights" type="button">Flugradar öffnen</button><a href="https://globe.adsbexchange.com/" target="_blank" rel="noopener">ADS-B Exchange ↗</a></article>
           <article class="command-card"><div class="command-icon">🚢</div><div><h4>Schiffspositionen</h4><p>AIS-Livepositionen aus finnischen Gewässern. Keine weltweite Gratis-Abdeckung in dieser App.</p></div><button id="commandShips" type="button">Finnische Schiffe anzeigen</button><a href="https://www.marinetraffic.com/" target="_blank" rel="noopener">Globaler Anbieter ↗</a></article>
           <article class="command-card"><div class="command-icon">🚆</div><div><h4>Zugpositionen</h4><p>GPS-Positionen aus dem finnischen Bahnnetz. Nicht jeder Zug sendet fortlaufend Positionsdaten.</p></div><button id="commandTrains" type="button">Finnische Züge anzeigen</button><a href="https://www.openrailwaymap.org/" target="_blank" rel="noopener">OpenRailwayMap ↗</a></article>
-          <article class="command-card"><div class="command-icon">🌙</div><div><h4>Kartenansicht</h4><p>Dunkle Weltkarte für eine ruhigere Ansicht. Keine aktuelle Nacht-Satellitenaufnahme.</p></div><button id="commandDark" type="button">Dunkle Karte aktivieren</button></article>
         </section>
         <div class="command-section-title"><div><span>04</span><h3>Live-Ereignisse</h3></div><p>Die neuesten USGS-Meldungen – anklicken, um den Ort auf der Karte zu finden.</p></div>
         <div id="commandFeed" class="command-feed"><div class="command-event">Ereignisdaten werden geladen …</div></div>
@@ -1812,9 +1811,7 @@ function setCommandMapStyle(style){
  if(!mapLayers[style])return;
  if(map.hasLayer(mapLayers[activeMapStyle]))map.removeLayer(mapLayers[activeMapStyle]);
  activeMapStyle=style;mapLayers[style].addTo(map);
- $('mapStyle').value=style;commandDarkActive=style==='dark';
- $('commandNight').textContent=commandDarkActive?'☀️ Standardkarte':'🌃 Nachtkarte';
- $('commandDark').textContent=commandDarkActive?'☀️ Standardkarte aktivieren':'🌙 Dunkle Karte aktivieren';
+ $('mapStyle').value=style;
  setMessage('Kartenstil geändert: '+(style==='dark'?'Dunkel':'Standard')+'.');
 }
 $('commandFlights').onclick=()=>{commandClose();openFlightRadar();};
