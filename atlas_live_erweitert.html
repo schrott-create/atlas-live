@@ -1477,7 +1477,8 @@ async function openGlobalCamera(row){
   const attribution=cam.redistribution?.attribution||{};
   const isImage=view.render==='image'||(view.render==='link'&&view.url_type==='image');
   const imageUrl=isImage?(view.url||cam.preview_url):(cam.preview_url||null);
-  const isPortal=!isImage&&view.render==='link';
+  const embedUrl=cam.embed_url||null;
+  const isPortal=!imageUrl&&!embedUrl&&view.render==='link';
   const sourceUrl=attribution.url||cam.publisher_url||cam.source_url||view.url||'https://openeye.cam/';
   const camera={
    name:cam.title||cam.handle||row.title||'Öffentliche Webcam',
@@ -1485,8 +1486,8 @@ async function openGlobalCamera(row){
    source:attribution.name||cam.publisher||'Öffentliche Betreiberquelle · OpenEye-Katalog',
    url:sourceUrl,
    imageUrl,
-   embedUrl:cam.embed_url||cam.stream_url||null,
-   category:isPortal?'portal':(cam.kind==='live_video'?'video':'still'),
+   embedUrl,
+   category:isPortal?'portal':(embedUrl?'video':'still'),
    refreshMs:Math.max(60000,(Number(cam.frame_interval_s)||300)*1000),
    preserveImageUrl:true
   };
