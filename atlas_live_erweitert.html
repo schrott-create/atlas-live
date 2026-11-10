@@ -1257,8 +1257,8 @@ function openCameraView(camera){
  }
  note.innerHTML='<span>Quelle: '+esc(camera.source||'Öffentliche Webcam')+'. '+(camera.imageUrl?'Aktuelles Standbild; automatische Aktualisierung.':'Live-Player, sofern der Anbieter Einbettung zulässt.')+'</span> '+openLink;
  if(camera.imageUrl){
-  const refresh=()=>{frame.src=camera.imageUrl+(camera.imageUrl.includes('?')?'&':'?')+'atlas_refresh='+Date.now();};
-  refresh();camRefreshTimer=setInterval(refresh,camera.refreshMs||300000);
+  const refresh=()=>{frame.src=camera.preserveImageUrl?camera.imageUrl:camera.imageUrl+(camera.imageUrl.includes('?')?'&':'?')+'atlas_refresh='+Date.now();};
+  refresh();if(!camera.preserveImageUrl)camRefreshTimer=setInterval(refresh,camera.refreshMs||300000);
  }else frame.src=camera.embedUrl;
  viewer.classList.add('open');
 }
@@ -1421,7 +1421,8 @@ async function openGlobalCamera(row){
    imageUrl,
    embedUrl:cam.embed_url||cam.stream_url||null,
    category:isPortal?'portal':(cam.kind==='live_video'?'video':'still'),
-   refreshMs:Math.max(60000,(Number(cam.frame_interval_s)||300)*1000)
+   refreshMs:Math.max(60000,(Number(cam.frame_interval_s)||300)*1000),
+   preserveImageUrl:true
   };
   openCameraView(camera);
  }catch(error){setMessage('Kameradetails konnten nicht geladen werden: '+error.message);}
