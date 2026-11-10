@@ -216,6 +216,9 @@ footer{padding:10px 16px;border-top:1px solid var(--line);font-size:10px;color:v
 .command-weather{font-size:12px;color:#a8c1d8;padding:10px;border:1px solid #29445d;border-radius:9px;background:#0a1524}
 @media(max-width:600px){.command-stats{grid-template-columns:1fr 1fr}}
 
+
+.command-feed-tools{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0}
+.command-feed-tools button{width:auto;padding:7px 10px;font-size:11px}
 </style>
 </head>
 <body>
@@ -365,11 +368,11 @@ footer{padding:10px 16px;border-top:1px solid var(--line);font-size:10px;color:v
         <h3 style="font-size:13px;color:#8edcf0;margin:18px 0 9px">LIVE-EXPLORER</h3>
         <div class="command-grid">
           <article class="command-card"><h3>✈️ Flug-Radar</h3><p>Öffentliche ADS-B-Flugkarte. Sichtbarkeit hängt von Empfängern, Abdeckung und Datenanbieter ab.</p><button id="commandFlights" type="button">Flugradar öffnen</button><a href="https://globe.adsbexchange.com/" target="_blank" rel="noopener">ADS-B Exchange ↗</a></article>
-          <article class="command-card"><h3>🚢 Schiffe & Ozeane</h3><p>Schiffsverkehr und nautische Karten bei externen Anbietern. Manche Live-Positionen sind eingeschränkt oder kostenpflichtig.</p><a href="https://www.marinetraffic.com/" target="_blank" rel="noopener">MarineTraffic ↗</a><a href="https://www.openseamap.org/" target="_blank" rel="noopener">OpenSeaMap ↗</a></article>
+          <article class="command-card"><h3>🚢 Schiffe & Ozeane</h3><p>Schiffsverkehr und nautische Karten bei externen Anbietern. Manche Live-Positionen sind eingeschränkt oder kostenpflichtig.</p><button id="commandShips" type="button">Finnische AIS-Schiffe auf Karte</button><a href="https://www.marinetraffic.com/" target="_blank" rel="noopener">Globaler Anbieter ↗</a><a href="https://www.openseamap.org/" target="_blank" rel="noopener">OpenSeaMap ↗</a></article>
           <article class="command-card"><h3>🌃 Erde bei Nacht</h3><p>Dunkle Kartenansicht für Städte, Straßen und Kontinente. Keine aktuelle Nacht-Satellitenaufnahme.</p><button id="commandDark" type="button">Dunkle Weltkarte aktivieren</button></article>
-          <article class="command-card"><h3>🌪️ Sturm- & Wetterradar</h3><p>Wetterkarten und Windfelder. Prognosen sind Modellprodukte und können sich ändern.</p><a href="https://www.windy.com/" target="_blank" rel="noopener">Windy öffnen ↗</a><button id="commandWeatherRefresh" type="button">Wetter für Kartenmitte laden</button></article>
-          <article class="command-card"><h3>🌋 Vulkan-Watch</h3><p>Vulkanstatus, Beobachtungsberichte und Warnmeldungen aus wissenschaftlichen Quellen.</p><a href="https://www.volcano.si.edu/" target="_blank" rel="noopener">Smithsonian Global Volcanism ↗</a><a href="https://www.usgs.gov/programs/VHP" target="_blank" rel="noopener">USGS Volcano Hazards ↗</a></article>
-          <article class="command-card"><h3>🚆 Zug-Radar</h3><p>Öffentliche Bahn- und Streckenkarten. Kein globales Live-Zugtracking in dieser App verfügbar.</p><a href="https://www.openrailwaymap.org/" target="_blank" rel="noopener">OpenRailwayMap ↗</a><a href="https://www.bahn.de/" target="_blank" rel="noopener">DB Fahrplanauskunft ↗</a></article>
+          <article class="command-card"><h3>🌪️ Sturm- & Wetterradar</h3><p>Wetterkarten und Windfelder. Prognosen sind Modellprodukte und können sich ändern.</p><a href="https://www.windy.com/" target="_blank" rel="noopener">Windy öffnen ↗</a><button id="commandWeatherRefresh" type="button">Wetter für Kartenmitte laden</button><button id="commandRadar" type="button">Niederschlagsradar auf Karte</button></article>
+          <article class="command-card"><h3>🌋 Vulkan-Watch</h3><p>Vulkanstatus, Beobachtungsberichte und Warnmeldungen aus wissenschaftlichen Quellen.</p><a href="https://volcano.si.edu/reports_weekly.cfm" target="_blank" rel="noopener">Aktueller Smithsonian/USGS-Wochenbericht ↗</a><a href="https://www.usgs.gov/programs/VHP" target="_blank" rel="noopener">USGS Volcano Hazards ↗</a><p>Der offizielle Bericht wird wöchentlich aktualisiert und ist kein Echtzeit-Sensorfeed.</p></article>
+          <article class="command-card"><h3>🚆 Zug-Radar</h3><p>Öffentliche Bahn- und Streckenkarten. Kein globales Live-Zugtracking in dieser App verfügbar.</p><button id="commandTrains" type="button">Finnische Live-Züge auf Karte</button><a href="https://www.openrailwaymap.org/" target="_blank" rel="noopener">OpenRailwayMap ↗</a><a href="https://www.bahn.de/" target="_blank" rel="noopener">DB Fahrplanauskunft ↗</a><p>Live-Positionsdaten sind hier für Finnland verfügbar, nicht weltweit.</p></article>
           <article class="command-card"><h3>🌍 Erdbeben- & Ereignisradar</h3><p>USGS-Ereignisdaten der letzten Stunde mit Magnitude und Ort. Aktualisierung manuell oder beim Öffnen.</p><button id="commandQuakeRefresh" type="button">Erdbeben aktualisieren</button></article>
           <article class="command-card"><h3>🛰️ Weltraum & ISS</h3><p>ISS-Position, NASA-Bildarchiv und wissenschaftliche 3D-Missionsexplorer.</p><button id="commandSpace" type="button">SPACE EXPLORER öffnen</button></article>
           <article class="command-card"><h3>📷 Weltweite Kameras</h3><p>Öffentliche Webcams und Betreiberseiten aus den verfügbaren Quellen.</p><button id="commandCameras" type="button">Webcam-Ebene laden</button><button id="commandWall" type="button">Live-Wall öffnen</button></article>
@@ -395,7 +398,7 @@ const mapLayers={
  satellite:L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{attribution:'Tiles &copy; Esri — Source: Esri, Maxar, Earthstar Geographics, and the GIS User Community',maxZoom:19})
 };
 let activeMapStyle='street';mapLayers.street.addTo(map);
-const pointLayers={webcams:L.layerGroup(),germany:L.layerGroup(),northsea:L.layerGroup(),usa:L.layerGroup(),harbors:L.layerGroup(),autobahn:L.layerGroup(),radio:L.layerGroup(),airports:L.layerGroup(),windy:L.layerGroup(),space:L.layerGroup(),sights:L.layerGroup(),nature:L.layerGroup(),countryPOIs:L.layerGroup()};
+const pointLayers={webcams:L.layerGroup(),germany:L.layerGroup(),northsea:L.layerGroup(),usa:L.layerGroup(),harbors:L.layerGroup(),autobahn:L.layerGroup(),radio:L.layerGroup(),airports:L.layerGroup(),windy:L.layerGroup(),space:L.layerGroup(),sights:L.layerGroup(),nature:L.layerGroup(),countryPOIs:L.layerGroup(),digitrafficShips:L.layerGroup(),digitrafficTrains:L.layerGroup()};
 const loadedPointLayers=new Set();
 let flightMarkers=[];
 const $=id=>document.getElementById(id);
@@ -1269,6 +1272,51 @@ $('commandNature').onclick=()=>{commandClose();setMapLayerVisible('nature',true)
 $('commandSights').onclick=()=>{commandClose();setMapLayerVisible('sights',true);};
 $('commandCountries').onclick=()=>{commandClose();document.querySelector('.country-picker')?.scrollIntoView({behavior:'smooth',block:'center'});document.querySelector('.country-picker')?.setAttribute('open','');};
 $('commandRadio').onclick=()=>{$('openRadio').click();commandClose();};
+
+
+/* Extra live overlays: RainViewer precipitation radar + Finnish AIS and train GPS */
+let commandRadarLayer=null,commandRadarFrame=null;
+function setCommandStatus(message){const box=$('commandWeatherText');if(box)box.textContent=message;}
+async function toggleCommandRadar(){
+ if(commandRadarLayer&&map.hasLayer(commandRadarLayer)){map.removeLayer(commandRadarLayer);$('commandRadar').textContent='Niederschlagsradar auf Karte';setCommandStatus('Niederschlagsradar ausgeblendet.');return;}
+ const button=$('commandRadar');button.disabled=true;
+ try{
+  const r=await fetch('https://api.rainviewer.com/public/weather-maps.json',{cache:'no-store'});if(!r.ok)throw new Error('HTTP '+r.status);
+  const d=await r.json(),frames=d.radar?.past||[];if(!frames.length)throw new Error('Keine Radaraufnahmen verfügbar');
+  commandRadarFrame=frames[frames.length-1];
+  if(commandRadarLayer)map.removeLayer(commandRadarLayer);
+  commandRadarLayer=L.tileLayer(d.host+commandRadarFrame.path+'/256/{z}/{x}/{y}/2/1_1.png',{opacity:.68,maxNativeZoom:7,maxZoom:20,attribution:'Weather data by <a href="https://www.rainviewer.com/" target="_blank" rel="noopener">RainViewer</a>'});
+  commandRadarLayer.addTo(map);button.textContent='Radar ausblenden';
+  setCommandStatus('Niederschlagsradar eingeblendet · Aufnahme '+new Date(commandRadarFrame.time*1000).toLocaleString('de-DE')+'. RainViewer liefert vergangene Radarframes (bis ca. 2 Stunden), keine Vorhersage.');
+ }catch(e){setCommandStatus('Radar gerade nicht verfügbar: '+e.message);}
+ finally{button.disabled=false;}
+}
+$('commandRadar').onclick=toggleCommandRadar;
+async function loadDigitrafficGeoJSON(url,group,label,style,popupBuilder){
+ const button=label==='Schiffe' ? $('commandShips') : $('commandTrains');
+ button.disabled=true;button.textContent=label+' werden geladen …';
+ try{
+  const r=await fetch(url,{headers:{Accept:'application/geo+json, application/json','Digitraffic-User':'AtlasLive/1.0 (public map)'},cache:'no-store'});
+  if(!r.ok)throw new Error('HTTP '+r.status);
+  const d=await r.json();let features=Array.isArray(d.features)?d.features:[];
+  if(!features.length&&Array.isArray(d))features=d.map((x,i)=>({type:'Feature',geometry:{type:'Point',coordinates:[Number(x.lon??x.longitude??x.location?.longitude),Number(x.lat??x.latitude??x.location?.latitude)]},properties:x}));
+  if(!features.length&&Array.isArray(d.data))features=d.data.map(x=>({type:'Feature',geometry:{type:'Point',coordinates:[Number(x.lon??x.longitude),Number(x.lat??x.latitude)]},properties:x}));
+  group.clearLayers();let count=0;
+  features.forEach(f=>{
+   const coords=f.geometry?.coordinates||[],lon=Number(coords[0]),lat=Number(coords[1]);
+   if(!Number.isFinite(lat)||!Number.isFinite(lon)||Math.abs(lat)>90||Math.abs(lon)>180)return;
+   const p=f.properties||{},marker=L.circleMarker([lat,lon],style);
+   marker.bindPopup(popupBuilder(p));marker.addTo(group);count++;
+  });
+  if(!count)throw new Error('Die API lieferte keine verwertbaren Positionspunkte');
+  group.addTo(map);const bounds=L.latLngBounds(group.getLayers().map(m=>m.getLatLng()));map.fitBounds(bounds.pad(.08),{maxZoom:9});
+  button.textContent=label+' aktualisieren';
+  setCommandStatus(count+' '+label+'-Positionen geladen. Quelle: Fintraffic/Digitraffic, Finnland. Abdeckung ist regional; AIS/GPS kann unvollständig oder verzögert sein.');
+ }catch(e){button.textContent=label+' erneut versuchen';setCommandStatus(label+' konnten nicht geladen werden: '+e.message);}
+ finally{button.disabled=false;}
+}
+$('commandShips').onclick=()=>loadDigitrafficGeoJSON('https://meri.digitraffic.fi/api/ais/v1/locations',pointLayers.digitrafficShips,'Schiffe',{radius:5,color:'#72d7ff',weight:1,fillColor:'#168bc2',fillOpacity:.9},p=>'<b>🚢 '+esc(p.name||p.shipName||'AIS-Schiff')+'</b><br>'+esc(p.destination||'Ziel unbekannt')+'<br>Quelle: Fintraffic AIS');
+$('commandTrains').onclick=()=>loadDigitrafficGeoJSON('https://rata.digitraffic.fi/api/v1/train-locations/latest',pointLayers.digitrafficTrains,'Züge',{radius:5,color:'#ffe08a',weight:1,fillColor:'#d28a20',fillOpacity:.95},p=>'<b>🚆 Zug '+esc(p.trainNumber??p.train_number??'unbekannt')+'</b><br>'+esc(p.operatorShortCode||p.operator||'Fintraffic')+'<br>Quelle: Digitraffic Rail');
 
 </script>
 </body>
