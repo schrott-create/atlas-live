@@ -1430,7 +1430,14 @@ async function loadGlobalCameraMap(options={}){
  }
 }
 function isPlayableLiveVideo(row){
- return !!row&&row.feed_kind==='live_video'&&row.live===true&&row.is_free===true&&!!row.id;
+ if(!row||!row.id)return false;
+ const rawKind=row.feed_kind??row.kind??row.camera_kind??row.stream_kind??row.media_kind??'';
+ const kind=String(rawKind).toLowerCase().replace(/[\\s-]+/g,'_');
+ const live=row.live===true||row.live==='true';
+ const free=row.is_free===true||row.is_free==='true';
+ const explicitVideo=kind==='live_video'||row.live_video===true||row.video===true||
+  row.view?.render==='video'||row.view?.url_type==='video';
+ return live&&free&&explicitVideo;
 }
 function globalCameraState(){return 'AKTIVER LIVE-VIDEOSTREAM';}
 let globalCamPeer=null,globalCamWhepDeleteUrl=null;
@@ -1473,6 +1480,11 @@ function renderGlobalCameraResults(rows,query){
  const heading=document.createElement('div');heading.className='global-camera-heading';
  heading.textContent='WELTWEITE WEBCAMS · '+rows.length+' TREFFER'+(query?' · '+query:'');
  container.appendChild(heading);
+ if(!rows.length){
+  const empty=document.createElement('div');empty.className='empty global-camera-card';
+  empty.textContent='Der Anbieter hat für diese Auswahl gerade keine bestätigten kostenlosen Live-Videostreams geliefert. Probiere „Weltstädte durchsuchen“ oder einen Themenbegriff wie Wildlife, Surf, Ski oder Hafen.';
+  container.appendChild(empty);
+ }
  rows.forEach(row=>{
   const view=row.view||{},image=view.render==='image'?view.url:(row.preview_url||'');
   const place=globalCameraPlace(row),category=row.category||'Webcam';
@@ -1484,7 +1496,9 @@ function renderGlobalCameraResults(rows,query){
  filterCameraCards();
 }
 function normalizeGlobalCameraRows(data){
- const rows=Array.isArray(data.items)?data.items:Array.isArray(data.results)?data.results:[];
+ const rows=Array.isArray(data.items)?data.items:
+  Array.isArray(data.results)?data.results:
+  Array.isArray(data.cameras)?data.cameras:[];
  return rows.filter(row=>row&&row.id&&isPlayableLiveVideo(row)&&
   Number.isFinite(Number(row.lat))&&Number.isFinite(Number(row.lon))&&
   Math.abs(Number(row.lat))<=90&&Math.abs(Number(row.lon))<=180);
@@ -1523,8 +1537,17 @@ async function openGlobalCamera(row){
   $('camvideo').style.display='block';
   $('camviewer').classList.add('open');
   $('camviewnote').textContent='Quelle: '+(attribution.name||cam.publisher||'OpenEye')+' · starte echten Videostream …';
-  try{await startGlobalCamWhep(cam.id);}
-  catch(error){$('camviewnote').textContent='Live-Video konnte nicht gestartet werden: '+error.message;$('camvideo').style.display='none';$('camframe').style.display='block';}
+  try{
+   if(cam.view?.render==='video'&&cam.view?.url){
+    $('camvideo').style.display='none';$('camframe').style.display='block';
+    $('camframe').src=cam.view.url;
+    $('camviewnote').textContent='Live-Video · Quelle: '+(attribution.name||cam.publisher||'OpenEye');
+   }else await startGlobalCamWhep(cam.id);
+  }catch(error){
+   await stopGlobalCamWhep();
+   $('camviewnote').textContent='Live-Video konnte nicht gestartet werden: '+error.message;
+   $('camvideo').style.display='none';$('camframe').style.display='block';
+  }
   setMessage((cam.title||cam.handle||'Livecam')+' · '+globalCameraState(cam));
  }catch(error){setMessage('Kamera konnte nicht geöffnet werden: '+error.message);}
 }
