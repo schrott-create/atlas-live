@@ -1664,7 +1664,7 @@ function filterGlobalCityRows(rows,city){
  });
 }
 async function searchGlobalCity(city){
- const button=document.querySelector('[data-global-city="'+CSS.escape(city)+'"]');
+ const button=[...document.querySelectorAll('[data-global-city]')].find(item=>item.dataset.globalCity===city);
  const query=city==='New York City'?'New York City':city;
  $('globalCamQuery').value=query;
  $('globalCamStatus').textContent='Suche ausschließlich Kameras aus '+city+' …';
