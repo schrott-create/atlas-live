@@ -1584,12 +1584,28 @@ function renderGlobalCameraResults(rows,query){
  $('count').textContent=String(rows.length);
  filterCameraCards();
 }
+function globalCameraCoordinates(row){
+ const candidates=[
+  [row?.lat,row?.lon],[row?.latitude,row?.longitude],[row?.latitude,row?.long],
+  [row?.position?.lat,row?.position?.lon],[row?.location?.lat,row?.location?.lon],
+  [row?.geometry?.coordinates?.[1],row?.geometry?.coordinates?.[0]],
+  [row?.coordinates?.[1],row?.coordinates?.[0]],
+  [row?.location?.coordinates?.[1],row?.location?.coordinates?.[0]]
+ ];
+ for(const pair of candidates){
+  const lat=Number(pair[0]),lon=Number(pair[1]);
+  if(Number.isFinite(lat)&&Number.isFinite(lon)&&Math.abs(lat)<=90&&Math.abs(lon)<=180&&(lat!==0||lon!==0))return {lat,lon};
+ }
+ return null;
+}
 function normalizeGlobalCameraRows(data){
  const rows=Array.isArray(data.items)?data.items:
   Array.isArray(data.results)?data.results:
   Array.isArray(data.cameras)?data.cameras:[];
- // Auch öffentliche Bildkameras und Betreiberseiten anzeigen, nicht nur Video-Feeds.
- return rows.filter(row=>row&&row.id&&row.is_free!==false);
+ return rows.filter(row=>row&&row.id&&row.is_free!==false).map(row=>{
+  const coords=globalCameraCoordinates(row);
+  return coords?{...row,lat:coords.lat,lon:coords.lon}:row;
+ });
 }
 function showGlobalCameraRows(rows,label){
  renderGlobalCameraResults(rows,label);
@@ -1721,7 +1737,7 @@ const GLOBAL_CITY_MATCH={
  'Rome':{aliases:['rome','roma'],fallback:['rome','roma'],queries:['Rome Italy webcams','Rome traffic cameras','Colosseum webcam','Rome city webcam'],bbox:[41.75,42.05,12.35,12.65]},
  'Dubai':{aliases:['dubai'],fallback:['dubai'],queries:['Dubai UAE webcams','Dubai traffic cameras','Downtown Dubai webcam','Dubai Marina webcam','Palm Jumeirah webcam'],bbox:[24.90,25.35,54.90,55.55]},
  'Abu Dhabi':{aliases:['abu dhabi'],fallback:['abu dhabi'],queries:['Abu Dhabi UAE webcams','Abu Dhabi traffic cameras','Abu Dhabi Corniche webcam','Yas Island webcam'],bbox:[24.30,24.60,54.25,54.75]},
- 'Tokyo Shibuya Crossing':{aliases:['tokyo','shibuya'],fallback:['tokyo','shibuya'],queries:['Tokyo Japan webcams','Tokyo traffic cameras','Shibuya Crossing webcam','Tokyo Station live camera','Tokyo city webcam'],bbox:[35.50,35.90,139.40,139.95]},
+ 'Shibuya Crossing Tokyo':{aliases:['tokyo','shibuya'],fallback:['tokyo','shibuya'],queries:['Tokyo Japan webcams','Tokyo traffic cameras','Shibuya Crossing webcam','Tokyo Station live camera','Tokyo city webcam'],bbox:[35.50,35.90,139.40,139.95]},
  'Osaka':{aliases:['osaka'],fallback:['osaka'],queries:['Osaka Japan webcams','Osaka traffic cameras','Dotonbori webcam','Osaka city webcam'],bbox:[34.55,34.80,135.35,135.65]},
  'Seoul':{aliases:['seoul'],fallback:['seoul'],queries:['Seoul South Korea webcams','Seoul traffic cameras','Seoul city webcam','Han River webcam'],bbox:[37.40,37.70,126.75,127.20]},
  'Shanghai China':{aliases:['shanghai'],fallback:['shanghai'],queries:['Shanghai China webcams','Shanghai traffic cameras','The Bund Shanghai webcam','Pudong skyline webcam'],bbox:[30.90,31.55,120.85,122.00]},
@@ -1744,23 +1760,16 @@ const GLOBAL_CITY_MATCH={
  'Queenstown':{aliases:['queenstown'],fallback:['queenstown'],queries:['Queenstown New Zealand webcams','Queenstown lake webcam','Remarkables ski webcam'],bbox:[-45.10,-44.90,168.50,168.80]},
  'Vail Colorado':{aliases:['vail'],fallback:['vail'],queries:['Vail Colorado webcams','Vail ski resort webcam','Vail mountain camera'],bbox:[39.55,39.75,-106.50,-106.25]}
 };
-function globalCityText(value){return String(value||'').normalize('NFD').replace(/[\\u0300-\\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,' ').trim();}
+function globalCityText(value){return String(value||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,' ').trim();}
 function filterGlobalCityRows(rows,city){
  const rule=GLOBAL_CITY_MATCH[city];
  if(!rule||!Array.isArray(rule.bbox))return [];
  const [south,north,west,east]=rule.bbox;
  return rows.filter(row=>{
-  const lat=Number(row.lat),lon=Number(row.lon);
-  if(!Number.isFinite(lat)||!Number.isFinite(lon)||lat<south||lat>north||lon<west||lon>east)return false;
-  const cityFields=[row.city,row.locality,row.town,row.municipality,row.city_name].filter(value=>typeof value==='string'&&value.trim()).map(globalCityText);
-  const locationText=[row.title,row.handle,row.place,row.location,row.address,row.description,row.tags].filter(Boolean).map(value=>Array.isArray(value)?value.join(' '):String(value)).map(globalCityText).join(' ');
-  const matchesAlias=value=>rule.aliases.some(alias=>{
-   const normalized=globalCityText(alias);
-   return value===normalized||value.startsWith(normalized+' ')||(' '+value+' ').includes(' '+normalized+' ');
-  });
-  // Koordinaten sind die harte Grenze. Ortsfelder mit eindeutig fremdem Stadtnamen werden verworfen.
-  if(cityFields.length&&!cityFields.some(matchesAlias))return false;
-  return true;
+  const coords=globalCameraCoordinates(row);
+  if(!coords)return false;
+  const {lat,lon}=coords;
+  return lat>=south&&lat<=north&&lon>=west&&lon<=east;
  });
 }
 function getNYCCuratedCameraRows(){
