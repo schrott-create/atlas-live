@@ -1426,7 +1426,7 @@ async function loadGlobalCameraMap(options={}){
   const rows=normalizeGlobalCameraRows(data);
   clearGlobalCamMarkers();
   rows.forEach(item=>addGlobalCamMarker(item,false));
-  $('globalCamStatus').textContent=rows.length+' kostenlose, aktive Live-Video-Cams im Kartenausschnitt gefunden.';
+  $('globalCamStatus').textContent=rows.length+' öffentliche Kamera-Einträge im Kartenausschnitt geladen · '+rows.filter(isPlayableLiveVideo).length+' davon Live-Video.';
   if(!options.silent)setMessage(rows.length+' echte Live-Videostreams im Kartenausschnitt gefunden.');
  }catch(error){
   if(request!==globalCamRequest)return;
@@ -1596,25 +1596,26 @@ async function openGlobalCamera(row){
 }
 async function loadGlobalCameraFeatured(){
  const button=$('globalCamFeaturedButton');button.disabled=true;
- $('globalCamStatus').textContent='Suche im öffentlichen Katalog nach aktiven Live-Videostreams …';
+ $('globalCamStatus').textContent='Suche im öffentlichen Kamerakatalog nach Video-, Bild- und Betreiberkameras …';
  try{
   const params=new URLSearchParams({limit:'500',sort:'fresh'});
   const data=await fetchJsonSafe(OPEN_EYE_API+'/catalog?'+params.toString(),30000);
   const rows=normalizeGlobalCameraRows(data);
   showGlobalCameraRows(rows,'Aktive Live-Video-Cams');
-  $('globalCamStatus').textContent=rows.length+' kostenlose aktive Live-Videostreams gefunden. Reine Bildkameras und kostenpflichtige Streams wurden ausgeschlossen.';
+  $('globalCamStatus').textContent=rows.length+' öffentliche Kamera-Einträge geladen. Live-Video: '+rows.filter(isPlayableLiveVideo).length+' · Bilder/Betreiberseiten: '+rows.filter(row=>!isPlayableLiveVideo(row)).length+'.';
  }catch(error){$('globalCamStatus').textContent='Live-Video-Suche fehlgeschlagen: '+error.message;}
  finally{button.disabled=false;}
 }
 async function loadGlobalCameraRandom(){
  const button=$('globalCamRandomButton');button.disabled=true;
- $('globalCamStatus').textContent='Suche eine zufällige kostenlose Live-Video-Cam …';
+ $('globalCamStatus').textContent='Suche eine zufällige öffentliche Kamera …';
  try{
   const params=new URLSearchParams({limit:'500',sort:'fresh'});
   const data=await fetchJsonSafe(OPEN_EYE_API+'/catalog?'+params.toString(),30000);
   const rows=normalizeGlobalCameraRows(data);
-  if(!rows.length)throw new Error('Im aktuellen Katalogfenster wurde kein kostenloser Live-Videostream gefunden.');
-  const cam=rows[Math.floor(Math.random()*rows.length)];
+  if(!rows.length)throw new Error('Im aktuellen Katalogfenster wurden keine öffentlichen Kameras gefunden.');
+  const videos=rows.filter(isPlayableLiveVideo),pool=videos.length?videos:rows;
+  const cam=pool[Math.floor(Math.random()*pool.length)];
   await openGlobalCamera(cam);
   $('globalCamStatus').textContent='Zufällige Livecam: '+(cam.title||cam.handle||cam.id)+' · '+globalCameraPlace(cam);
  }catch(error){$('globalCamStatus').textContent='Zufallskamera gerade nicht verfügbar: '+error.message;}
@@ -1644,7 +1645,7 @@ async function searchGlobalWorldCities(){
  const button=$('globalCamCitiesButton');
  const cities=['New York','Miami Florida','Orlando Florida','Los Angeles','San Francisco','Las Vegas','Chicago','Toronto','Vancouver','Mexico City','Rio de Janeiro','London','Paris','Amsterdam','Rome','Dubai','Abu Dhabi','Tokyo Shibuya Crossing','Osaka','Seoul','Shanghai China','Hong Kong','Bangkok Thailand','Singapore','Sydney','Auckland','Cape Town'];
  button.disabled=true;
- $('globalCamStatus').textContent='Durchsuche '+cities.length+' Städte weltweit nach echten Live-Videostreams …';
+ $('globalCamStatus').textContent='Durchsuche '+cities.length+' Städte nach öffentlichen Kameras …';
  const collected=new Map(),failed=[];
  try{
   for(let i=0;i<cities.length;i+=4){
@@ -1657,11 +1658,11 @@ async function searchGlobalWorldCities(){
     if(result.status!=='fulfilled'){failed.push(batch[index]);return;}
     normalizeGlobalCameraRows(result.value.data).forEach(row=>collected.set(row.id,row));
    });
-   $('globalCamStatus').textContent=(Math.min(i+4,cities.length))+'/'+cities.length+' Städte geprüft · '+collected.size+' echte Live-Videostreams gefunden …';
+   $('globalCamStatus').textContent=(Math.min(i+4,cities.length))+'/'+cities.length+' Städte geprüft · '+collected.size+' Kamera-Einträge gefunden …';
   }
   const rows=[...collected.values()];
   showGlobalCameraRows(rows,'Weltstädte weltweit');
-  $('globalCamStatus').textContent=rows.length+' echte Live-Video-Cams aus '+cities.length+' Städten geladen.'+(failed.length?' Nicht erreichbar: '+failed.join(', '):'')+' · Standbilder und Betreiberlinks bleiben ausgeblendet.';
+  $('globalCamStatus').textContent=rows.length+' Kamera-Einträge aus '+cities.length+' Städten geladen · '+rows.filter(isPlayableLiveVideo).length+' Live-Video.'+(failed.length?' Nicht erreichbar: '+failed.join(', '):'')+'. Bilder und offizielle Betreiberseiten werden ebenfalls angezeigt.';
  }catch(error){$('globalCamStatus').textContent='Weltweite Stadtsuche fehlgeschlagen: '+error.message;}
  finally{button.disabled=false;}
 }
