@@ -1437,24 +1437,27 @@ async function loadGlobalCameraMap(options={}){
 function globalCamVideoType(row){
  const view=row?.view||{},url=String(view.url||row?.stream_url||row?.url||'').toLowerCase();
  const type=String(view.url_type||view.mime_type||row?.mime_type||row?.content_type||'').toLowerCase();
+ if(type.includes('page')||type.includes('embed')||type.includes('html'))return '';
  if(type.includes('whep')||view.whep_url||row?.whep_url)return 'whep';
- if(type.includes('mpegurl')||type==='hls'||/\\.m3u8(?:[?#]|$)/.test(url))return 'hls';
- if(type.includes('mp4')||/\\.mp4(?:[?#]|$)/.test(url))return 'mp4';
- if(type.includes('webm')||/\\.webm(?:[?#]|$)/.test(url))return 'webm';
+ if(type.includes('mpegurl')||type==='hls'||/\.m3u8(?:[?#]|$)/.test(url))return 'hls';
+ if(type.includes('mp4')||/\.mp4(?:[?#]|$)/.test(url))return 'mp4';
+ if(type.includes('webm')||/\.webm(?:[?#]|$)/.test(url))return 'webm';
  if(type.includes('video')||view.render==='video'||row?.video===true||row?.live_video===true)return 'video';
  return '';
 }
 function isPlayableLiveVideo(row){
  if(!row||row.is_free===false)return false;
+ const view=row.view||{},urlType=String(view.url_type||'').toLowerCase();
+ if(urlType.includes('page')||urlType.includes('embed')||urlType.includes('html'))return false;
  const rawKind=row.feed_kind??row.kind??row.camera_kind??row.stream_kind??row.media_kind??'';
- const kind=String(rawKind).toLowerCase().replace(/[\\s-]+/g,'_');
+ const kind=String(rawKind).toLowerCase().replace(/[\s-]+/g,'_');
  const directType=globalCamVideoType(row);
- const live=row.live===true||row.live==='true'||row.live_video===true||row.view?.render==='video';
+ const live=row.live===true||row.live==='true'||row.live_video===true||view.render==='video';
  return Boolean(directType||((kind==='live_video'||row.live_video===true||row.video===true)&&live));
 }
 function globalCameraState(row){
  const kind=String(row?.feed_kind??row?.kind??row?.camera_kind??'').toLowerCase().replace(/[\s-]+/g,'_');
- if(kind==='live_video'||row?.view?.render==='video')return 'LIVE-VIDEO';
+ if(isPlayableLiveVideo(row))return 'LIVE-VIDEO';
  if(row?.view?.render==='image'||row?.preview_url)return row?.live===false?'LETZTES BILD':'KAMERA-BILD (aktuell/aktualisiert)';
  if(row?.view?.render==='link'||row?.view?.url)return 'BEIM BETREIBER ÖFFNEN';
  return 'KAMERA-EINTRAG';
@@ -1608,6 +1611,7 @@ function showGlobalCameraRows(rows,label){
 }
 async function openGlobalCamera(row){
  if(row.is_free===false){setMessage('Diese Kamera ist nicht kostenlos verfügbar.');return;}
+ await stopGlobalCamWhep();
  setMessage('Lade Kamera-Informationen …');
  try{
   let cam=row;
@@ -1635,6 +1639,11 @@ async function openGlobalCamera(row){
     setMessage(title+' · Videowiedergabe fehlgeschlagen.');
    }
    return;
+  }
+  if(view.url&&(['page','embed','html'].some(kind=>String(view.url_type||'').toLowerCase().includes(kind)))){
+   openCameraView({name:title,category:'portal',url:view.url,source:attribution.name||cam.publisher||'Kamerabetreiber'});
+   $('camviewnote').textContent='Diese Quelle ist eine Betreiberseite, kein direkt abspielbarer Videostream. Falls Einbettung blockiert wird, öffne die Originalseite.';
+   setMessage(title+' · Betreiberseite geöffnet.');return;
   }
   if(view.render==='image'||cam.preview_url||view.url_type==='image'){
    if(!source)throw new Error('Für diese Kamera ist gerade kein Bildlink verfügbar.');
