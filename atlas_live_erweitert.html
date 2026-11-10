@@ -659,7 +659,7 @@ header{position:relative;z-index:2701}
 
 </style>
 </head>
-<body>
+<body class="menu-open">
 <header><button class="logo" id="homeMenuButton" type="button" aria-label="Hauptmenü öffnen" title="Hauptmenü">◎</button><div><h1>ATLAS LIVE</h1><div class="sub">PUBLIC CAMERA EXPLORER · KEY-FREE</div></div><div class="status">● PUBLIC SOURCES ONLY</div></header>
 <main>
 <aside id="mainMenu" aria-label="ATLAS LIVE Hauptmenü">
@@ -1306,7 +1306,7 @@ $('closeMainMenu').addEventListener('click',closeMainMenu);
 document.addEventListener('keydown',e=>{if(e.key==='Escape')closeMainMenu();});
 
 function closeOverlay(id){$(id).classList.remove('open')}
-$('openWall').onclick=()=>{buildWall();openOverlay('wallOverlay')};
+$('openWall').onclick=()=>{closeMainMenu();buildWall();openOverlay('wallOverlay')};
 $('closeWall').onclick=()=>closeOverlay('wallOverlay');
 $('wallOverlay').addEventListener('click',e=>{if(e.target===$('wallOverlay'))closeOverlay('wallOverlay')});
 function getEmbeddableSources(){
@@ -1621,7 +1621,7 @@ async function loadSpaceTracker(){
   loadedPointLayers.add('space');
  }catch(e){status.textContent='ISS-Positionsdienst gerade nicht erreichbar: '+e.message+'. Bitte später erneut versuchen.';throw e;}
 }
-$('openSpace').onclick=()=>{$('spaceOverlay').classList.add('open');loadSpaceTracker().catch(()=>{});if(!$('spaceImageResults').childElementCount)searchSpaceImages();};
+$('openSpace').onclick=()=>{closeMainMenu();$('spaceOverlay').classList.add('open');loadSpaceTracker().catch(()=>{});if(!$('spaceImageResults').childElementCount)searchSpaceImages();};
 $('closeSpace').onclick=()=>{$('spaceOverlay').classList.remove('open')};
 $('spaceOverlay').addEventListener('click',e=>{if(e.target===$('spaceOverlay'))$('closeSpace').click()});
 $('focusISS').onclick=()=>{if(issLatest){map.setView([issLatest.lat,issLatest.lon],4);if(!map.hasLayer(pointLayers.space))pointLayers.space.addTo(map);const b=document.querySelector('.map-layer-toggle[data-layer="space"]');b?.classList.add('active');b?.setAttribute('aria-pressed','true');setMessage('ISS-Position auf der Karte angezeigt. Die Position wird alle 10 Sekunden aktualisiert.')}else loadSpaceTracker().then(()=>$('focusISS').click()).catch(()=>{})};
@@ -1702,7 +1702,7 @@ async function searchRadio(options={}){
  finally{button.disabled=false;}
 }
 
-$('openRadio').onclick=()=>{$('radioOverlay').classList.add('open');if(!$('radioResults').childElementCount)searchRadio({showMap:false,openOverlay:false});};
+$('openRadio').onclick=()=>{closeMainMenu();$('radioOverlay').classList.add('open');if(!$('radioResults').childElementCount)searchRadio({showMap:false,openOverlay:false});};
 $('closeRadio').onclick=()=>{$('radioOverlay').classList.remove('open');$('radioAudio').pause();$('radioAudio').removeAttribute('src');$('radioAudio').load();};
 $('radioOverlay').addEventListener('click',e=>{if(e.target===$('radioOverlay'))$('closeRadio').click()});
 $('radioSearch').onclick=()=>searchRadio({showMap:false,openOverlay:false});
@@ -1759,7 +1759,7 @@ $('search').addEventListener('keydown',async e=>{
 });
 
 /* COMMAND CENTER: public data feeds + shortcuts to all existing explorers */
-function commandOpen(){ $('commandOverlay').classList.add('open'); refreshCommandCenter(); }
+function commandOpen(){ closeMainMenu();$('commandOverlay').classList.add('open'); refreshCommandCenter(); }
 function commandClose(){ $('commandOverlay').classList.remove('open'); }
 $('openCommand').addEventListener('click',commandOpen);
 $('closeCommand').addEventListener('click',commandClose);
@@ -1823,7 +1823,7 @@ $('commandCameras').onclick=()=>{commandClose();setMapLayerVisible('webcams',tru
 $('commandWall').onclick=()=>{$('openWall').click();commandClose();};
 $('commandNature').onclick=()=>{commandClose();setMapLayerVisible('nature',true);};
 $('commandSights').onclick=()=>{commandClose();setMapLayerVisible('sights',true);};
-$('commandCountries').onclick=()=>{commandClose();const group=$('mapMenuGroup');if(group)group.open=true;$('countryPicker')?.scrollIntoView({behavior:'smooth',block:'center'});};
+$('commandCountries').onclick=()=>{commandClose();openMainMenu();$('countryPicker')?.scrollIntoView({behavior:'smooth',block:'center'});};
 $('commandRadio').onclick=()=>{$('openRadio').click();commandClose();};
 
 
