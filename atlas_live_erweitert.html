@@ -402,6 +402,78 @@ footer{padding:10px 16px;border-top:1px solid var(--line);font-size:10px;color:v
 }
 @media(prefers-reduced-motion:reduce){#commandOverlay .command-card{transition:none}#commandOverlay .command-card:hover{transform:none}}
 
+
+/* REAL LAYOUT: three-column glass operations desk */
+#commandOverlay{padding:0!important;align-items:stretch!important;justify-content:stretch!important;background:rgba(1,5,12,.91)!important;backdrop-filter:blur(20px)!important}
+#commandOverlay .command-panel{width:100%!important;height:100vh!important;height:100dvh!important;max-height:none!important;margin:0!important;border:0!important;border-radius:0!important;display:flex;flex-direction:column;background:#07111e!important;box-shadow:none!important}
+#commandOverlay .atlas-panel-head{height:76px;min-height:76px;box-sizing:border-box;padding:12px 22px!important;background:linear-gradient(90deg,#091725,#0b1d30 60%,#101b31)!important;border-bottom:1px solid rgba(115,198,231,.2)}
+#commandOverlay .command-body{height:auto!important;max-height:none!important;min-height:0;flex:1;padding:0!important;overflow:hidden!important}
+#commandOverlay .cc-shell{height:100%;min-height:0;display:grid;grid-template-columns:82px minmax(0,1fr) 310px;background:radial-gradient(ellipse at 55% 0%,rgba(31,105,139,.12),transparent 45%),#07111e}
+#commandOverlay .cc-rail{display:flex;flex-direction:column;align-items:center;gap:9px;padding:18px 9px;background:rgba(4,12,22,.92);border-right:1px solid rgba(117,186,216,.17)}
+#commandOverlay .cc-rail-logo{width:48px;height:48px;display:grid;place-items:center;border-radius:15px;color:#9cecff;font-size:27px;background:linear-gradient(145deg,#174b67,#0c2135);border:1px solid #34718d;box-shadow:0 0 25px #1a8ab033;margin-bottom:13px}
+#commandOverlay .cc-rail-label{font-size:8px;letter-spacing:1.6px;color:#617f98;margin-bottom:5px}
+#commandOverlay .cc-rail button{width:62px;min-height:58px;padding:8px 3px;border:1px solid transparent;border-radius:13px;background:transparent;color:#86a5bd;font-size:21px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px}
+#commandOverlay .cc-rail button span{font-size:8px;letter-spacing:.2px;color:inherit}
+#commandOverlay .cc-rail button:hover,#commandOverlay .cc-rail button.active{color:#a7edff;background:linear-gradient(145deg,rgba(34,119,153,.27),rgba(14,44,66,.48));border-color:rgba(91,199,233,.3);box-shadow:inset 0 1px #ffffff0d,0 5px 20px #0003}
+#commandOverlay .cc-rail-bottom{margin-top:auto;text-align:center;font-size:8px;line-height:1.7;letter-spacing:1.5px;color:#52738c}
+#commandOverlay .cc-workspace{min-width:0;min-height:0;display:flex;flex-direction:column;overflow:hidden}
+#commandOverlay .cc-topline{height:48px;min-height:48px;padding:0 24px;display:flex;align-items:center;justify-content:space-between;gap:12px;border-bottom:1px solid rgba(117,186,216,.13);background:rgba(9,23,38,.72);color:#7796ad;font-size:9px;letter-spacing:1.25px}
+#commandOverlay .cc-topline>div:first-child{display:flex;align-items:center;gap:9px}
+#commandOverlay .cc-topline b{font-weight:700;color:#a5c6d8}
+#commandOverlay .cc-pulse{width:7px;height:7px;border-radius:50%;background:#5ee3ae;box-shadow:0 0 12px #5ee3ae}
+#commandOverlay .cc-top-actions{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+#commandOverlay .cc-top-actions button{width:auto;padding:7px 10px;border-radius:8px;background:#10283b;border:1px solid #284b64;color:#bfeeff;font-size:9px}
+#commandOverlay .cc-top-actions button:hover{border-color:#65d7f7;background:#17425c}
+#commandOverlay .cc-main{min-height:0;overflow:auto;padding:22px 24px 45px;scrollbar-color:#284d65 transparent}
+#commandOverlay .cc-overview{scroll-margin-top:12px}
+#commandOverlay .command-hero{min-height:155px;padding:22px 25px;border-radius:18px;display:flex;align-items:center;gap:20px;background:radial-gradient(ellipse at 80% 5%,#1d6580aa,transparent 44%),linear-gradient(115deg,#10334b,#0b1a2e 66%,#101c35);border:1px solid #34708a}
+#commandOverlay .command-hero h3{font-size:clamp(24px,2.5vw,34px)}
+#commandOverlay .command-hero:after{right:30%;font-size:210px}
+#commandOverlay .command-live-strip{margin-top:15px;grid-template-columns:repeat(3,minmax(0,1fr))}
+#commandOverlay .command-stat{min-height:100px}
+#commandOverlay .command-weather{margin-top:10px}
+#commandOverlay .cc-module{margin-top:27px;scroll-margin-top:14px}
+#commandOverlay .cc-module-title{margin-top:0;margin-bottom:13px}
+#commandOverlay .command-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+#commandOverlay .command-data-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+#commandOverlay .command-traffic-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+#commandOverlay .command-card{min-height:170px}
+#commandOverlay .cc-right{min-width:0;min-height:0;overflow:auto;padding:23px 16px 28px;background:linear-gradient(180deg,rgba(10,25,41,.98),rgba(6,15,27,.98));border-left:1px solid rgba(117,186,216,.18);scrollbar-color:#284d65 transparent}
+#commandOverlay .cc-right-heading{font-size:9px;font-weight:800;letter-spacing:1.8px;color:#8db2c9;padding:3px 3px 14px;border-bottom:1px solid rgba(117,186,216,.17);margin-bottom:15px}
+#commandOverlay .cc-live-module .command-section-title{margin:0 0 12px}
+#commandOverlay .cc-live-module .command-section-title p{display:none}
+#commandOverlay .cc-live-module .command-section-title h3{font-size:16px}
+#commandOverlay .cc-live-module .command-feed{grid-template-columns:1fr}
+#commandOverlay .cc-live-module .command-event{font-size:10px;padding:11px}
+#commandOverlay .cc-right .command-footnote{margin-top:22px;font-size:9px;line-height:1.6}
+@media(max-width:1100px){
+ #commandOverlay .cc-shell{grid-template-columns:70px minmax(0,1fr)}
+ #commandOverlay .cc-right{display:none}
+ #commandOverlay .command-data-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(max-width:700px){
+ #commandOverlay .atlas-panel-head{height:65px;min-height:65px;padding:9px 12px!important}
+ #commandOverlay .command-brand-mark{width:38px;height:38px}
+ #commandOverlay .command-brand h2{font-size:11px}
+ #commandOverlay .command-brand small{font-size:8px}
+ #commandOverlay .cc-shell{grid-template-columns:56px minmax(0,1fr)}
+ #commandOverlay .cc-rail{padding:12px 3px;gap:5px}
+ #commandOverlay .cc-rail-logo{width:38px;height:38px;font-size:22px}
+ #commandOverlay .cc-rail button{width:48px;min-height:50px;font-size:18px}
+ #commandOverlay .cc-rail button span{font-size:7px}
+ #commandOverlay .cc-topline{padding:0 10px;font-size:7px}
+ #commandOverlay .cc-topline b{display:none}
+ #commandOverlay .cc-top-actions button{font-size:8px;padding:6px}
+ #commandOverlay .cc-main{padding:12px 10px 30px}
+ #commandOverlay .command-hero{padding:16px;display:block}
+ #commandOverlay .command-hero h3{font-size:22px}
+ #commandOverlay .command-toolbar{display:none}
+ #commandOverlay .command-live-strip{grid-template-columns:1fr 1fr}
+ #commandOverlay .command-live-strip .command-stat:last-child{grid-column:1/-1}
+ #commandOverlay .command-grid,#commandOverlay .command-data-grid,#commandOverlay .command-traffic-grid{grid-template-columns:1fr}
+ #commandOverlay .command-card{min-height:0}
+}
+
 </style>
 </head>
 <body>
