@@ -219,6 +219,51 @@ footer{padding:10px 16px;border-top:1px solid var(--line);font-size:10px;color:v
 
 .command-feed-tools{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0}
 .command-feed-tools button{width:auto;padding:7px 10px;font-size:11px}
+
+/* Command Center 2.0 – klare Hierarchie, weniger Untermenüs */
+.command-panel{width:min(1240px,96vw);background:#091321;border-color:#29425c}
+.command-panel .atlas-panel-head{padding:17px 22px;background:#0d1929}
+.command-brand{display:flex;align-items:center;gap:12px;flex:1;min-width:0}
+.command-brand-mark{width:42px;height:42px;border:1px solid #3a7996;border-radius:13px;display:grid;place-items:center;color:#71ddf5;font-size:25px;background:linear-gradient(145deg,#153b53,#0b1b2d)}
+.command-brand h2{font-size:15px;letter-spacing:1.1px;margin:0}
+.command-brand h2 span{color:#75d8ef}
+.command-brand small{display:block;color:#91a8c0;font-size:10px;margin-top:3px}
+.command-body{padding:22px;display:grid;gap:13px}
+.command-hero{display:flex;align-items:center;justify-content:space-between;gap:20px;padding:22px;border:1px solid #31536f;border-radius:17px;background:radial-gradient(ellipse at 85% 10%,#1b5270 0%,transparent 48%),linear-gradient(120deg,#10243a,#0b1727)}
+.command-eyebrow{font-size:9px;letter-spacing:2px;color:#75d8ef;font-weight:800}
+.command-hero h3{font-size:25px;margin:5px 0;color:#f0f8ff;letter-spacing:-.5px}
+.command-hero p{margin:0;color:#a9bdd2;font-size:12px;max-width:480px}
+.command-toolbar{display:flex;gap:7px;flex-wrap:wrap;justify-content:flex-end;max-width:390px}
+.command-toolbar button{width:auto;padding:9px 11px;font-size:10px;white-space:nowrap}
+.command-live-strip{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px}
+.command-stat{padding:13px 15px;border:1px solid #263e57;border-radius:12px;background:linear-gradient(145deg,#102035,#0b1726)}
+.command-stat span{display:block;color:#8fa8c1;font-size:9px;letter-spacing:.8px}
+.command-stat b{display:block;font-size:25px;color:#91e5fb;line-height:1.25;margin:5px 0}
+.command-stat small{font-size:10px;color:#8099b3}
+.command-weather{font-size:11px;line-height:1.55;color:#a9c1d7;padding:11px 14px;border:1px solid #263e57;border-radius:10px;background:#0b1726}
+.command-section-title{display:flex;align-items:end;justify-content:space-between;gap:12px;margin-top:10px;padding-bottom:7px;border-bottom:1px solid #243950}
+.command-section-title>div{display:flex;align-items:center;gap:9px}
+.command-section-title>div>span{color:#65cce7;font-size:10px;font-weight:800;letter-spacing:1px}
+.command-section-title h3{font-size:17px;margin:0;color:#e6f4ff}
+.command-section-title p{font-size:10px;color:#8099b3;margin:0;text-align:right}
+.command-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+.command-data-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+.command-traffic-grid{grid-template-columns:repeat(4,minmax(0,1fr))}
+.command-card{padding:15px;border:1px solid #263e57;border-radius:13px;background:linear-gradient(160deg,#102035,#0a1523);gap:9px;min-height:190px}
+.command-card h4{font-size:13px;margin:0;color:#e4f4ff}
+.command-card p{font-size:10px;line-height:1.5;color:#9bb0c6;margin:5px 0 0;flex:1}
+.command-icon{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;background:#17334a;border:1px solid #2e5b77;font-size:17px}
+.command-card button,.command-card a{width:100%;padding:9px 10px;font-size:10px;text-align:center}
+.command-card a{color:#81dff4;border:1px solid #31556e;border-radius:8px;background:#0d2234;text-decoration:none}
+.command-card .secondary{background:#0c1b2a;border-color:#2c435b;color:#b9cadd}
+.command-actions{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.command-feature{background:radial-gradient(ellipse at 80% 0%,#174969 0%,transparent 55%),linear-gradient(160deg,#10263d,#0a1523);border-color:#32627e}
+.command-feed{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.command-event{padding:11px 13px;border-color:#263e57;background:#0c1929;font-size:11px}
+.command-footnote{font-size:10px;color:#728aa3;line-height:1.55;margin:5px 0 0}
+@media(max-width:900px){.command-grid,.command-traffic-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.command-hero{align-items:flex-start;flex-direction:column}.command-toolbar{justify-content:flex-start;max-width:none}}
+@media(max-width:600px){.command-body{padding:13px}.command-panel .atlas-panel-head{padding:12px}.command-brand h2{font-size:12px}.command-brand small{font-size:9px}.command-hero{padding:16px}.command-hero h3{font-size:21px}.command-live-strip{grid-template-columns:1fr 1fr}.command-live-strip .command-stat:last-child{grid-column:1/-1}.command-grid,.command-data-grid,.command-traffic-grid,.command-feed{grid-template-columns:1fr}.command-card{min-height:0}.command-section-title{align-items:flex-start;flex-direction:column;gap:4px}.command-section-title p{text-align:left}.command-toolbar button{flex:1}}
+
 </style>
 </head>
 <body>
@@ -353,36 +398,50 @@ footer{padding:10px 16px;border-top:1px solid var(--line);font-size:10px;color:v
   </div>
 
   <div class="atlas-overlay" id="commandOverlay" role="dialog" aria-modal="true" aria-label="ATLAS Live Command Center">
-    <section class="atlas-panel">
-      <div class="atlas-panel-head"><h2>ATLAS LIVE · COMMAND CENTER</h2><button id="closeCommand" type="button">Schließen ✕</button></div>
-      <div class="atlas-panel-body">
-        <p class="hub-note">Alle Explorer an einem Ort: aktuelle öffentliche Daten, Kartenebenen und externe Live-Dienste. Externe Anbieter können eigene Konten, regionale Abdeckung oder Einbettungsbeschränkungen haben.</p>
-        <div class="command-headline"><button id="commandRefresh" type="button">↻ Daten aktualisieren</button><button id="commandNight" type="button">🌃 Nachtkarte umschalten</button><button id="commandRandom" type="button">🎲 Zufallskamera</button><button id="commandFavorites" type="button">☆ Favoriten anzeigen</button></div>
-        <div class="command-stats">
-          <div class="command-stat"><b id="commandQuakes">—</b><span>ERDBEBEN · LETZTE STUNDE</span></div>
-          <div class="command-stat"><b id="commandSignificant">—</b><span>STÄRKERE BEBEN · M4+</span></div>
-          <div class="command-stat"><b id="commandWeather">—</b><span>WETTER · KARTENMITTE</span></div>
-          <div class="command-stat"><b id="commandUpdated">—</b><span>LETZTES UPDATE</span></div>
-        </div>
+    <section class="atlas-panel command-panel">
+      <div class="atlas-panel-head">
+        <div class="command-brand"><span class="command-brand-mark">◎</span><div><h2>ATLAS LIVE <span>COMMAND CENTER</span></h2><small>Dein Überblick über öffentliche Live-Daten</small></div></div>
+        <button id="closeCommand" type="button">Schließen ✕</button>
+      </div>
+      <div class="atlas-panel-body command-body">
+        <section class="command-hero">
+          <div><span class="command-eyebrow">LIVE DASHBOARD</span><h3>Alles Wichtige. Ein Ort.</h3><p>Kameras, Wetter, Ereignisse und Verkehr direkt öffnen – ohne dich durch Untermenüs zu klicken.</p></div>
+          <div class="command-toolbar">
+            <button id="commandRefresh" type="button">↻ Aktualisieren</button>
+            <button id="commandRandom" type="button">🎲 Zufallskamera</button>
+            <button id="commandFavorites" type="button">☆ Favoriten</button>
+            <button id="commandNight" type="button">🌃 Nachtkarte</button>
+          </div>
+        </section>
+        <section class="command-live-strip" aria-label="Aktuelle Kennzahlen">
+          <article class="command-stat"><span>ERDBEBEN · LETZTE STUNDE</span><b id="commandQuakes">—</b><small>USGS Live-Feed</small></article>
+          <article class="command-stat"><span>STÄRKERE BEBEN · M4+</span><b id="commandSignificant">—</b><small>Magnitude 4 oder höher</small></article>
+          <article class="command-stat"><span>WETTER · KARTENMITTE</span><b id="commandWeather">—</b><small id="commandUpdated">Wird aktualisiert …</small></article>
+        </section>
         <div id="commandWeatherText" class="command-weather">Wetterdaten werden für die aktuelle Kartenmitte geladen …</div>
-        <h3 style="font-size:13px;color:#8edcf0;margin:18px 0 9px">LIVE-EXPLORER</h3>
-        <div class="command-grid">
-          <article class="command-card"><h3>✈️ Flug-Radar</h3><p>Öffentliche ADS-B-Flugkarte. Sichtbarkeit hängt von Empfängern, Abdeckung und Datenanbieter ab.</p><button id="commandFlights" type="button">Flugradar öffnen</button><a href="https://globe.adsbexchange.com/" target="_blank" rel="noopener">ADS-B Exchange ↗</a></article>
-          <article class="command-card"><h3>🚢 Schiffe & Ozeane</h3><p>Schiffsverkehr und nautische Karten bei externen Anbietern. Manche Live-Positionen sind eingeschränkt oder kostenpflichtig.</p><button id="commandShips" type="button">Finnische AIS-Schiffe auf Karte</button><a href="https://www.marinetraffic.com/" target="_blank" rel="noopener">Globaler Anbieter ↗</a><a href="https://www.openseamap.org/" target="_blank" rel="noopener">OpenSeaMap ↗</a></article>
-          <article class="command-card"><h3>🌃 Erde bei Nacht</h3><p>Dunkle Kartenansicht für Städte, Straßen und Kontinente. Keine aktuelle Nacht-Satellitenaufnahme.</p><button id="commandDark" type="button">Dunkle Weltkarte aktivieren</button></article>
-          <article class="command-card"><h3>🌪️ Sturm- & Wetterradar</h3><p>Wetterkarten und Windfelder. Prognosen sind Modellprodukte und können sich ändern.</p><a href="https://www.windy.com/" target="_blank" rel="noopener">Windy öffnen ↗</a><button id="commandWeatherRefresh" type="button">Wetter für Kartenmitte laden</button><button id="commandRadar" type="button">Niederschlagsradar auf Karte</button></article>
-          <article class="command-card"><h3>🌋 Vulkan-Watch</h3><p>Vulkanstatus, Beobachtungsberichte und Warnmeldungen aus wissenschaftlichen Quellen.</p><a href="https://volcano.si.edu/reports_weekly.cfm" target="_blank" rel="noopener">Aktueller Smithsonian/USGS-Wochenbericht ↗</a><a href="https://www.usgs.gov/programs/VHP" target="_blank" rel="noopener">USGS Volcano Hazards ↗</a><p>Der offizielle Bericht wird wöchentlich aktualisiert und ist kein Echtzeit-Sensorfeed.</p></article>
-          <article class="command-card"><h3>🚆 Zug-Radar</h3><p>Öffentliche Bahn- und Streckenkarten. Kein globales Live-Zugtracking in dieser App verfügbar.</p><button id="commandTrains" type="button">Finnische Live-Züge auf Karte</button><a href="https://www.openrailwaymap.org/" target="_blank" rel="noopener">OpenRailwayMap ↗</a><a href="https://www.bahn.de/" target="_blank" rel="noopener">DB Fahrplanauskunft ↗</a><p>Live-Positionsdaten sind hier für Finnland verfügbar, nicht weltweit.</p></article>
-          <article class="command-card"><h3>🌍 Erdbeben- & Ereignisradar</h3><p>USGS-Ereignisdaten der letzten Stunde mit Magnitude und Ort. Aktualisierung manuell oder beim Öffnen.</p><button id="commandQuakeRefresh" type="button">Erdbeben aktualisieren</button></article>
-          <article class="command-card"><h3>🛰️ Weltraum & ISS</h3><p>ISS-Position, NASA-Bildarchiv und wissenschaftliche 3D-Missionsexplorer.</p><button id="commandSpace" type="button">SPACE EXPLORER öffnen</button></article>
-          <article class="command-card"><h3>📷 Weltweite Kameras</h3><p>Öffentliche Webcams und Betreiberseiten aus den verfügbaren Quellen.</p><button id="commandCameras" type="button">Webcam-Ebene laden</button><button id="commandWall" type="button">Live-Wall öffnen</button></article>
-          <article class="command-card"><h3>🌿 Natur & Sehenswürdigkeiten</h3><p>Orte, Parks, Aussichtspunkte, Wasserfälle und weitere OpenStreetMap-Entdeckungen.</p><button id="commandNature" type="button">Natur-Ebene laden</button><button id="commandSights" type="button">Sehenswürdigkeiten laden</button></article>
-          <article class="command-card"><h3>🌐 Länder-Explorer</h3><p>Länder auswählen, lokale Kameras und POIs entdecken und die Karte filtern.</p><button id="commandCountries" type="button">Länder-Auswahl öffnen</button></article>
-          <article class="command-card"><h3>📻 Welt-Radio</h3><p>Öffentliche HTTPS-Radiostreams suchen und direkt anhören.</p><button id="commandRadio" type="button">Radio öffnen</button></article>
-        </div>
-        <h3 style="font-size:13px;color:#8edcf0;margin:20px 0 8px">LIVE-EVENT-TICKER · USGS</h3>
+        <div class="command-section-title"><div><span>01</span><h3>Entdecken</h3></div><p>Öffne die wichtigsten Explorer mit einem Klick.</p></div>
+        <section class="command-grid command-discover">
+          <article class="command-card command-feature"><div class="command-icon">📷</div><div><h4>Webcams weltweit</h4><p>Öffentliche Kameras und gespeicherte Favoriten auf der Weltkarte.</p></div><div class="command-actions"><button id="commandCameras" type="button">Kameras laden</button><button id="commandWall" type="button" class="secondary">Live-Wall</button></div></article>
+          <article class="command-card"><div class="command-icon">🛰️</div><div><h4>Weltraum & ISS</h4><p>ISS-Position, NASA-Bilder und 3D-Missionsexplorer.</p></div><button id="commandSpace" type="button">Space Explorer öffnen</button></article>
+          <article class="command-card"><div class="command-icon">🌿</div><div><h4>Natur & Orte</h4><p>Parks, Berge, Wasserfälle und Sehenswürdigkeiten entdecken.</p></div><div class="command-actions"><button id="commandNature" type="button">Natur</button><button id="commandSights" type="button" class="secondary">Sehenswürdigkeiten</button></div></article>
+          <article class="command-card"><div class="command-icon">🌐</div><div><h4>Länder & Radio</h4><p>Länderbezogene Inhalte finden oder öffentliche Radiosender hören.</p></div><div class="command-actions"><button id="commandCountries" type="button">Länder wählen</button><button id="commandRadio" type="button" class="secondary">Welt-Radio</button></div></article>
+        </section>
+        <div class="command-section-title"><div><span>02</span><h3>Wetter & Ereignisse</h3></div><p>Messwerte und Meldungen aus öffentlichen Datenquellen.</p></div>
+        <section class="command-grid command-data-grid">
+          <article class="command-card"><div class="command-icon">🌦️</div><div><h4>Wetter & Regenradar</h4><p>Wetter für die aktuelle Kartenmitte und einblendbares Niederschlagsradar.</p></div><div class="command-actions"><button id="commandWeatherRefresh" type="button">Wetter aktualisieren</button><button id="commandRadar" type="button" class="secondary">Radar auf Karte</button></div><a href="https://www.windy.com/" target="_blank" rel="noopener">Windy öffnen ↗</a></article>
+          <article class="command-card"><div class="command-icon">🌍</div><div><h4>Erdbeben-Radar</h4><p>USGS-Ereignisse der letzten Stunde. Ein Eintrag im Ticker lässt sich auf der Karte anzeigen.</p></div><button id="commandQuakeRefresh" type="button">Erdbeben aktualisieren</button></article>
+          <article class="command-card"><div class="command-icon">🌋</div><div><h4>Vulkan-Watch</h4><p>Wissenschaftliche Statusberichte und Warninformationen. Der Smithsonian/USGS-Bericht wird wöchentlich aktualisiert, nicht in Echtzeit.</p></div><a href="https://volcano.si.edu/reports_weekly.cfm" target="_blank" rel="noopener">Wochenbericht öffnen ↗</a><a href="https://www.usgs.gov/programs/VHP" target="_blank" rel="noopener">USGS Volcano Hazards ↗</a></article>
+        </section>
+        <div class="command-section-title"><div><span>03</span><h3>Verkehr & Bewegung</h3></div><p>Flugzeuge, Schiffe und Züge – mit klar gekennzeichneter Datenabdeckung.</p></div>
+        <section class="command-grid command-traffic-grid">
+          <article class="command-card"><div class="command-icon">✈️</div><div><h4>Flug-Radar</h4><p>Öffentliche ADS-B-Flugkarte. Sichtbarkeit hängt von Empfängern und regionaler Abdeckung ab.</p></div><button id="commandFlights" type="button">Flugradar öffnen</button><a href="https://globe.adsbexchange.com/" target="_blank" rel="noopener">ADS-B Exchange ↗</a></article>
+          <article class="command-card"><div class="command-icon">🚢</div><div><h4>Schiffspositionen</h4><p>AIS-Livepositionen aus finnischen Gewässern. Keine weltweite Gratis-Abdeckung in dieser App.</p></div><button id="commandShips" type="button">Finnische Schiffe anzeigen</button><a href="https://www.marinetraffic.com/" target="_blank" rel="noopener">Globaler Anbieter ↗</a></article>
+          <article class="command-card"><div class="command-icon">🚆</div><div><h4>Zugpositionen</h4><p>GPS-Positionen aus dem finnischen Bahnnetz. Nicht jeder Zug sendet fortlaufend Positionsdaten.</p></div><button id="commandTrains" type="button">Finnische Züge anzeigen</button><a href="https://www.openrailwaymap.org/" target="_blank" rel="noopener">OpenRailwayMap ↗</a></article>
+          <article class="command-card"><div class="command-icon">🌙</div><div><h4>Kartenansicht</h4><p>Dunkle Weltkarte für eine ruhigere Ansicht. Keine aktuelle Nacht-Satellitenaufnahme.</p></div><button id="commandDark" type="button">Dunkle Karte aktivieren</button></article>
+        </section>
+        <div class="command-section-title"><div><span>04</span><h3>Live-Ereignisse</h3></div><p>Die neuesten USGS-Meldungen – anklicken, um den Ort auf der Karte zu finden.</p></div>
         <div id="commandFeed" class="command-feed"><div class="command-event">Ereignisdaten werden geladen …</div></div>
-        <p class="hub-note" style="margin-top:12px">Datenquellen: USGS Earthquake Hazards Program, Open-Meteo, ADS-B Exchange, MarineTraffic, OpenSeaMap, OpenRailwayMap, Windy, Smithsonian Global Volcanism Program und NASA. Externe Links öffnen Anbieter-Websites. Kein globaler Echtzeit-Feed für Schiffe, Züge oder Vulkane wird vorgetäuscht.</p>
+        <p class="command-footnote">Quellen: USGS, Open-Meteo, RainViewer, ADS-B Exchange, Fintraffic/Digitraffic, Smithsonian Global Volcanism Program und NASA. Regionale Daten sind entsprechend gekennzeichnet. Externe Anbieter können Einbettungen oder den Zugriff beschränken.</p>
       </div>
     </section>
   </div>
