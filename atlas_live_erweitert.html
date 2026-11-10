@@ -1668,6 +1668,15 @@ function filterGlobalCityRows(rows,city){
   return cityFields.length?cityFields.some(matchesAlias):rule.fallback.some(term=>matchesAlias(locationText));
  });
 }
+function getNYCCuratedCameraRows(){
+ return [
+  {id:'atlas-nyc-times-square-earthcam',title:'Times Square 4K · EarthCam',handle:'Times Square, Manhattan',city:'New York City',region:'Manhattan',country:'USA',lat:40.7580,lon:-73.9855,category:'Stadtzentrum',live:true,is_free:true,publisher:'EarthCam',view:{render:'link',url:'https://www.earthcam.com/timessquare/?cam=tsrobo1',url_type:'page'}},
+  {id:'atlas-nyc-brooklyn-bridge-earthcam',title:'Brooklyn Bridge · EarthCam',handle:'Brooklyn Bridge, Manhattan / Brooklyn',city:'New York City',region:'Manhattan / Brooklyn',country:'USA',lat:40.7061,lon:-73.9969,category:'Brücke / Skyline',live:true,is_free:true,publisher:'EarthCam',view:{render:'link',url:'https://www.earthcam.com/usa/newyork/brooklynbridge/',url_type:'page'}},
+  {id:'atlas-nyc-statue-liberty-earthcam',title:'Statue of Liberty · EarthCam',handle:'Liberty Island / New York Harbor',city:'New York City',region:'New York Harbor',country:'USA',lat:40.6892,lon:-74.0445,category:'Hafen / Wahrzeichen',live:true,is_free:true,publisher:'EarthCam',view:{render:'link',url:'https://www.earthcam.com/usa/newyork/statueofliberty/?cam=liberty_str',url_type:'page'}},
+  {id:'atlas-nyc-dot-traffic-cameras',title:'NYC DOT · Verkehrskameras der fünf Boroughs',handle:'Manhattan, Brooklyn, Queens, Bronx und Staten Island',city:'New York City',region:'Five Boroughs',country:'USA',lat:40.7128,lon:-74.0060,category:'Verkehr · aktualisierte Standbilder',live:false,is_free:true,publisher:'NYC Department of Transportation',view:{render:'link',url:'https://webcams.nyctmc.org/map',url_type:'page'}},
+  {id:'atlas-nyc-511ny-regional-map',title:'511NY · Verkehrskameras im Großraum New York',handle:'New York City und Umgebung',city:'New York City',region:'New York Metro Area',country:'USA',lat:40.7357,lon:-74.1724,category:'Verkehr · regionale Kamerakarte',live:false,is_free:true,publisher:'New York State Department of Transportation',view:{render:'link',url:'https://511ny.org/',url_type:'page'}}
+ ];
+}
 async function searchGlobalCity(city){
  const button=[...document.querySelectorAll('[data-global-city]')].find(item=>item.dataset.globalCity===city);
  const rule=GLOBAL_CITY_MATCH[city]||{queries:[city]};
@@ -1685,6 +1694,9 @@ async function searchGlobalCity(city){
    if(result.status!=='fulfilled'){failed.push(queries[index]);return;}
    normalizeGlobalCameraRows(result.value).forEach(row=>collected.set(row.id,row));
   });
+  if(city==='New York City'){
+   getNYCCuratedCameraRows().forEach(row=>collected.set(row.id,row));
+  }
   const rows=filterGlobalCityRows([...collected.values()],city);
   showGlobalCameraRows(rows,city);
   $('globalCamStatus').textContent=rows.length+' passende Kameras für '+city+' gefunden · '+rows.filter(isPlayableLiveVideo).length+' echte Live-Videos · '+rows.filter(row=>row.view?.render==='image'||row.preview_url).length+' Bildkameras · '+rows.filter(row=>row.view?.render==='link').length+' Betreiberseiten.'+(failed.length?' Fehlgeschlagene Suchbegriffe: '+failed.join(', '):'');
