@@ -626,6 +626,7 @@ footer{padding:10px 16px;border-top:1px solid var(--line);font-size:10px;color:v
 .country-picker{margin-top:9px}
 .country-section-head{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:11px;color:#dceaf7}
 .country-section-head span{font-size:10px;color:#91a8c0}
+.global-cam-coverage{margin-top:7px;padding:8px 9px;border:1px solid #29435d;border-radius:8px;background:#0a1524;color:#9edcf0;font-size:10px;line-height:1.45}
 .folder-manage{margin:8px 10px;border:1px solid var(--line);border-radius:9px;background:#0b1422}
 .folder-manage>summary{padding:8px 10px;font-size:10px}
 .folder-manage .foldertools{padding:0 9px 9px}
@@ -708,6 +709,7 @@ header{position:relative;z-index:2701}
         <button id="globalCamSearchButton" type="button">Suchen</button>
       </div>
       <div class="country-status" id="globalCamStatus">Webcams werden weltweit auf der Karte gesucht. Zoome in eine Region oder suche nach einem Ort.</div>
+      <div class="global-cam-coverage" id="globalCamCoverage" aria-live="polite">Prüfe die weltweite Katalog-Abdeckung …</div>
       <a class="global-cam-attribution" href="https://openeye.cam/" target="_blank" rel="noopener noreferrer">Zusätzlicher öffentlicher Webcam-Katalog: OpenEye ↗</a>
     </section>
       </div>
@@ -1336,6 +1338,27 @@ async function loadCityCams(){
 
 const OPEN_EYE_API='https://api.openeye.cam/v1';
 let globalCamRequest=0,globalCamTimer=null;
+let globalCamCatalogStats=null,globalCamStatsPromise=null;
+function globalCamCoverageText(){
+ if(!globalCamCatalogStats)return 'Gesamtabdeckung wird vom öffentlichen Katalog abgefragt.';
+ const countries=globalCamCatalogStats.countries.toLocaleString('de-DE');
+ const cams=globalCamCatalogStats.total.toLocaleString('de-DE');
+ return 'Gesamtkatalog: '+cams+' Kameras aus '+countries+' Ländern. Ziel: möglichst alle rund 195 Länder; fehlende Länder sind damit noch nicht abgedeckt.';
+}
+async function loadGlobalCamCoverage(){
+ if(globalCamStatsPromise)return globalCamStatsPromise;
+ globalCamStatsPromise=(async()=>{
+  try{
+   const data=await fetchJsonSafe(OPEN_EYE_API+'/catalog/categories',15000);
+   globalCamCatalogStats={countries:Number(data.countries)||0,total:Number(data.total)||0};
+   $('globalCamCoverage').textContent=globalCamCoverageText();
+  }catch(error){
+   $('globalCamCoverage').textContent='Die Gesamtzahl der Länder im Webcam-Katalog konnte gerade nicht abgefragt werden.';
+  }
+ })();
+ return globalCamStatsPromise;
+}
+loadGlobalCamCoverage();
 function clearGlobalCamMarkers(){
  globalCamMarkers.forEach(marker=>pointLayers.webcams.removeLayer(marker));
  globalCamMarkers=[];
