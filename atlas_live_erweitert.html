@@ -582,6 +582,7 @@ const citySources=[
  ,{name:'Kiel – Schwedenkai',place:'Deutschland · Kiel · Schwedenkai und Innenstadt',lat:54.322,lon:10.135,url:'https://cm.livespotting.com/v1/player/c61cba4f-68a3-488e-b2e4-ffb8e182794f/b80c51ef-5da6-49e0-bf9e-617d1e78cf22/f8e142dd-b175-4a1d-bd94-29a064696a0d',embedUrl:'https://cm.livespotting.com/v1/player/c61cba4f-68a3-488e-b2e4-ffb8e182794f/b80c51ef-5da6-49e0-bf9e-617d1e78cf22/f8e142dd-b175-4a1d-bd94-29a064696a0d',source:'Port of Kiel / Livespotting · öffentlicher Player-Link',category:'video'}
  ,{name:'Kiel – Hafenhaus',place:'Deutschland · Kiel · Schwedenkai und Norwegenkai',lat:54.322,lon:10.135,url:'https://www.portofkiel.com/webcam.html',source:'Port of Kiel · offizielle Webcam-Seite',category:'portal'}
 
+ ,{name:'Fineview – St. Lawrence River Webcam',place:'USA · New York · Wellesley Island · nahe La Fargeville',lat:44.28725,lon:-76.01133,url:'https://www.fvny.us/',source:'Fineview / fvny.us · öffentlicher Live-Webcam-Link; Einbettung nicht bestätigt',category:'portal',local:true}
  ,{name:'Alexandria Bay – Chamber River View Stream',place:'USA · New York · Alexandria Bay · St. Lawrence River',lat:44.3360,lon:-75.9180,url:'https://www.youtube.com/watch?v=XfiHdsxawCY',embedUrl:'https://www.youtube-nocookie.com/embed/XfiHdsxawCY?autoplay=1&mute=1',source:'Alexandria Bay Chamber of Commerce · offizieller River-View-Livestream',category:'video'}
  ,{name:'Alexandria Bay – Dock Camera',place:'USA · New York · Alexandria Bay · Dock',lat:44.3325,lon:-75.9185,url:'https://www.youtube.com/watch?v=6DDfSIMfi0c',embedUrl:'https://www.youtube-nocookie.com/embed/6DDfSIMfi0c?autoplay=1&mute=1',source:'Alexandria Bay Chamber of Commerce · offizieller Dock-Livestream',category:'video'}
 ];
@@ -751,7 +752,7 @@ function getSharedMapView(){
 let camRefreshTimer=null;
 function openCameraView(camera){
  const playerUrl=camera.embedUrl||camera.imageUrl||'';
- if(!playerUrl){const viewer=$('camviewer');$('camviewtitle').textContent=camera.name||'Kamera';$('camviewnote').textContent='Für diese Quelle liegt kein direkt einbettbarer Bild- oder Player-Link vor. Sie wird deshalb nicht außerhalb von ATLAS LIVE geöffnet.';$('camframe').src='about:blank';viewer.classList.add('open');setMessage('Kein direkter In-App-Stream für diese Quelle verfügbar.');return;}
+ if(!playerUrl){const viewer=$('camviewer');$('camviewtitle').textContent=camera.name||'Kamera';$('camviewnote').innerHTML='Kein direkt einbettbarer Player bestätigt. <a href="'+esc(camera.url||'')+'" target="_blank" rel="noopener noreferrer">Beim Betreiber öffnen ↗</a>';$('camframe').src='about:blank';viewer.classList.add('open');setMessage('Diese Kamera öffnet sich über die öffentliche Betreiberseite.');return;}
  const frame=$('camframe'),viewer=$('camviewer');
  if(camRefreshTimer){clearInterval(camRefreshTimer);camRefreshTimer=null;}
  $('camviewtitle').textContent=camera.name;
@@ -800,7 +801,7 @@ async function loadCityCams(){
  keys.forEach(key=>{pointLayers[key].clearLayers();loadedPointLayers.add(key);});
  const valid=cameraSourceCache.filter(c=>{
   const lat=Number(c.lat),lon=Number(c.lon);
-  return Number.isFinite(lat)&&Number.isFinite(lon)&&Math.abs(lat)<=90&&Math.abs(lon)<=180&&(lat!==0||lon!==0)&&(c.embedUrl||c.imageUrl||(c.category==='portal'&&/Berlin/i.test([c.name,c.place].join(' '))));
+  return Number.isFinite(lat)&&Number.isFinite(lon)&&Math.abs(lat)<=90&&Math.abs(lon)<=180&&(lat!==0||lon!==0)&&(c.embedUrl||c.imageUrl||(c.category==='portal'&&(c.local===true||/Berlin/i.test([c.name,c.place].join(' ')))));
  });
  const matches={
   webcams:()=>true,
@@ -820,11 +821,11 @@ async function loadCityCams(){
   });
  });
  const container=$('autobahnList'),head=document.createElement('div');
- head.className='note';head.textContent='EINGEBETTETE KAMERAS · '+valid.length+' MIT DIREKTEM PLAYER ODER BILDBILD';
+ head.className='note';head.textContent='KAMERAS & BETREIBERLINKS · '+valid.length+' KARTENPUNKTE';
  container.appendChild(head);
  valid.forEach(c=>addCameraCard(container,c.name,c.place+' · '+c.source,()=>openCameraView(c),c.imageUrl||'',c.embedUrl?'Live-Player':'Aktuelles Standbild'));
  $('count').textContent=String(valid.length);
- $('citymessage').textContent=valid.length+' direkt eingebettete Kameras mit Koordinaten geladen. Quellen ohne echten Player oder Bild werden nicht als Kamera-Punkt ausgegeben.';
+ $('citymessage').textContent=valid.length+' Kamera- und Betreiberpunkte mit Koordinaten geladen. Bei Fineview öffnet sich die öffentliche Betreiberseite, da kein direkter Einbettungslink bestätigt ist.';
  filterCameraCards();
  $('citymessage').textContent+=' Finnland: '+fintrafficSources.length+' aktualisierte öffentliche Standbilder.';
  setMessage('Kameradaten bereit. Schalte links einzelne Kamera-Ebenen ein; nur deren Punkte erscheinen auf der Karte.');
