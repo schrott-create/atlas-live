@@ -1859,6 +1859,48 @@ function filterGlobalCityRows(rows,city){
   return lat>=south&&lat<=north&&lon>=west&&lon<=east;
  });
 }
+
+// Reuse the application's existing attributed camera sources without inventing feeds.
+// Directory landing pages are deliberately excluded: they are not individual webcams.
+function getCuratedGlobalCityRows(city){
+ const rule=GLOBAL_CITY_MATCH[city];
+ if(!rule)return [];
+ const aliases=(rule.aliases||[]).filter(alias=>alias.length>=4);
+ const knownSources=[...citySources,...regionalSources,...worldSources];
+ const results=[];
+ const seen=new Set();
+ for(const source of knownSources){
+  if(!source||!/^https:\/\//i.test(source.url||''))continue;
+  if(/portal|übersicht|verzeichnis|directory|katalog|webcam-karte|webcam portal/i.test(source.name||''))continue;
+  if(!Number.isFinite(Number(source.lat))||!Number.isFinite(Number(source.lon)))continue;
+  const title=globalCityText(source.name+' '+(source.place||''));
+  if(!aliases.some(alias=>title.includes(globalCityText(alias))))continue;
+  const [south,north,west,east]=rule.bbox;
+  if(source.lat<south||source.lat>north||source.lon<west||source.lon>east)continue;
+  const url=String(source.url);
+  if(seen.has(url))continue;
+  seen.add(url);
+  results.push({
+   id:'atlas-curated-'+city.replace(/[^a-z0-9]/gi,'-')+'-'+results.length,
+   title:source.name,city,lat:Number(source.lat),lon:Number(source.lon),
+   country:source.place||'',category:'Kuratiert · Betreiberseite',is_free:true,
+   live:false,publisher:source.source||'Öffentlicher Kamerabetreiber',
+   view:{render:'link',url,url_type:'page'}
+  });
+ }
+ return results;
+}
+function mergeGlobalCityCameraRows(catalogRows,curatedRows,city){
+ const combined=new Map();
+ for(const row of [...catalogRows,...curatedRows]){
+  const coords=globalCameraCoordinates(row);
+  if(!coords)continue;
+  const key=String(row.view?.url||row.preview_url||row.id);
+  if(!combined.has(key))combined.set(key,row);
+ }
+ return filterGlobalCityRows([...combined.values()],city)
+  .sort((a,b)=>Number(isPlayableLiveVideo(b))-Number(isPlayableLiveVideo(a)));
+}
 function getNYCCuratedCameraRows(){
  // Ausschließlich verifizierte Koordinaten innerhalb der fünf NYC-Boroughs.
  // NYC DOT-Bildendpunkte liefern aktuelle Standbilder, keine Videostreams.
@@ -1943,7 +1985,7 @@ async function searchGlobalCity(city){
    const spatial=await fetchJsonSafe(OPEN_EYE_API+'/catalog?'+params,25000);
    const collected=new Map();
    normalizeGlobalCameraRows(spatial).forEach(row=>collected.set(String(row.id),row));
-   if(collected.size<5){
+   if(filterGlobalCityRows([...collected.values()],city).length+getCuratedGlobalCityRows(city).length<5){
     const batches=queries.slice(0,5);
     const results=await Promise.allSettled(batches.map(query=>{
      const searchParams=new URLSearchParams({q:query,limit:'100',sort:'fresh'});
@@ -1954,9 +1996,7 @@ async function searchGlobalCity(city){
      else failed.push(batches[index]);
     });
    }
-   rows=filterGlobalCityRows([...collected.values()],city)
-    .filter(row=>row.view?.render!=='none')
-    .sort((a,b)=>Number(isPlayableLiveVideo(b))-Number(isPlayableLiveVideo(a)));
+   rows=mergeGlobalCityCameraRows([...collected.values()].filter(row=>row.view?.render!=='none'),getCuratedGlobalCityRows(city),city);
    if(globalCityCache.size>80)globalCityCache.clear();
    globalCityCache.set(city,{time:Date.now(),rows});
   }
