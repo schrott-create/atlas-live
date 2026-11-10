@@ -1434,15 +1434,23 @@ async function loadGlobalCameraMap(options={}){
   if(!options.silent)setMessage('Die weltweite Webcam-Suche ist gerade nicht erreichbar: '+error.message);
  }
 }
+function globalCamVideoType(row){
+ const view=row?.view||{},url=String(view.url||row?.stream_url||row?.url||'').toLowerCase();
+ const type=String(view.url_type||view.mime_type||row?.mime_type||row?.content_type||'').toLowerCase();
+ if(type.includes('whep')||view.whep_url||row?.whep_url)return 'whep';
+ if(type.includes('mpegurl')||type==='hls'||/\\.m3u8(?:[?#]|$)/.test(url))return 'hls';
+ if(type.includes('mp4')||/\\.mp4(?:[?#]|$)/.test(url))return 'mp4';
+ if(type.includes('webm')||/\\.webm(?:[?#]|$)/.test(url))return 'webm';
+ if(type.includes('video')||view.render==='video'||row?.video===true||row?.live_video===true)return 'video';
+ return '';
+}
 function isPlayableLiveVideo(row){
- if(!row||!row.id)return false;
+ if(!row||row.is_free===false)return false;
  const rawKind=row.feed_kind??row.kind??row.camera_kind??row.stream_kind??row.media_kind??'';
  const kind=String(rawKind).toLowerCase().replace(/[\\s-]+/g,'_');
- const live=row.live===true||row.live==='true';
- const free=row.is_free===true||row.is_free==='true';
- const explicitVideo=kind==='live_video'||row.live_video===true||row.video===true||
-  row.view?.render==='video'||row.view?.url_type==='video';
- return live&&free&&explicitVideo;
+ const directType=globalCamVideoType(row);
+ const live=row.live===true||row.live==='true'||row.live_video===true||row.view?.render==='video';
+ return Boolean(directType||((kind==='live_video'||row.live_video===true||row.video===true)&&live));
 }
 function globalCameraState(row){
  const kind=String(row?.feed_kind??row?.kind??row?.camera_kind??'').toLowerCase().replace(/[\s-]+/g,'_');
@@ -1451,12 +1459,56 @@ function globalCameraState(row){
  if(row?.view?.render==='link'||row?.view?.url)return 'BEIM BETREIBER ÖFFNEN';
  return 'KAMERA-EINTRAG';
 }
-let globalCamPeer=null,globalCamWhepDeleteUrl=null,globalCamTrackTimer=null;
+let globalCamPeer=null,globalCamWhepDeleteUrl=null,globalCamTrackTimer=null,globalCamHls=null,globalCamHlsLoader=null;
 async function stopGlobalCamWhep(){
  if(globalCamTrackTimer){clearTimeout(globalCamTrackTimer);globalCamTrackTimer=null;}
+ if(globalCamHls){try{globalCamHls.destroy();}catch(_){}globalCamHls=null;}
  if(globalCamPeer){globalCamPeer.getSenders().forEach(sender=>sender.track?.stop());globalCamPeer.close();globalCamPeer=null;}
- const video=$('camvideo');if(video){video.pause();video.srcObject=null;video.style.display='none';}
+ const video=$('camvideo');if(video){video.pause();video.removeAttribute('src');video.srcObject=null;video.load();video.style.display='none';}
  if(globalCamWhepDeleteUrl){const url=globalCamWhepDeleteUrl;globalCamWhepDeleteUrl=null;try{await fetch(url,{method:'DELETE',keepalive:true});}catch(_){}}
+}
+function loadGlobalHls(){
+ if(window.Hls)return Promise.resolve(window.Hls);
+ if(globalCamHlsLoader)return globalCamHlsLoader;
+ globalCamHlsLoader=new Promise((resolve,reject)=>{
+  const script=document.createElement('script');script.src='https://cdn.jsdelivr.net/npm/hls.js@1.5.18/dist/hls.min.js';script.async=true;
+  script.onload=()=>window.Hls?resolve(window.Hls):reject(new Error('HLS-Player wurde nicht geladen.'));
+  script.onerror=()=>reject(new Error('HLS-Player konnte nicht vom CDN geladen werden.'));
+  document.head.appendChild(script);
+ });
+ return globalCamHlsLoader;
+}
+async function startGlobalCamDirect(url,type){
+ await stopGlobalCamWhep();
+ const video=$('camvideo'),frame=$('camframe'),note=$('camviewnote');
+ frame.src='about:blank';frame.style.display='none';video.style.display='block';
+ video.muted=true;video.playsInline=true;video.controls=true;video.srcObject=null;
+ note.textContent='Verbinde den direkten Videostream …';
+ const failTimer=setTimeout(()=>{video.pause();note.textContent='Stream lädt nicht oder der Anbieter blockiert die Wiedergabe.';},20000);
+ try{
+  if(type==='hls'){
+   if(video.canPlayType('application/vnd.apple.mpegurl'))video.src=url;
+   else{
+    const Hls=await loadGlobalHls();
+    if(!Hls.isSupported())throw new Error('HLS wird von diesem Browser nicht unterstützt.');
+    globalCamHls=new Hls({enableWorker:true,lowLatencyMode:true});
+    globalCamHls.loadSource(url);globalCamHls.attachMedia(video);
+    await new Promise((resolve,reject)=>{
+     globalCamHls.on(Hls.Events.MANIFEST_PARSED,()=>resolve());
+     globalCamHls.on(Hls.Events.ERROR,(_event,data)=>{if(data?.fatal)reject(new Error('HLS-Streamfehler: '+(data.details||data.type||'unbekannt')));});
+    });
+   }
+  }else video.src=url;
+  await new Promise((resolve,reject)=>{
+   const timer=setTimeout(()=>reject(new Error('Innerhalb von 20 Sekunden kam kein abspielbares Videosignal.')),20000);
+   const done=()=>{clearTimeout(timer);video.removeEventListener('playing',done);resolve();};
+   video.addEventListener('playing',done,{once:true});
+   video.addEventListener('error',()=>{clearTimeout(timer);reject(new Error(video.error?.message||'Browser kann diesen Videostream nicht dekodieren.'));},{once:true});
+   video.play().catch(error=>{clearTimeout(timer);reject(new Error('Wiedergabe blockiert: '+error.message));});
+  });
+  note.textContent='Live-Video läuft · direkter Stream. Quelle: '+(url.split('/')[2]||'Kameraanbieter');
+ }catch(error){await stopGlobalCamWhep();throw error;}
+ finally{clearTimeout(failTimer);}
 }
 async function startGlobalCamWhep(streamId){
  await stopGlobalCamWhep();
@@ -1566,19 +1618,23 @@ async function openGlobalCamera(row){
   const view=cam.view||{},attribution=cam.redistribution?.attribution||{};
   const source=view.url||cam.preview_url||'';
   const title=cam.title||cam.handle||'Öffentliche Kamera';
-  if(view.render==='video'&&view.url){
-   $('camviewtitle').textContent=title;$('camviewer').classList.add('open');
-   $('camvideo').style.display='none';$('camframe').style.display='block';$('camframe').src=view.url;
-   $('camviewnote').textContent='Live-Video · Quelle: '+(attribution.name||cam.publisher||'OpenEye');
-   setMessage(title+' · Live-Video wird geöffnet.');return;
-  }
   if(isPlayableLiveVideo(cam)){
    $('camviewtitle').textContent=title;$('camviewer').classList.add('open');
    $('camframe').src='about:blank';$('camframe').style.display='none';$('camvideo').style.display='block';
-   $('camviewnote').textContent='Quelle: '+(attribution.name||cam.publisher||'OpenEye')+' · starte echten Videostream …';
-   try{await startGlobalCamWhep(cam.id);}
-   catch(error){await stopGlobalCamWhep();$('camvideo').style.display='none';$('camframe').style.display='block';$('camframe').src='about:blank';$('camviewnote').textContent='Live-Video konnte nicht gestartet werden: '+error.message;}
-   setMessage(title+' · '+globalCameraState(cam));return;
+   $('camviewnote').textContent='Quelle: '+(attribution.name||cam.publisher||'Kameraanbieter')+' · starte echten Videostream …';
+   try{
+    const videoType=globalCamVideoType(cam);
+    if(videoType==='whep'||(!view.url&&videoType==='video'))await startGlobalCamWhep(cam.id);
+    else if(view.url||cam.stream_url||cam.url)await startGlobalCamDirect(view.url||cam.stream_url||cam.url,videoType);
+    else await startGlobalCamWhep(cam.id);
+    setMessage(title+' · Live-Video gestartet.');
+   }catch(error){
+    await stopGlobalCamWhep();
+    $('camvideo').style.display='none';$('camframe').style.display='block';$('camframe').src='about:blank';
+    $('camviewnote').textContent='Video konnte nicht abgespielt werden: '+error.message+(view.url?' · Öffne die Originalquelle im Browser, falls Einbettung blockiert wird.':'');
+    setMessage(title+' · Videowiedergabe fehlgeschlagen.');
+   }
+   return;
   }
   if(view.render==='image'||cam.preview_url||view.url_type==='image'){
    if(!source)throw new Error('Für diese Kamera ist gerade kein Bildlink verfügbar.');
