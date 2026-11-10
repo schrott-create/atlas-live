@@ -1682,15 +1682,15 @@ async function searchGlobalWorldCities(){
  const queries=[...new Set(GLOBAL_CAM_CITIES)];
  await searchGlobalQueryBatch(queries,'Weltstädte weltweit',$('globalCamCitiesButton'));
 }
-async function searchGlobalCategory(category){
+async function searchGlobalCategory(category,button){
  const terms=GLOBAL_CAM_CATEGORIES[category];
  if(!terms)return;
  const queries=[...new Set(terms)];
- await searchGlobalQueryBatch(queries,'Kategorie: '+category,$('globalCamCitiesButton'));
+ await searchGlobalQueryBatch(queries,'Kategorie: '+category,button);
 }
 $('globalCamCitiesButton').addEventListener('click',searchGlobalWorldCities);
 document.querySelectorAll('[data-global-city]').forEach(button=>button.addEventListener('click',()=>searchGlobalCity(button.dataset.globalCity)));
-document.querySelectorAll('[data-global-category]').forEach(button=>button.addEventListener('click',()=>searchGlobalCategory(button.dataset.globalCategory)));
+document.querySelectorAll('[data-global-category]').forEach(button=>button.addEventListener('click',()=>searchGlobalCategory(button.dataset.globalCategory,button)));
 
 map.on('moveend',()=>{
  if(!map.hasLayer(pointLayers.webcams))return;
