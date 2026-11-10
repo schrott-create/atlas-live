@@ -584,6 +584,62 @@ footer{padding:10px 16px;border-top:1px solid var(--line);font-size:10px;color:v
     </section>
   </div>
 
+  <script>
+  /* Atlas Live: struktureller Umbau des Command-Center-Overlays */
+  (() => {
+    const overlay=document.getElementById('commandOverlay');
+    const panel=overlay?.querySelector('.command-panel');
+    const body=overlay?.querySelector('.command-body');
+    if(!overlay||!panel||!body||body.dataset.rebuilt==='1')return;
+    body.dataset.rebuilt='1';
+    const children=[...body.children];
+    const hero=children.find(e=>e.classList.contains('command-hero'));
+    const stats=children.find(e=>e.classList.contains('command-live-strip'));
+    const weather=children.find(e=>e.id==='commandWeatherText');
+    const titles=children.filter(e=>e.classList.contains('command-section-title'));
+    const grids=children.filter(e=>e.classList.contains('command-grid'));
+    const feed=children.find(e=>e.id==='commandFeed');
+    const foot=children.find(e=>e.classList.contains('command-footnote'));
+    const head=panel.querySelector('.atlas-panel-head');
+    const shell=document.createElement('div');shell.className='cc-shell';
+    const nav=document.createElement('nav');nav.className='cc-rail';nav.setAttribute('aria-label','Command Center Navigation');
+    nav.innerHTML='<div class="cc-rail-logo">◎</div><div class="cc-rail-label">CONTROL</div><button class="active" data-target="cc-overview" title="Übersicht">⌂<span>Übersicht</span></button><button data-target="cc-discover" title="Entdecken">◉<span>Entdecken</span></button><button data-target="cc-weather" title="Wetter & Ereignisse">☼<span>Wetter</span></button><button data-target="cc-traffic" title="Verkehr">⌁<span>Verkehr</span></button><button data-target="cc-feed" title="Live-Ereignisse">≋<span>Ereignisse</span></button><div class="cc-rail-bottom">ATLAS<br>LIVE</div>';
+    const workspace=document.createElement('div');workspace.className='cc-workspace';
+    const top=document.createElement('div');top.className='cc-topline';top.innerHTML='<div><span class="cc-pulse"></span> SYSTEM STATUS <b>PUBLIC DATA ONLINE</b></div><div class="cc-top-actions"></div>';
+    const main=document.createElement('main');main.className='cc-main';
+    const right=document.createElement('aside');right.className='cc-right';
+    const overview=document.createElement('section');overview.id='cc-overview';overview.className='cc-overview';
+    const discover=document.createElement('section');discover.id='cc-discover';discover.className='cc-module';
+    const weatherModule=document.createElement('section');weatherModule.id='cc-weather';weatherModule.className='cc-module';
+    const traffic=document.createElement('section');traffic.id='cc-traffic';traffic.className='cc-module';
+    const live=document.createElement('section');live.id='cc-feed';live.className='cc-live-module';
+    if(hero)overview.append(hero);
+    const actions=hero?.querySelector('.command-toolbar');
+    if(actions)top.querySelector('.cc-top-actions').append(...[...actions.children]);
+    if(stats)overview.append(stats);
+    if(weather)overview.append(weather);
+    if(titles[0]){titles[0].classList.add('cc-module-title');discover.append(titles[0]);}
+    if(grids[0])discover.append(grids[0]);
+    if(titles[1]){titles[1].classList.add('cc-module-title');weatherModule.append(titles[1]);}
+    if(grids[1])weatherModule.append(grids[1]);
+    if(titles[2]){titles[2].classList.add('cc-module-title');traffic.append(titles[2]);}
+    if(grids[2])traffic.append(grids[2]);
+    if(titles[3]){titles[3].classList.add('cc-module-title');live.append(titles[3]);}
+    if(feed)live.append(feed);
+    if(foot)right.append(Object.assign(document.createElement('div'),{className:'cc-right-heading',textContent:'LIVE EVENT STREAM'}),live,foot);
+    main.append(overview,discover,weatherModule,traffic);
+    workspace.append(top,main);
+    shell.append(nav,workspace,right);
+    body.replaceChildren(shell);
+    nav.querySelectorAll('button[data-target]').forEach(btn=>btn.addEventListener('click',()=>{
+      nav.querySelectorAll('button').forEach(b=>b.classList.toggle('active',b===btn));
+      document.getElementById(btn.dataset.target)?.scrollIntoView({behavior:'smooth',block:'start'});
+    }));
+    const heading=head?.querySelector('.command-brand');
+    if(heading){const sub=heading.querySelector('small');if(sub)sub.textContent='GLOBAL MONITORING · LIVE OPERATIONS';}
+  })();
+  </script>
+
 </main>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
