@@ -638,8 +638,10 @@ main{display:block;height:calc(100vh - 64px);min-height:0}
 .mapwrap{position:fixed;inset:64px 0 0;z-index:1}
 #map{height:100%;width:100%}
 aside#mainMenu{display:none;position:fixed;z-index:2501;top:64px;left:0;bottom:0;width:min(490px,100vw);max-width:100%;min-height:0;overflow-y:auto;overscroll-behavior:contain;background:linear-gradient(160deg,#111e30,#0b1422 70%);border-right:1px solid #35516c;box-shadow:22px 0 70px #0009}
-body.menu-open:after{content:"";position:fixed;z-index:2500;inset:64px 0 0;background:#020711b8;backdrop-filter:blur(3px)}
-body.menu-open aside#mainMenu{display:flex}
+body.menu-open .mapwrap{display:none}
+body.menu-open aside#mainMenu{display:flex;width:100vw;max-width:none;border-right:0;box-shadow:none}
+body.menu-open main{display:block}
+body.menu-open #mainMenu{left:0;right:0}
 .main-menu-head{position:sticky;top:0;z-index:5;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:13px 16px;background:#101c2cf2;border-bottom:1px solid #2b415a;backdrop-filter:blur(12px)}
 .main-menu-head strong,.main-menu-head span{display:block}.main-menu-head strong{font-size:14px;letter-spacing:1.4px}.main-menu-head span{font-size:10px;color:#91a8c0;margin-top:2px}
 .main-menu-head button{width:auto;white-space:nowrap;padding:8px 10px;font-size:10px}
@@ -1294,7 +1296,10 @@ $('windyLoad').onclick=loadWindyCams;
 $('windyOpen').onclick=()=>openCameraView({name:'Windy · weltweite Webcam-Karte',url:'https://www.windy.com/webcams',embedUrl:'https://www.windy.com/webcams',source:'Windy · offizielle Webcam-Karte'});
 function openOverlay(id){$(id).classList.add('open')}
 function openMainMenu(){document.body.classList.add('menu-open');}
-function closeMainMenu(){document.body.classList.remove('menu-open');}
+function closeMainMenu(){
+ document.body.classList.remove('menu-open');
+ requestAnimationFrame(()=>{if(typeof map!=='undefined'&&map)map.invalidateSize({pan:false});});
+}
 $('homeMenuButton').addEventListener('click',()=>{
  closeMainMenu();
  ['radioOverlay','wallOverlay','spaceOverlay','commandOverlay'].forEach(id=>$(id)?.classList.remove('open'));
