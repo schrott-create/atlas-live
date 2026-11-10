@@ -1862,6 +1862,41 @@ function filterGlobalCityRows(rows,city){
 
 // Reuse the application's existing attributed camera sources without inventing feeds.
 // Directory landing pages are deliberately excluded: they are not individual webcams.
+
+// Public, location-specific live-camera operator pages (not video URLs).
+// These are labelled as external live pages until playback is verified in-browser.
+const GLOBAL_LIVE_OPERATOR_CAMERAS={
+ 'Berlin':[
+  ['Tiergarten · Panorama Südwest','https://berlinwebcam.de/',52.517,13.338,'BerlinWebcam'],
+  ['Tiergarten · Skyline Südost','https://berlinwebcam.de/',52.517,13.338,'BerlinWebcam']
+ ],
+ 'Tampa Florida':[
+  ['Tampa · MOSI Skyline','https://www.earthcam.com/usa/florida/tampa/',28.053,-82.414,'EarthCam / MOSI']
+ ],
+ 'Miami Florida':[
+  ['Bayfront Park · Downtown','https://www.miamiandbeaches.com/plan-your-trip/miami-webcams?wc=10',25.775,-80.186,'Greater Miami & Miami Beach'],
+  ['Sailboat Bay · Coconut Grove','https://www.miamiandbeaches.com/plan-your-trip/miami-webcams?wc=10',25.731,-80.235,'Greater Miami & Miami Beach'],
+  ['Ocean Drive · South Beach','https://www.miamiandbeaches.com/plan-your-trip/miami-webcams?wc=10',25.783,-80.130,'Greater Miami & Miami Beach'],
+  ['PortMiami · Biscayne Bay','https://www.miamiandbeaches.com/plan-your-trip/miami-webcams?wc=10',25.774,-80.169,'Greater Miami & Miami Beach'],
+  ['Calle Ocho · Little Havana','https://www.miamiandbeaches.com/plan-your-trip/miami-webcams?wc=10',25.765,-80.219,'Greater Miami & Miami Beach']
+ ],
+ 'Key West Florida':[
+  ['Key West Bight · Hafen','https://visitfloridakeys.com/discover-the-keys/see-the-keys/webcams/key-west',24.561,-81.804,'Florida Keys Tourism'],
+  ['Duval Street · Altstadt','https://visitfloridakeys.com/discover-the-keys/see-the-keys/webcams/key-west',24.555,-81.803,'Florida Keys Tourism'],
+  ['USCGC Ingham · Hafenblick','https://visitfloridakeys.com/discover-the-keys/see-the-keys/webcams/key-west',24.546,-81.811,'Florida Keys Tourism'],
+  ['Bagatelle · Duval Street','https://fantasyfest.com/live-webcams/',24.559,-81.805,'Fantasy Fest / Bagatelle'],
+  ['Irish Kevins · Duval Street','https://fantasyfest.com/live-webcams/',24.558,-81.805,'Fantasy Fest / Irish Kevins'],
+  ['La Trattoria · Duval Street','https://fantasyfest.com/live-webcams/',24.557,-81.805,'Fantasy Fest / La Trattoria']
+ ]
+};
+function getAdditionalOperatorRows(city){
+ return (GLOBAL_LIVE_OPERATOR_CAMERAS[city]||[]).map(([title,url,lat,lon,publisher],index)=>({
+  id:'atlas-operator-'+city.replace(/[^a-z0-9]/gi,'-')+'-'+index,
+  title,city,lat,lon,is_free:true,live:false,publisher,
+  category:'Live-Kamera · externe Betreiberseite',
+  view:{render:'link',url,url_type:'page'}
+ }));
+}
 function getCuratedGlobalCityRows(city){
  const rule=GLOBAL_CITY_MATCH[city];
  if(!rule)return [];
@@ -1895,7 +1930,7 @@ function mergeGlobalCityCameraRows(catalogRows,curatedRows,city){
  for(const row of [...catalogRows,...curatedRows]){
   const coords=globalCameraCoordinates(row);
   if(!coords)continue;
-  const key=String(row.view?.url||row.preview_url||row.id);
+  const key=String(row.id).startsWith('atlas-operator-')?String(row.id):String(row.view?.url||row.preview_url||row.id);
   if(!combined.has(key))combined.set(key,row);
  }
  return filterGlobalCityRows([...combined.values()],city)
@@ -1985,7 +2020,7 @@ async function searchGlobalCity(city){
    const spatial=await fetchJsonSafe(OPEN_EYE_API+'/catalog?'+params,25000);
    const collected=new Map();
    normalizeGlobalCameraRows(spatial).forEach(row=>collected.set(String(row.id),row));
-   if(filterGlobalCityRows([...collected.values()],city).length+getCuratedGlobalCityRows(city).length<5){
+   if(filterGlobalCityRows([...collected.values()],city).length+getCuratedGlobalCityRows(city).length+getAdditionalOperatorRows(city).length<5){
     const batches=queries.slice(0,5);
     const results=await Promise.allSettled(batches.map(query=>{
      const searchParams=new URLSearchParams({q:query,limit:'100',sort:'fresh'});
@@ -1996,7 +2031,7 @@ async function searchGlobalCity(city){
      else failed.push(batches[index]);
     });
    }
-   rows=mergeGlobalCityCameraRows([...collected.values()].filter(row=>row.view?.render!=='none'),getCuratedGlobalCityRows(city),city);
+   rows=mergeGlobalCityCameraRows([...collected.values()].filter(row=>row.view?.render!=='none'),[...getCuratedGlobalCityRows(city),...getAdditionalOperatorRows(city)],city);
    if(globalCityCache.size>80)globalCityCache.clear();
    globalCityCache.set(city,{time:Date.now(),rows});
   }
