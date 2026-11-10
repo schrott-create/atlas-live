@@ -627,6 +627,9 @@ footer{padding:10px 16px;border-top:1px solid var(--line);font-size:10px;color:v
 .country-section-head{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:11px;color:#dceaf7}
 .country-section-head span{font-size:10px;color:#91a8c0}
 .global-cam-coverage{margin-top:7px;padding:8px 9px;border:1px solid #29435d;border-radius:8px;background:#0a1524;color:#9edcf0;font-size:10px;line-height:1.45}
+.global-cam-actions{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:8px}
+.global-cam-actions button{padding:8px 6px;font-size:10px}
+.global-cam-state{display:inline-block;margin-top:4px;padding:2px 6px;border-radius:20px;border:1px solid #31556a;color:#9bdcf0;font-size:9px}
 .folder-manage{margin:8px 10px;border:1px solid var(--line);border-radius:9px;background:#0b1422}
 .folder-manage>summary{padding:8px 10px;font-size:10px}
 .folder-manage .foldertools{padding:0 9px 9px}
@@ -707,6 +710,10 @@ header{position:relative;z-index:2701}
       <div class="global-cam-search-row">
         <input id="globalCamQuery" type="search" placeholder="Stadt, Ort oder Kamera suchen …" aria-label="Weltweit nach Webcams suchen">
         <button id="globalCamSearchButton" type="button">Suchen</button>
+      </div>
+      <div class="global-cam-actions">
+        <button id="globalCamFeaturedButton" type="button">▶ Live-Highlights laden</button>
+        <button id="globalCamRandomButton" type="button">🎲 Zufällige Livecam</button>
       </div>
       <div class="country-status" id="globalCamStatus">Webcams werden weltweit auf der Karte gesucht. Zoome in eine Region oder suche nach einem Ort.</div>
       <div class="global-cam-coverage" id="globalCamCoverage" aria-live="polite">Prüfe die weltweite Katalog-Abdeckung …</div>
@@ -1409,38 +1416,74 @@ async function loadGlobalCameraMap(options={}){
   if(!options.silent)setMessage('Die weltweite Webcam-Suche ist gerade nicht erreichbar: '+error.message);
  }
 }
+function globalCameraState(row){
+ if(row.live===true)return 'LIVE · aktueller Frame';
+ if(row.last_frame_age_s!=null){
+  const age=Number(row.last_frame_age_s);
+  if(Number.isFinite(age)&&age<=86400)return 'Aktuelles Standbild';
+  if(Number.isFinite(age))return 'Letzter Frame vor '+Math.round(age/3600)+' h';
+ }
+ if(row.view?.render==='image'||row.preview_url)return 'Bildvorschau verfügbar';
+ if(row.view?.render==='link')return 'Beim offiziellen Betreiber öffnen';
+ return 'Status nicht bestätigt';
+}
 function renderGlobalCameraResults(rows,query){
  const container=$('autobahnList');
  container.querySelectorAll('.global-camera-card,.global-camera-heading').forEach(node=>node.remove());
  const heading=document.createElement('div');heading.className='global-camera-heading';
- heading.textContent='WELTWEITE WEBCAM-SUCHE · '+rows.length+' TREFFER'+(query?' FÜR „'+query+'“':'');
+ heading.textContent='WELTWEITE WEBCAMS · '+rows.length+' TREFFER'+(query?' · '+query:'');
  container.appendChild(heading);
  rows.forEach(row=>{
   const view=row.view||{},image=view.render==='image'?view.url:(row.preview_url||'');
   const place=globalCameraPlace(row),category=row.category||'Webcam';
-  addCameraCard(container,row.title||row.handle||'Öffentliche Webcam',place+' · '+category,()=>openGlobalCamera(row),image,'Weltweite Webcam');
+  const state=globalCameraState(row);
+  addCameraCard(container,row.title||row.handle||'Öffentliche Webcam',place+' · '+category+' · '+state,()=>openGlobalCamera(row),image,'Weltweite Webcam');
   container.lastElementChild?.classList.add('global-camera-card');
  });
  $('count').textContent=String(rows.length);
  filterCameraCards();
 }
+function normalizeGlobalCameraRows(data){
+ const rows=Array.isArray(data.items)?data.items:Array.isArray(data.results)?data.results:[];
+ return rows.filter(row=>row&&row.id&&Number.isFinite(Number(row.lat))&&Number.isFinite(Number(row.lon))&&
+  Math.abs(Number(row.lat))<=90&&Math.abs(Number(row.lon))<=180&&
+  row.view?.render!=='none'&&(row.is_free!==false));
+}
+function showGlobalCameraRows(rows,label){
+ renderGlobalCameraResults(rows,label);
+ clearGlobalCamMarkers();
+ rows.forEach(row=>addGlobalCamMarker(row,false));
+ if(!map.hasLayer(pointLayers.webcams))pointLayers.webcams.addTo(map);
+ loadedPointLayers.add('webcams');
+ document.querySelector('.map-layer-toggle[data-layer="webcams"]')?.classList.add('active');
+ document.querySelector('.map-layer-toggle[data-layer="webcams"]')?.setAttribute('aria-pressed','true');
+ $('globalCamStatus').textContent=rows.length+' öffentliche Kameras geladen. LIVE-Status und Bildalter stehen an jedem Eintrag; reine Betreiberlinks sind gekennzeichnet.';
+ if(!rows.length)setMessage('Keine darstellbaren Kameras gefunden. Probiere einen anderen Ort oder lade die Live-Highlights.');
+ else setMessage(rows.length+' öffentliche Kameras geladen.');
+}
 async function openGlobalCamera(row){
- if(row.is_free===false){setMessage('Diese Kamera ist nicht als kostenlos markiert und wird deshalb nicht geöffnet.');return;}
- setMessage('Lade öffentliche Kamera und Betreiberquelle …');
+ if(row.is_free===false){setMessage('Diese Kamera ist nicht kostenlos verfügbar.');return;}
+ setMessage('Prüfe Kameradaten und lade das aktuelle Bild …');
  try{
-  const response=await fetchJsonSafe(OPEN_EYE_API+'/catalog/'+encodeURIComponent(row.id),16000);
-  const cam=response.item||response.camera||response;
-  const view=cam.view||row.view||{};
-  if(view.render==='none'){setMessage('Für diese Kamera ist derzeit kein öffentlicher Bild- oder Player-Link verfügbar.');return;}
+  let cam=row;
+  if(!cam.view||!cam.view.render){
+   const response=await fetchJsonSafe(OPEN_EYE_API+'/catalog/'+encodeURIComponent(row.id),18000);
+   cam=response.item||response.camera||response;
+  }
+  const view=cam.view||{};
+  if(view.render==='none'||(!view.url&&!cam.preview_url&&!cam.embed_url&&!cam.stream_url)){
+   setMessage('Für diese Kamera gibt es aktuell kein nutzbares Bild oder einen öffentlichen Player-Link.');return;
+  }
   const attribution=cam.redistribution?.attribution||{};
-  const sourceUrl=attribution.url||cam.source_url||cam.publisher_url||(view.render==='link'?view.url:'');
-  const imageUrl=view.render==='image'?view.url:(cam.preview_url||null);
-  const isPortal=view.render==='link';
+  const isImage=view.render==='image'||(view.render==='link'&&view.url_type==='image');
+  const imageUrl=isImage?(view.url||cam.preview_url):(cam.preview_url||null);
+  const isPortal=!isImage&&view.render==='link';
+  const sourceUrl=attribution.url||cam.publisher_url||cam.source_url||view.url||'https://openeye.cam/';
   const camera={
    name:cam.title||cam.handle||row.title||'Öffentliche Webcam',
    place:globalCameraPlace(cam),
    source:attribution.name||cam.publisher||'Öffentliche Betreiberquelle · OpenEye-Katalog',
-   url:sourceUrl||view.url||'https://openeye.cam/',
+   url:sourceUrl,
    imageUrl,
    embedUrl:cam.embed_url||cam.stream_url||null,
    category:isPortal?'portal':(cam.kind==='live_video'?'video':'still'),
@@ -1448,7 +1491,31 @@ async function openGlobalCamera(row){
    preserveImageUrl:true
   };
   openCameraView(camera);
- }catch(error){setMessage('Kameradetails konnten nicht geladen werden: '+error.message);}
+  const state=globalCameraState(cam);
+  setMessage(camera.name+' · '+state+'. '+(cam.last_frame_age_s!=null?'Frame-Alter: '+Math.round(Number(cam.last_frame_age_s)/60)+' Minuten.':''));
+ }catch(error){setMessage('Kamera konnte nicht geöffnet werden: '+error.message);}
+}
+async function loadGlobalCameraFeatured(){
+ const button=$('globalCamFeaturedButton');button.disabled=true;
+ $('globalCamStatus').textContent='Suche nach aktuellen, öffentlichen Live-Kameras …';
+ try{
+  const data=await fetchJsonSafe(OPEN_EYE_API+'/catalog/featured',25000);
+  const rows=normalizeGlobalCameraRows(data);
+  showGlobalCameraRows(rows,'Live-Highlights');
+  $('globalCamStatus').textContent=rows.length+' Live-Highlights geladen · '+(Number(data.candidate_count)||rows.length)+' geprüft'+(data.omitted_count?' · '+data.omitted_count+' nicht darstellbare Einträge ausgelassen':'')+'.';
+ }catch(error){$('globalCamStatus').textContent='Live-Highlights gerade nicht erreichbar: '+error.message;}
+ finally{button.disabled=false;}
+}
+async function loadGlobalCameraRandom(){
+ const button=$('globalCamRandomButton');button.disabled=true;
+ $('globalCamStatus').textContent='Suche eine zufällige öffentliche Livecam …';
+ try{
+  const cam=await fetchJsonSafe(OPEN_EYE_API+'/catalog/random',18000);
+  if(!cam||!cam.id)throw new Error('Der Katalog hat keine Kamera zurückgegeben.');
+  await openGlobalCamera(cam);
+  $('globalCamStatus').textContent='Zufällige Livecam: '+(cam.title||cam.handle||cam.id)+' · '+globalCameraPlace(cam);
+ }catch(error){$('globalCamStatus').textContent='Zufallskamera gerade nicht verfügbar: '+error.message;}
+ finally{button.disabled=false;}
 }
 async function searchGlobalCameras(){
  const input=$('globalCamQuery'),query=input.value.trim(),button=$('globalCamSearchButton');
@@ -1456,24 +1523,16 @@ async function searchGlobalCameras(){
  button.disabled=true;$('globalCamStatus').textContent='Suche weltweit nach öffentlichen Kameras …';
  try{
   const params=new URLSearchParams({q:query,limit:'100',sort:'fresh'});
-  const data=await fetchJsonSafe(OPEN_EYE_API+'/catalog?'+params.toString(),20000);
-  const rows=(Array.isArray(data.items)?data.items:Array.isArray(data.results)?data.results:[])
-   .filter(row=>row&&row.is_free!==false&&Number.isFinite(Number(row.lat))&&Number.isFinite(Number(row.lon)));
-  renderGlobalCameraResults(rows,query);
-  clearGlobalCamMarkers();
-  rows.forEach(row=>addGlobalCamMarker(row,false));
-  if(!map.hasLayer(pointLayers.webcams))pointLayers.webcams.addTo(map);
-  loadedPointLayers.add('webcams');
-  document.querySelector('.map-layer-toggle[data-layer="webcams"]')?.classList.add('active');
-  document.querySelector('.map-layer-toggle[data-layer="webcams"]')?.setAttribute('aria-pressed','true');
-  $('globalCamStatus').textContent=rows.length+' kostenlose öffentliche Kameras für „'+query+'“ gefunden. Klicke einen Eintrag oder Kartenpunkt zum Öffnen.';
-  if(!rows.length)setMessage('Keine passenden öffentlichen Kameras gefunden. Versuche einen anderen Ort oder Suchbegriff.');
-  else setMessage(rows.length+' weltweite Webcam-Treffer geladen.');
+  const data=await fetchJsonSafe(OPEN_EYE_API+'/catalog?'+params.toString(),25000);
+  const rows=normalizeGlobalCameraRows(data);
+  showGlobalCameraRows(rows,query);
  }catch(error){$('globalCamStatus').textContent='Suche fehlgeschlagen: '+error.message;}
  finally{button.disabled=false;}
 }
 $('globalCamSearchButton').addEventListener('click',searchGlobalCameras);
 $('globalCamQuery').addEventListener('keydown',event=>{if(event.key==='Enter')searchGlobalCameras();});
+$('globalCamFeaturedButton').addEventListener('click',loadGlobalCameraFeatured);
+$('globalCamRandomButton').addEventListener('click',loadGlobalCameraRandom);
 map.on('moveend',()=>{
  if(!map.hasLayer(pointLayers.webcams))return;
  if(globalCamTimer)clearTimeout(globalCamTimer);
