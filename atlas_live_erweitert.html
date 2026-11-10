@@ -1434,7 +1434,7 @@ async function loadGlobalCameraMap(options={}){
  }
 }
 function isPlayableLiveVideo(row){
- if(!row||row.feed_kind!=='live_video'||row.is_free===false)return false;
+ if(!row||row.feed_kind!=='live_video'||row.live!==true||row.is_free===false)return false;
  const url=String(row.embed_url||'').trim();
  if(!url||!/^https:\/\//i.test(url))return false;
  if(row.view?.render==='none')return false;
@@ -1468,6 +1468,10 @@ function showGlobalCameraRows(rows,label){
  clearGlobalCamMarkers();
  rows.filter(isPlayableLiveVideo).forEach(row=>addGlobalCamMarker(row,false));
  if(!map.hasLayer(pointLayers.webcams))pointLayers.webcams.addTo(map);
+ if(rows.length){
+  const bounds=L.latLngBounds(rows.map(row=>[Number(row.lat),Number(row.lon)]));
+  if(bounds.isValid())map.fitBounds(bounds.pad(.08),{maxZoom:rows.length===1?11:6});
+ }
  loadedPointLayers.add('webcams');
  document.querySelector('.map-layer-toggle[data-layer="webcams"]')?.classList.add('active');
  document.querySelector('.map-layer-toggle[data-layer="webcams"]')?.setAttribute('aria-pressed','true');
