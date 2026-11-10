@@ -34,7 +34,7 @@ def health():
 @app.route("/robots.txt")
 def robots_txt():
     # Dynamic host keeps this correct for the Render URL or a later custom domain.
-    body = "User-agent: *\nAllow: /\nSitemap: " + request.host_url.rstrip("/") + "/sitemap.xml\n"
+    body = "User-agent: *\nAllow: /\nSitemap: " + request.url_root.rstrip("/") + "/sitemap.xml\n"
     return Response(body, content_type="text/plain; charset=utf-8")
 
 
@@ -183,7 +183,7 @@ def radio_stations():
     tag = request.args.get("tag", "").strip()[:50]
     try:
         limit = max(1, min(int(request.args.get("limit", "24")), 200))
-    except ValueError:
+    except (ValueError, TypeError):
         return jsonify({"error": "Ungültiges Ergebnislimit."}), 400
 
     params = {"limit": limit, "hidebroken": "true", "order": "votes", "reverse": "true"}
@@ -219,8 +219,13 @@ def radio_stations():
         stream = station.get("url_resolved") or station.get("url") or ""
         if not isinstance(stream, str):
             continue
-        parsed = urlsplit(stream)
-        if parsed.scheme.lower() != "https" or not parsed.hostname or parsed.username or parsed.password:
+        try:
+            parsed = urlsplit(stream)
+            if parsed.scheme.lower() != "https" or not parsed.hostname or parsed.username or parsed.password:
+                continue
+            # Accessing .port validates malformed ports, including out-of-range values.
+            _ = parsed.port
+        except ValueError:
             continue
         stations.append({
             "stationuuid": station.get("stationuuid", ""),
