@@ -613,6 +613,26 @@ footer{padding:10px 16px;border-top:1px solid var(--line);font-size:10px;color:v
 .camviewfoot{display:flex;flex-wrap:wrap;align-items:center;gap:8px;line-height:1.55}
 .camviewfoot strong{color:#bdeeff}
 
+
+/* Vereinfachtes Hauptmenü: weniger dauerhaft offene Bereiche und keine doppelten Schnellaktionen */
+.menu-group{margin-top:12px;border:1px solid var(--line);border-radius:12px;background:#0b1422;overflow:hidden}
+.menu-group>summary,.folder-manage>summary{list-style:none;cursor:pointer;padding:12px;display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:12px;font-weight:800;color:#dceaf7}
+.menu-group>summary::-webkit-details-marker,.folder-manage>summary::-webkit-details-marker{display:none}
+.menu-group>summary:after,.folder-manage>summary:after{content:'＋';color:var(--cyan);margin-left:auto}
+.menu-group[open]>summary:after,.folder-manage[open]>summary:after{content:'−'}
+.menu-group>summary span{font-size:10px;font-weight:500;color:#8fa2bb}
+.menu-group-content{padding:0 10px 10px}
+.menu-group-content .layer-picker{margin-top:0}
+.country-picker{margin-top:9px}
+.country-section-head{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:11px;color:#dceaf7}
+.country-section-head span{font-size:10px;color:#91a8c0}
+.folder-manage{margin:8px 10px;border:1px solid var(--line);border-radius:9px;background:#0b1422}
+.folder-manage>summary{padding:8px 10px;font-size:10px}
+.folder-manage .foldertools{padding:0 9px 9px}
+.folder-manage .folderhint{padding:0 10px 9px}
+.folderbar{padding-top:0}
+#commandRandom,#commandFavorites,#commandNight{display:none!important}
+#commandDark{display:none!important}
 </style>
 </head>
 <body>
@@ -625,6 +645,9 @@ footer{padding:10px 16px;border-top:1px solid var(--line);font-size:10px;color:v
     <p class="note">Suche Orte und Straßen weltweit. Erkannte Straßen werden – wenn Kartendaten vorhanden sind – auf der Karte hervorgehoben.</p>
     <div class="row"><button id="locate" type="button">Weltkarte</button><button id="regionHome" type="button">La Fargeville & Umgebung</button></div>
     <p class="note" id="message">ATLAS LIVE startet in der Thousand-Islands-Region rund um La Fargeville. Wähle öffentliche Livekameras oder regionale Betreiber- und Verkehrsportale.</p>
+    <details class="menu-group" id="mapMenuGroup" open>
+      <summary>🗺️ Karten & Regionen <span>Layer und Länder</span></summary>
+      <div class="menu-group-content">
     <div class="layer-picker">
       <div class="layer-picker-head"><strong>AUF DER KARTE ANZEIGEN</strong><span>Mehrfachauswahl</span></div>
       <div class="layer-picker-grid">
@@ -643,26 +666,32 @@ footer{padding:10px 16px;border-top:1px solid var(--line);font-size:10px;color:v
       </div>
       <p class="note">Jedes Feld schaltet nur seine eigenen Kartenpunkte ein oder aus. Du kannst mehrere Bereiche gleichzeitig anzeigen.</p>
     </div>
-    <details class="country-picker" id="countryPicker">
-      <summary><span>🌐 LÄNDER AUSWÄHLEN</span><span id="countrySelectedLabel">0 Länder</span></summary>
+    <section class="country-picker" id="countryPicker">
+      <div class="country-section-head"><strong>🌐 LÄNDER AUSWÄHLEN</strong><span id="countrySelectedLabel">0 Länder</span></div>
       <input id="countrySearch" type="search" placeholder="Land suchen …" aria-label="Land suchen">
       <div id="countryList" class="country-picker-list"><div class="country-status">Länderdaten werden geladen …</div></div>
       <div class="country-status" id="countryStatus">Kein Land ausgewählt. Wähle ein Land aus, um dessen Inhalte einzublenden.</div>
       <div id="countryExplore" class="country-explore"><div class="country-status">Noch keine Länder ausgewählt. Sobald du ein Land anklickst, erscheinen die verfügbaren Punkte auf der Karte.</div></div>
+    </section>
+      </div>
     </details>
     <p class="note" id="abmessage" hidden></p><p class="note" id="citymessage" hidden></p><p class="note" id="flightmessage" hidden></p>
-    <div style="height:14px"></div>
-    <label class="label" for="windyKey">Windy-Webcams direkt auf der Karte</label>
+    <details class="menu-group">
+      <summary>🌦️ Windy-Webcams <span>Optionaler API-Key</span></summary>
+      <div class="menu-group-content">
+      <label class="label" for="windyKey">Windy-Webcams direkt auf der Karte</label>
     <input id="windyKey" type="password" autocomplete="off" placeholder="Optionaler persönlicher Windy-API-Key">
     <div class="row"><button id="windyLoad" type="button">Windy-Kameras im Kartenausschnitt laden</button><button id="windyOpen" type="button">Windy-Karte öffnen ↗</button></div>
     <p class="note" id="windyMessage">Mit einem eigenen Windy-Webcams-API-Key erscheinen echte Windy-Kameras als Marker mit Vorschaubild. Der Schlüssel wird nicht gespeichert und bleibt nur bis zum Neuladen in diesem Tab.</p>
+      </div>
+    </details>
     <div class="hub-actions">
-      <button id="openWall" type="button">▦ Live-Wall öffnen</button>
+      <button id="openCommand" class="command-launch" type="button">🛰️ COMMAND CENTER</button>
+      <button id="openWall" type="button">▦ Live-Wall</button>
       <button id="randomCamera" type="button">🎲 Zufallskamera</button>
-      <button id="shareAtlas" type="button">↗ ATLAS LIVE teilen</button>
-      <button id="openRadio" type="button">🌍 Weltweites Radio</button>
-      <button id="openSpace" type="button">🚀 SPACE EXPLORER</button>
-      <button id="openCommand" class="command-launch" type="button">🛰️ COMMAND CENTER · ALLES</button>
+      <button id="openRadio" type="button">🌍 Welt-Radio</button>
+      <button id="openSpace" type="button">🚀 Space Explorer</button>
+      <button id="shareAtlas" type="button">↗ Teilen</button>
       
       
     </div>
@@ -671,7 +700,7 @@ footer{padding:10px 16px;border-top:1px solid var(--line);font-size:10px;color:v
   <div class="listhead"><span>Quellen & Kameras</span><span id="count">0</span></div>
   <div class="listupdated" id="listUpdated">Noch nicht geladen</div>
   <div class="filterbox"><input id="cameraFilter" type="search" placeholder="Kamera, Ort oder Quelle filtern …" aria-label="Kameraeinträge filtern"><select id="categoryFilter" aria-label="Kategorie filtern"><option value="all">Alle Kategorien</option><option value="video">Videostreams / Player</option><option value="still">Standbild / Wetterkamera</option><option value="traffic">Verkehr / Straßen</option><option value="portal">Kamera-Portale / Betreiberseiten</option><option value="resort">Resort / Landschaft</option></select><div class="filteractions"><button id="favoritesOnly" type="button" aria-pressed="false">☆ Nur Favoriten</button><button id="resetFilters" type="button">Filter zurücksetzen</button></div></div>
-  <div class="foldertools"><button id="newFolder" type="button">＋ Ordner erstellen</button><button id="renameFolder" type="button">Umbenennen</button><button id="deleteFolder" type="button">Löschen</button></div><div class="folderbar" id="folderBar"></div><div class="folderhint" id="folderHint">Eigene Ordner bleiben auf diesem Gerät gespeichert.</div><div id="cameraList">
+  <details class="folder-manage"><summary>Eigene Kamera-Ordner verwalten</summary><div class="foldertools"><button id="newFolder" type="button">＋ Erstellen</button><button id="renameFolder" type="button">Umbenennen</button><button id="deleteFolder" type="button">Löschen</button></div><div class="folderhint" id="folderHint">Eigene Ordner bleiben auf diesem Gerät gespeichert.</div></details><div class="folderbar" id="folderBar"></div><div id="cameraList">
    <div id="autobahnList"></div>
   </div>
   <footer>Quellen: Autobahn GmbH · Berlin.de · NYSDOT / 511NY · Flughäfen · Kartendaten © OpenStreetMap-Mitwirkende</footer>
@@ -1766,7 +1795,7 @@ $('commandCameras').onclick=()=>{commandClose();setMapLayerVisible('webcams',tru
 $('commandWall').onclick=()=>{$('openWall').click();commandClose();};
 $('commandNature').onclick=()=>{commandClose();setMapLayerVisible('nature',true);};
 $('commandSights').onclick=()=>{commandClose();setMapLayerVisible('sights',true);};
-$('commandCountries').onclick=()=>{commandClose();document.querySelector('.country-picker')?.scrollIntoView({behavior:'smooth',block:'center'});document.querySelector('.country-picker')?.setAttribute('open','');};
+$('commandCountries').onclick=()=>{commandClose();const group=$('mapMenuGroup');if(group)group.open=true;$('countryPicker')?.scrollIntoView({behavior:'smooth',block:'center'});};
 $('commandRadio').onclick=()=>{$('openRadio').click();commandClose();};
 
 
