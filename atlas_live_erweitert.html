@@ -718,7 +718,7 @@ header{position:relative;z-index:2701}
         <button id="globalCamCitiesButton" type="button">🌍 Weltstädte durchsuchen</button>
       </div>
       <div class="global-cam-citychips" aria-label="Beliebte Städte">
-        <button type="button" data-global-city="New York City">NYC + Umgebung</button>
+        <button type="button" data-global-city="New York City">NYC · 5 Boroughs</button>
         <button type="button" data-global-city="Miami Florida">Florida / Miami</button>
         <button type="button" data-global-city="Los Angeles">Los Angeles</button>
         <button type="button" data-global-city="Dubai">Dubai</button>
@@ -737,7 +737,7 @@ header{position:relative;z-index:2701}
         <button type="button" data-global-category="port">🚢 Häfen & Schiffe</button>
         <button type="button" data-global-category="volcano">🌋 Vulkane</button>
       </div>
-      <div class="country-status" id="globalCamStatus">NYC + Umgebung: Manhattan, Brooklyn, Queens, Bronx, Staten Island sowie Jersey City, Newark, Westchester und Nassau. Einzelkameras, Live-Wände und offizielle Karten werden getrennt gekennzeichnet.</div>
+      <div class="country-status" id="globalCamStatus">NYC · nur fünf Boroughs: Manhattan, Brooklyn, Queens, Bronx und Staten Island. Die NYC-Schaltfläche zeigt ausschließlich Kameras mit NYC-Standortdaten.</div>
       <div class="global-cam-coverage" id="globalCamCoverage" aria-live="polite">Prüfe die weltweite Katalog-Abdeckung …</div>
       <a class="global-cam-attribution" href="https://openeye.cam/" target="_blank" rel="noopener noreferrer">Zusätzlicher öffentlicher Webcam-Katalog: OpenEye ↗</a>
     </section>
@@ -1669,24 +1669,55 @@ function filterGlobalCityRows(rows,city){
  });
 }
 function getNYCCuratedCameraRows(){
- return [
-  {id:'atlas-nyc-times-square-earthcam',title:'Times Square 4K · EarthCam',handle:'Times Square, Manhattan',city:'New York City',region:'Manhattan',country:'USA',lat:40.7580,lon:-73.9855,category:'Stadtzentrum',live:true,is_free:true,publisher:'EarthCam',view:{render:'link',url:'https://www.earthcam.com/timessquare/?cam=tsrobo1',url_type:'page'}},
-  {id:'atlas-nyc-brooklyn-bridge-earthcam',title:'Brooklyn Bridge · EarthCam',handle:'Brooklyn Bridge, Manhattan / Brooklyn',city:'New York City',region:'Manhattan / Brooklyn',country:'USA',lat:40.7061,lon:-73.9969,category:'Brücke / Skyline',live:true,is_free:true,publisher:'EarthCam',view:{render:'link',url:'https://www.earthcam.com/usa/newyork/brooklynbridge/',url_type:'page'}},
-  {id:'atlas-nyc-statue-liberty-earthcam',title:'Statue of Liberty · EarthCam',handle:'Liberty Island / New York Harbor',city:'New York City',region:'New York Harbor',country:'USA',lat:40.6892,lon:-74.0445,category:'Hafen / Wahrzeichen',live:true,is_free:true,publisher:'EarthCam',view:{render:'link',url:'https://www.earthcam.com/usa/newyork/statueofliberty/?cam=liberty_str',url_type:'page'}},
-  {id:'atlas-nyc-dot-traffic-cameras',title:'NYC DOT · Verkehrskameras der fünf Boroughs',handle:'Manhattan, Brooklyn, Queens, Bronx und Staten Island',city:'New York City',region:'Five Boroughs',country:'USA',lat:40.7128,lon:-74.0060,category:'Verkehr · aktualisierte Standbilder',live:false,is_free:true,publisher:'NYC Department of Transportation',view:{render:'link',url:'https://webcams.nyctmc.org/map',url_type:'page'}},
-  {id:'atlas-nyc-511ny-regional-map',title:'511NY · Regionale Verkehrskameras (NYC & New York State)',handle:'New York City und New York State',city:'New York City',region:'New York State',country:'USA',lat:40.7357,lon:-74.1724,category:'Verkehr · regionale Kamerakarte',live:false,is_free:true,publisher:'New York State Department of Transportation',view:{render:'link',url:'https://511ny.org/',url_type:'page'}},
-  {id:'atlas-nyc-all-cameras-directory',title:'NYC·CAM · Kameras nach Borough und Straße',handle:'New York City, Westchester, Nassau und New Jersey',city:'New York City',region:'NYC & Umgebung',country:'USA',lat:40.7128,lon:-74.0060,category:'Kameraverzeichnis · Standbilder alle paar Sekunden',live:false,is_free:true,publisher:'NYC·CAM · unabhängiger Viewer öffentlicher Behördenkameras',view:{render:'link',url:'https://nyc-cams.com/c/index.html',url_type:'page'}},
-  {id:'atlas-nyc-live-camera-walls',title:'NYC·CAM · Live-Kamerawände (21 Ansichten)',handle:'Times Square, Midtown, Brücken, alle fünf Boroughs und Umgebung',city:'New York City',region:'NYC & Umgebung',country:'USA',lat:40.7510,lon:-73.9855,category:'Live-Kamerawände · aktualisierte Standbilder',live:false,is_free:true,publisher:'NYC·CAM · unabhängiger Viewer öffentlicher Behördenkameras',view:{render:'link',url:'https://nyc-cams.com/d/index.html',url_type:'page'}},
-  {id:'atlas-nyc-brooklyn-atlantic-eastern',title:'Atlantic Ave @ Eastern Pkwy · Brooklyn',handle:'Brooklyn · NYC DOT Kamera · Bildaktualisierung ca. alle 5 Sekunden',city:'New York City',region:'Brooklyn',country:'USA',lat:40.67635,lon:-73.90828,category:'Verkehr · aktualisiertes Kamerabild',live:false,is_free:true,publisher:'NYC DOT über NYC·CAM',view:{render:'link',url:'https://nyc-cams.com/c/atlantic-ave-eastern-pkwy-fde1748c.html',url_type:'page'}},
-  {id:'atlas-nyc-brooklyn-atlantic-pennsylvania',title:'Atlantic Ave @ Pennsylvania Ave · Brooklyn',handle:'Brooklyn · NYC DOT Kamera · Bildaktualisierung ca. alle 5 Sekunden',city:'New York City',region:'Brooklyn',country:'USA',lat:40.67579,lon:-73.89690,category:'Verkehr · aktualisiertes Kamerabild',live:false,is_free:true,publisher:'NYC DOT über NYC·CAM',view:{render:'link',url:'https://nyc-cams.com/c/atlantic-ave-pennsylvania-ave-0bbea8bd.html',url_type:'page'}},
-  {id:'atlas-nyc-brooklyn-atlantic-highland',title:'Atlantic Ave @ Highland Pl · Brooklyn',handle:'Brooklyn · NYC DOT Kamera · Bildaktualisierung ca. alle 5 Sekunden',city:'New York City',region:'Brooklyn',country:'USA',lat:40.67925,lon:-73.88071,category:'Verkehr · aktualisiertes Kamerabild',live:false,is_free:true,publisher:'NYC DOT über NYC·CAM',view:{render:'link',url:'https://nyc-cams.com/c/atlantic-ave-highland-pl-berriman-st-e016c2e4.html',url_type:'page'}}
+ // Ausschließlich verifizierte Koordinaten innerhalb der fünf NYC-Boroughs.
+ // NYC DOT-Bildendpunkte liefern aktuelle Standbilder, keine Videostreams.
+ const dot=[
+  ['Worth St @ Centre St','Manhattan','07b8616e-373e-4ec9-89cc-11cad7d59fcb',40.715157,-74.002130],
+  ['FDR Dr @ 64 St','Manhattan','c5040f93-f4ec-4803-8370-8b931b0443e2',40.761186,-73.955676],
+  ['FDR Dr @ 36 St','Manhattan','04ffc69c-92a7-4c02-aa18-2b16e7ba81f2',40.744441,-73.971242],
+  ['5 Ave @ 47 St','Manhattan','03a8a2da-3ac2-45aa-a5ba-4ff7d1ecbd22',40.756725,-73.978830],
+  ['Columbus Ave @ 65 St','Manhattan','04e09ed5-2d97-4e29-8438-b87748850dbb',40.772157,-73.981719],
+  ['Atlantic Ave @ Pennsylvania Ave','Brooklyn','0bbea8bd-10f1-4126-b3c5-9e9432eab749',40.675787,-73.896898],
+  ['Fort Hamilton Pkwy @ 60 St','Brooklyn','ddc62c2f-dab2-48e0-918e-742e62e78ec1',40.633200,-74.005700],
+  ['Rogers Ave @ Montgomery St','Brooklyn','1b874f5c-e1c6-481d-bb85-8d7d92c1793b',40.665600,-73.953600],
+  ['Ft Hamilton Pkwy @ McDonald Ave','Brooklyn','88895623-f6fa-4509-a927-8eae076725da',40.647697,-73.980373],
+  ['Jamaica Ave @ 168 St','Queens','52399045-4691-4258-8f82-12000f5719a8',40.706371,-73.792539],
+  ['Rockaway Blvd @ Lefferts Blvd','Queens','d88837a0-5f2d-4800-b4c8-57970aa929cd',40.676012,-73.818977],
+  ['GCP @ LGA 94 St Exit','Queens','9fa5b0dd-e955-449e-97e1-9c53ad9c23a8',40.771466,-73.877462],
+  ['Mosholu Pkwy @ Exit 12','Bronx','fb588f5e-c90e-4136-9817-ed4201267d97',40.889129,-73.888492],
+  ['Pelham Shore Rd @ City Island Rd','Bronx','09afb231-ef10-470f-bf54-0f44fc2dc18f',40.864552,-73.813781],
+  ['Hylan Blvd @ Arden Ave','Staten Island','0f5e11ff-0ecc-4622-a32e-bb80a6b2c1c6',40.529434,-74.161351],
+  ['Central Park @ 72nd St','Manhattan','3f04a686-f97c-4187-8968-cb09265e08ff',40.770785,-73.978337],
+  ['Metropolitan Ave @ Berry St','Brooklyn','40213626-3ef8-4d63-be77-e1d84ca4d19c',40.715924,-73.961926]
  ];
+ const rows=dot.map(([name,borough,id,lat,lon])=>({
+  id:'nycdot-'+id,title:name+' · '+borough,handle:borough+', New York City',
+  city:'New York City',locality:borough,region:borough,country:'USA',
+  lat,lon,category:'NYC DOT · aktuelles Standbild',live:false,is_free:true,
+  publisher:'NYC Department of Transportation',
+  preview_url:'https://webcams.nyctmc.org/api/cameras/'+id+'/image',
+  view:{render:'image',url:'https://webcams.nyctmc.org/api/cameras/'+id+'/image',url_type:'image'}
+ }));
+ rows.push(
+  {id:'atlas-nyc-times-square-earthcam',title:'Times Square 4K · EarthCam',handle:'Times Square, Manhattan',city:'New York City',locality:'Manhattan',region:'Manhattan',country:'USA',lat:40.7580,lon:-73.9855,category:'Live-Video · Stadtzentrum',live:true,is_free:true,publisher:'EarthCam',view:{render:'link',url:'https://www.earthcam.com/timessquare/?cam=tsrobo1',url_type:'page'}},
+  {id:'atlas-nyc-brooklyn-bridge-earthcam',title:'Brooklyn Bridge · EarthCam',handle:'Brooklyn Bridge, Brooklyn',city:'New York City',locality:'Brooklyn',region:'Brooklyn',country:'USA',lat:40.7061,lon:-73.9969,category:'Live-Video · Brücke',live:true,is_free:true,publisher:'EarthCam',view:{render:'link',url:'https://www.earthcam.com/usa/newyork/brooklynbridge/',url_type:'page'}},
+  {id:'atlas-nyc-statue-liberty-earthcam',title:'Statue of Liberty · EarthCam',handle:'Liberty Island, New York Harbor',city:'New York City',locality:'Manhattan',region:'Manhattan',country:'USA',lat:40.6892,lon:-74.0445,category:'Live-Video · Hafen',live:true,is_free:true,publisher:'EarthCam',view:{render:'link',url:'https://www.earthcam.com/usa/newyork/statueofliberty/?cam=liberty_str',url_type:'page'}}
+ );
+ return rows;
 }
 async function searchGlobalCity(city){
  const button=[...document.querySelectorAll('[data-global-city]')].find(item=>item.dataset.globalCity===city);
+ $('globalCamQuery').value=city;
+ if(city==='New York City'){
+  // NYC-Schaltfläche darf niemals un-gefilterte Weltkatalog-Treffer übernehmen.
+  const rows=getNYCCuratedCameraRows();
+  showGlobalCameraRows(rows,'New York City · ausschließlich fünf Boroughs');
+  $('globalCamStatus').textContent=rows.length+' NYC-Kameras geladen · Manhattan, Brooklyn, Queens, Bronx und Staten Island. '+rows.filter(row=>row.view?.render==='image').length+' NYC-DOT-Standbilder und '+rows.filter(row=>row.publisher==='EarthCam').length+' EarthCam-Liveseiten. Keine Treffer außerhalb der fünf Boroughs.';
+  if(button)button.disabled=false;
+  return;
+ }
  const rule=GLOBAL_CITY_MATCH[city]||{queries:[city]};
  const queries=rule.queries||[city];
- $('globalCamQuery').value=city;
  $('globalCamStatus').textContent='Suche Kameras und öffentliche Webcam-Quellen für '+city+' …';
  if(button)button.disabled=true;
  try{
@@ -1699,9 +1730,6 @@ async function searchGlobalCity(city){
    if(result.status!=='fulfilled'){failed.push(queries[index]);return;}
    normalizeGlobalCameraRows(result.value).forEach(row=>collected.set(row.id,row));
   });
-  if(city==='New York City'){
-   getNYCCuratedCameraRows().forEach(row=>collected.set(row.id,row));
-  }
   const rows=filterGlobalCityRows([...collected.values()],city);
   showGlobalCameraRows(rows,city);
   $('globalCamStatus').textContent=rows.length+' passende Kameras für '+city+' gefunden · '+rows.filter(isPlayableLiveVideo).length+' echte Live-Videos · '+rows.filter(row=>row.view?.render==='image'||row.preview_url).length+' Bildkameras · '+rows.filter(row=>row.view?.render==='link').length+' Betreiberseiten.'+(failed.length?' Fehlgeschlagene Suchbegriffe: '+failed.join(', '):'');
