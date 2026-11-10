@@ -607,6 +607,12 @@ footer{padding:10px 16px;border-top:1px solid var(--line);font-size:10px;color:v
  #commandOverlay .cc-workspace{grid-column:2;grid-row:1}
  #commandOverlay .cc-right{grid-column:2;grid-row:2;display:block;padding:10px;max-height:none}
 }
+/* Camera player recovery and source transparency */
+.cam-source-link{display:inline-flex;align-items:center;gap:5px;margin:8px 0 2px;padding:8px 12px;border:1px solid rgba(117,208,238,.38);border-radius:9px;background:rgba(20,83,111,.3);color:#9beaff!important;text-decoration:none;font-weight:700}
+.cam-source-link:hover{background:rgba(32,119,151,.42);border-color:#7ce3ff}
+.camviewfoot{display:flex;flex-wrap:wrap;align-items:center;gap:8px;line-height:1.55}
+.camviewfoot strong{color:#bdeeff}
+
 </style>
 </head>
 <body>
@@ -1090,9 +1096,9 @@ const citySources=[
  {name:'Belleville – NY Mesonet',place:'Belleville · öffentliche Wetterstation',lat:43.79,lon:-76.11,url:'https://godsviewai.com/world/cameras/ax_opencctv_nysmesonet_nysmesonet-nysm-BELL',embedUrl:'https://godsviewai.com/world/cameras/ax_opencctv_nysmesonet_nysmesonet-nysm-BELL',source:'NY Mesonet · öffentliche Wetterkamera, Ansicht über GodsView',category:'still',local:false},
  {name:'Philadelphia – NY Mesonet',place:'Philadelphia · öffentliche Wetterstation',lat:44.15,lon:-75.71,url:'https://godsviewai.com/world/cameras/ax_opencctv_nysmesonet_nysmesonet-nysm-PHIL',embedUrl:'https://godsviewai.com/world/cameras/ax_opencctv_nysmesonet_nysmesonet-nysm-PHIL',source:'NY Mesonet · öffentliche Wetterkamera, Ansicht über GodsView',category:'still',local:false}
 
- ,{name:'Husum – Marktplatz',place:'Deutschland · Husum · Nordsee · aktuelles Standbild',lat:54.485,lon:9.052,url:'https://www.husum-tourismus.de/Service/Wetter-Webcams',imageUrl:'https://www.foto-webcam.eu/webcam/husum-marktplatz/current/1200.jpg',refreshMs:300000,source:'Stadt Husum / Foto-Webcam.eu · Standbild, automatisch alle 5 Minuten aktualisiert',category:'still'}
- ,{name:'Husum – Binnenhafen / Hafenklappbrücke',place:'Deutschland · Husum · Nordsee · Binnenhafen',lat:54.485,lon:9.055,url:'https://www.husum-tourismus.de/Service/Wetter-Webcams',imageUrl:'https://www.foto-webcam.eu/webcam/husum-hafenklappbruecke/current/1200.jpg',refreshMs:300000,source:'Stadt Husum / Foto-Webcam.eu · Standbild, automatisch alle 5 Minuten aktualisiert',category:'still'}
- ,{name:'Husum – Dockkoog',place:'Deutschland · Husum · Nordsee · Wattenmeer und Deich',lat:54.474,lon:8.976,url:'https://www.husum-tourismus.de/Service/Wetter-Webcams',imageUrl:'https://www.foto-webcam.eu/webcam/husum-dockkoog/current/1200.jpg',refreshMs:300000,source:'Stadt Husum / Foto-Webcam.eu · Standbild, automatisch alle 5 Minuten aktualisiert',category:'still'}
+ ,{name:'Husum – Marktplatz',place:'Deutschland · Husum · Nordsee · aktuelles Standbild',lat:54.485,lon:9.052,url:'https://www.husum-tourismus.de/Service/Wetter-Webcams',imageUrl:'https://www.foto-webcam.eu/webcam/husum-marktplatz/current/720.jpg',refreshMs:300000,source:'Stadt Husum / Foto-Webcam.eu · Standbild, automatisch alle 5 Minuten aktualisiert',category:'still'}
+ ,{name:'Husum – Binnenhafen / Hafenklappbrücke',place:'Deutschland · Husum · Nordsee · Binnenhafen',lat:54.485,lon:9.055,url:'https://www.husum-tourismus.de/Service/Wetter-Webcams',imageUrl:'https://www.foto-webcam.eu/webcam/husum-hafenklappbruecke/current/720.jpg',refreshMs:300000,source:'Stadt Husum / Foto-Webcam.eu · Standbild, automatisch alle 5 Minuten aktualisiert',category:'still'}
+ ,{name:'Husum – Dockkoog',place:'Deutschland · Husum · Nordsee · Wattenmeer und Deich',lat:54.474,lon:8.976,url:'https://www.husum-tourismus.de/Service/Wetter-Webcams',imageUrl:'https://www.foto-webcam.eu/webcam/husum-dockkoog/current/720.jpg',refreshMs:300000,source:'Stadt Husum / Foto-Webcam.eu · Standbild, automatisch alle 5 Minuten aktualisiert',category:'still'}
  ,{name:'Husum – Schlosspark',place:'Deutschland · Husum · Nordsee · Schlosspark',lat:54.489,lon:9.052,url:'https://www.foto-webcam.eu/webcam/husum-schlosspark/',source:'Stadt Husum / Foto-Webcam.eu · Kamera-Seite',category:'portal'}
  ,{name:'Borkum – Neuer Leuchtturm',place:'Borkum · Nordsee · Inselpanorama',lat:53.588,lon:6.67,url:'https://player.livespotting.com/lsplayer.html?alias=PS_c4cf1',embedUrl:'https://player.livespotting.com/lsplayer.html?alias=PS_c4cf1',source:'Livespotting · öffentlicher Player-Link',category:'video'}
  ,{name:'Norddeich – Hafen',place:'Norddeich · Nordsee · Hafenblick',lat:53.62,lon:7.15,url:'https://player.livespotting.com/lsplayer.html?alias=r9r305wi&ch=pyb3snyw',embedUrl:'https://player.livespotting.com/lsplayer.html?alias=r9r305wi&ch=pyb3snyw',source:'Livespotting · öffentlicher Player-Link',category:'video'}
@@ -1106,16 +1112,16 @@ const citySources=[
 
 
  ,{name:'Hamburg – offizielle Webcam-Übersicht',place:'Deutschland · Hamburg · Hafen, Michel und Speicherstadt',lat:53.55,lon:9.99,url:'https://www.hamburg.de/tourismus/hamburg-erkunden/webcam',source:'Hamburg.de · offizielle Übersicht mehrerer Stadt- und Hafen-Webcams',category:'portal'}
- ,{name:'Hamburg – Michel Hafenpanorama',place:'Deutschland · Hamburg · Hafenblick vom Michel',lat:53.548,lon:9.979,url:'https://www.hamburg.de/tourismus/hamburg-erkunden/webcam/michel-339164',source:'Hamburg.de / St. Michaelis · offizieller HD-Livestream, Player auf Betreiberseite',category:'portal'}
- ,{name:'Hamburg – Speicherstadt und Kontorhausviertel',place:'Deutschland · Hamburg · Speicherstadt',lat:53.545,lon:9.999,url:'https://www.hamburg.de/tourismus/hamburg-erkunden/webcam/speicherstadt-339168',source:'Hamburg.de · offizieller 24/7-Livestream, Player auf Betreiberseite',category:'portal'}
- ,{name:'Hamburg – Hafen und Dockland',place:'Deutschland · Hamburg · Elbe und Cruise Center Altona',lat:53.546,lon:9.94,url:'https://www.hamburg.de/tourismus/hamburg-erkunden/webcam/live-webcam-hamburger-hafen-339146',source:'Hamburg.de · offizieller Hafen-Livestream, Player auf Betreiberseite',category:'portal'}
+ ,{name:'Hamburg – Michel Hafenpanorama',place:'Deutschland · Hamburg · Hafenblick vom Michel',lat:53.548,lon:9.979,url:'https://www.hamburg.de/tourismus/hamburg-erkunden/webcam/michel-339164',source:'Hamburg.de / St. Michaelis · offizieller HD-Livestream (2-Minuten-Player auf Betreiberseite)',category:'portal',local:true}
+ ,{name:'Hamburg – Speicherstadt und Kontorhausviertel',place:'Deutschland · Hamburg · Speicherstadt',lat:53.545,lon:9.999,url:'https://www.hamburg.de/tourismus/hamburg-erkunden/webcam/speicherstadt-339168',source:'Hamburg.de · offizieller 24/7-Livestream (Player auf Betreiberseite)',category:'portal',local:true}
+ ,{name:'Hamburg – Hafen und Dockland',place:'Deutschland · Hamburg · Elbe und Cruise Center Altona',lat:53.546,lon:9.94,url:'https://www.hamburg.de/tourismus/hamburg-erkunden/webcam/live-webcam-hamburger-hafen-339146',source:'Hamburg.de · offizieller Hafen-Livestream (Player auf Betreiberseite)',category:'portal',local:true}
  ,{name:'Kiel – Förde und Hafen',place:'Deutschland · Kiel · Förde, Fähr- und Kreuzfahrtterminals',lat:54.323,lon:10.14,url:'https://webtv.feratel.com/webtv/?cam=3375&design=v5&pg=5EB12424-7C2D-428A-BEFF-0C9140CD772F',embedUrl:'https://webtv.feratel.com/webtv/?cam=3375&design=v5&pg=5EB12424-7C2D-428A-BEFF-0C9140CD772F',source:'Port of Kiel / Feratel · öffentlicher Webcam-Player',category:'video'}
  ,{name:'Kiel – Schwedenkai',place:'Deutschland · Kiel · Schwedenkai und Innenstadt',lat:54.322,lon:10.135,url:'https://cm.livespotting.com/v1/player/c61cba4f-68a3-488e-b2e4-ffb8e182794f/b80c51ef-5da6-49e0-bf9e-617d1e78cf22/f8e142dd-b175-4a1d-bd94-29a064696a0d',embedUrl:'https://cm.livespotting.com/v1/player/c61cba4f-68a3-488e-b2e4-ffb8e182794f/b80c51ef-5da6-49e0-bf9e-617d1e78cf22/f8e142dd-b175-4a1d-bd94-29a064696a0d',source:'Port of Kiel / Livespotting · öffentlicher Player-Link',category:'video'}
  ,{name:'Kiel – Hafenhaus',place:'Deutschland · Kiel · Schwedenkai und Norwegenkai',lat:54.322,lon:10.135,url:'https://www.portofkiel.com/webcam.html',source:'Port of Kiel · offizielle Webcam-Seite',category:'portal'}
 
  ,{name:'Fineview – St. Lawrence River Webcam',place:'USA · New York · Wellesley Island · nahe La Fargeville',lat:44.28725,lon:-76.01133,url:'https://www.fvny.us/',source:'Fineview / fvny.us · öffentlicher Live-Webcam-Link; Einbettung nicht bestätigt',category:'portal',local:true}
- ,{name:'Alexandria Bay – Chamber River View Stream',place:'USA · New York · Alexandria Bay · St. Lawrence River',lat:44.3360,lon:-75.9180,url:'https://www.youtube.com/watch?v=XfiHdsxawCY',embedUrl:'https://www.youtube-nocookie.com/embed/XfiHdsxawCY?autoplay=1&mute=1',source:'Alexandria Bay Chamber of Commerce · offizieller River-View-Livestream',category:'video'}
- ,{name:'Alexandria Bay – Dock Camera',place:'USA · New York · Alexandria Bay · Dock',lat:44.3325,lon:-75.9185,url:'https://www.youtube.com/watch?v=6DDfSIMfi0c',embedUrl:'https://www.youtube-nocookie.com/embed/6DDfSIMfi0c?autoplay=1&mute=1',source:'Alexandria Bay Chamber of Commerce · offizieller Dock-Livestream',category:'video'}
+ ,{name:'Alexandria Bay – Chamber River View Stream',place:'USA · New York · Alexandria Bay · St. Lawrence River',lat:44.3360,lon:-75.9180,url:'https://visitalexbay.org/area-videos/',source:'Alexandria Bay Chamber of Commerce · offizielle Seite; öffentlicher Player wird dort verlinkt',category:'portal',local:true}
+ ,{name:'Alexandria Bay – Dock Camera',place:'USA · New York · Alexandria Bay · Dock',lat:44.3325,lon:-75.9185,url:'https://visitalexbay.org/area-videos/',source:'Alexandria Bay Chamber of Commerce · offizielle Seite; öffentlicher Player wird dort verlinkt',category:'portal',local:true}
 ];
 const regionalSources=[
  {name:'Thousand Islands – öffentliche Webcam-Übersicht',place:'Region La Fargeville · Alexandria Bay und Clayton',lat:44.18,lon:-75.93,url:'https://1000islandslive.com/live-cams/',source:'1000 Islands Live · Betreiberübersicht',category:'portal',local:false},
@@ -1144,7 +1150,7 @@ const regionalSources=[
  {name:'CruisingEarth – echte Bord-Webcams',place:'Internationale Reedereien · verfügbare Schiffskameras',lat:20,lon:0,url:'https://www.cruisingearth.com/ship-webcams/',source:'CruisingEarth · Verzeichnis von Reedereien mit öffentlichen Bordkameras',category:'portal',local:false},
  {name:'EarthLive – Häfen und Marinas',place:'Weltweit · Hafenbecken, Marinas und Schifffahrtswege',lat:20,lon:0,url:'https://earthlive.tv/interests/harbours-and-marinas',source:'EarthLive · öffentliche Hafen- und Marina-Webcams',category:'portal',local:false}];
 const worldSources=[
- {name:'Niagara Falls – Horseshoe Falls Livecam',place:'Kanada · Ontario · Niagara Falls · kanadische Seite',lat:43.0781,lon:-79.0823,url:'https://www.visitniagarafalls.com/niagara-falls-live',embedUrl:'https://www.youtube-nocookie.com/embed/gIv9J38Dax8',source:'EarthCam via Niagara Falls Tourism · öffentlicher Livestream der kanadischen Horseshoe Falls',category:'video',local:false},
+ {name:'Niagara Falls – Horseshoe Falls Livecam',place:'Kanada · Ontario · Niagara Falls · kanadische Seite',lat:43.0781,lon:-79.0823,url:'https://www.visitniagarafalls.com/niagara-falls-live',embedUrl:'https://www.youtube-nocookie.com/embed/qx7gry390YA',source:'EarthCam via Niagara Falls Tourism · öffentlicher Livestream der kanadischen Horseshoe Falls',category:'video',local:false},
  {name:'Las Vegas – Welcome Sign Livecam',place:'USA · Nevada · Las Vegas · Welcome to Fabulous Las Vegas Sign',lat:36.0822,lon:-115.1728,url:'https://www.earthcam.com/usa/nevada/lasvegas/',embedUrl:'https://www.earthcam.com/usa/nevada/lasvegas/',source:'EarthCam · öffentliche Livecam am Welcome-Schild von Las Vegas; Einbettung kann vom Anbieter eingeschränkt sein',category:'video',local:false},
  {name:'EarthCam – Weltweite Livekameras',place:'Weltweit · Städte, Sehenswürdigkeiten und Plätze',lat:40.7128,lon:-74.0060,url:'https://www.earthcam.com/',source:'EarthCam · internationales Webcam-Portal',category:'portal',local:false},
  {name:'SkylineWebcams – Weltweite Ansichten',place:'Weltweit · Städte, Küsten, Plätze und Natur',lat:41.9028,lon:12.4964,url:'https://www.skylinewebcams.com/',source:'SkylineWebcams · internationales Webcam-Verzeichnis',category:'portal',local:false},
@@ -1283,15 +1289,21 @@ function getSharedMapView(){
 }
 let camRefreshTimer=null;
 function openCameraView(camera){
- const playerUrl=camera.embedUrl||camera.imageUrl||'';
- if(!playerUrl){const viewer=$('camviewer');$('camviewtitle').textContent=camera.name||'Kamera';$('camviewnote').innerHTML='Kein direkt einbettbarer Player bestätigt. <a href="'+esc(camera.url||'')+'" target="_blank" rel="noopener noreferrer">Beim Betreiber öffnen ↗</a>';$('camframe').src='about:blank';viewer.classList.add('open');setMessage('Diese Kamera öffnet sich über die öffentliche Betreiberseite.');return;}
- const frame=$('camframe'),viewer=$('camviewer');
+ const frame=$('camframe'),viewer=$('camviewer'),note=$('camviewnote');
  if(camRefreshTimer){clearInterval(camRefreshTimer);camRefreshTimer=null;}
- $('camviewtitle').textContent=camera.name;
- $('camviewnote').textContent='Quelle: '+camera.source+'. '+(camera.imageUrl?'Öffentliches Standbild; die Ansicht wird automatisch aktualisiert.':'Wenn der Anbieter das Einbetten blockiert oder der Stream offline ist, nutze „Beim Betreiber öffnen“.');
+ $('camviewtitle').textContent=camera.name||'Öffentliche Kamera';
+ const directPlayer=camera.category!=='portal'&&(camera.embedUrl||camera.imageUrl);
+ const sourceLink=camera.url||camera.embedUrl||camera.imageUrl||'';
+ const openLink=sourceLink?'<a class="cam-source-link" href="'+esc(sourceLink)+'" target="_blank" rel="noopener noreferrer">Beim Betreiber öffnen ↗</a>':'';
+ if(!directPlayer){
+  frame.src='about:blank';
+  note.innerHTML='<strong>Offizielle Betreiberseite</strong><br>Diese Quelle stellt den Stream auf ihrer eigenen Seite bereit oder erlaubt keine sichere Einbettung. '+openLink;
+  viewer.classList.add('open');setMessage('Betreiberseite geöffnet – der Stream wird direkt beim Anbieter angezeigt.');return;
+ }
+ note.innerHTML='<span>Quelle: '+esc(camera.source||'Öffentliche Webcam')+'. '+(camera.imageUrl?'Aktuelles Standbild; automatische Aktualisierung.':'Live-Player, sofern der Anbieter Einbettung zulässt.')+'</span> '+openLink;
  if(camera.imageUrl){
   const refresh=()=>{frame.src=camera.imageUrl+(camera.imageUrl.includes('?')?'&':'?')+'atlas_refresh='+Date.now();};
-  refresh();camRefreshTimer=setInterval(refresh,camera.refreshMs||600000);
+  refresh();camRefreshTimer=setInterval(refresh,camera.refreshMs||300000);
  }else frame.src=camera.embedUrl;
  viewer.classList.add('open');
 }
@@ -1355,7 +1367,10 @@ async function loadCityCams(){
  const container=$('autobahnList'),head=document.createElement('div');
  head.className='note';head.textContent='KAMERAS & BETREIBERLINKS · '+valid.length+' KARTENPUNKTE';
  container.appendChild(head);
- valid.forEach(c=>addCameraCard(container,c.name,c.place+' · '+c.source,()=>openCameraView(c),c.imageUrl||'',c.embedUrl?'Live-Player':'Aktuelles Standbild'));
+ valid.forEach(c=>{
+  const tag=c.category==='portal'?'Betreiberseite':c.category==='traffic'?'Verkehrskamera':c.imageUrl?'Aktuelles Standbild':'Live-Player';
+  addCameraCard(container,c.name,c.place+' · '+c.source,()=>openCameraView(c),c.imageUrl||'',tag);
+ });
  $('count').textContent=String(valid.length);
  $('citymessage').textContent=valid.length+' Kamera- und Betreiberpunkte mit Koordinaten geladen. Bei Fineview öffnet sich die öffentliche Betreiberseite, da kein direkter Einbettungslink bestätigt ist.';
  filterCameraCards();
