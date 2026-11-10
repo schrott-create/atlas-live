@@ -80,6 +80,15 @@ const directoryCities = directory.flatMap(entry => entry[3]);
 const unknownCities = directoryCities.filter(city => !cityRuleSet.has(city));
 if (unknownCities.length) throw new Error("Orte im Länderverzeichnis ohne Ortsregel: " + unknownCities.join(", "));
 if (new Set(directoryCities).size !== directoryCities.length) throw new Error("Doppelte Orte im Länderverzeichnis.");
+if (!html.includes("if(selectedGlobalCity)rows=filterGlobalCityRows(rows,selectedGlobalCity);")) {
+  throw new Error("Stadtansicht muss alle angezeigten Kameraeinträge geografisch filtern.");
+}
+if (!html.includes("if(bounds.isValid()&&!selectedGlobalCity)")) {
+  throw new Error("Stadtkartenansicht darf nicht durch Kamera-Marker verschoben werden.");
+}
+if (html.includes("GLOBAL_LIVE_OPERATOR_CAMERAS") || html.includes("getAdditionalOperatorRows")) {
+  throw new Error("Unverifizierte Betreiberseiten dürfen nicht als Live-Kameras gezählt werden.");
+}
 if (!html.includes("selectedGlobalCity||!map.hasLayer(pointLayers.webcams)")) {
   throw new Error("Kartenschwenken darf aktive Stadtsuchen nicht überschreiben.");
 }
