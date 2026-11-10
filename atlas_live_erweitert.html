@@ -1642,7 +1642,7 @@ const GLOBAL_CITY_MATCH={
  'Miami Florida':{aliases:['miami'],fallback:['miami'],queries:['Miami Florida','Miami webcam','Miami camera']},
  'Los Angeles':{aliases:['los angeles'],fallback:['los angeles'],queries:['Los Angeles','Los Angeles webcam','LA camera']},
  'Dubai':{aliases:['dubai'],fallback:['dubai'],queries:['Dubai','Dubai webcam','Dubai camera']},
- 'Shibuya Crossing Tokyo':{aliases:['shibuya'],fallback:['shibuya'],queries:['Shibuya Tokyo','Shibuya Crossing webcam','Tokyo Shibuya camera']},
+ 'Shibuya Crossing Tokyo':{aliases:['tokyo','shibuya'],fallback:['tokyo','shibuya'],queries:['Tokyo Japan','Tokyo webcam','Tokyo camera','Shibuya Tokyo','Shibuya Crossing webcam']},
  'Bangkok Thailand':{aliases:['bangkok'],fallback:['bangkok'],queries:['Bangkok Thailand','Bangkok webcam','Bangkok camera']},
  'Singapore':{aliases:['singapore'],fallback:['singapore'],queries:['Singapore','Singapore webcam','Singapore camera']},
  'Hong Kong':{aliases:['hong kong'],fallback:['hong kong'],queries:['Hong Kong','Hong Kong webcam','Hong Kong camera']},
@@ -1655,13 +1655,17 @@ const GLOBAL_CITY_MATCH={
 function globalCityText(value){return String(value||'').normalize('NFD').replace(/[\\u0300-\\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,' ').trim();}
 function filterGlobalCityRows(rows,city){
  const rule=GLOBAL_CITY_MATCH[city];
- if(!rule)return rows;
+ if(!rule)return [];
  return rows.filter(row=>{
-  const cityFields=[row.city,row.locality,row.town,row.municipality,row.city_name].filter(Boolean).map(globalCityText);
+  const cityFields=[row.city,row.locality,row.town,row.municipality,row.city_name].filter(value=>typeof value==='string'&&value.trim()).map(globalCityText);
   const locationText=[row.title,row.handle,row.place,row.location,row.address,row.description,row.tags].filter(Boolean).map(value=>Array.isArray(value)?value.join(' '):String(value)).map(globalCityText).join(' ');
-  const metadataMatch=cityFields.some(value=>rule.aliases.some(alias=>value===globalCityText(alias)||value.startsWith(globalCityText(alias)+' ')));
-  const textMatch=rule.fallback.some(term=>(' '+locationText+' ').includes(' '+globalCityText(term)+' '));
-  return metadataMatch||textMatch;
+  const matchesAlias=value=>rule.aliases.some(alias=>{
+   const normalized=globalCityText(alias);
+   return value===normalized||value.startsWith(normalized+' ')||(' '+value+' ').includes(' '+normalized+' ');
+  });
+  // Wenn der Katalog einen Ortswert nennt, ist dieser maßgeblich.
+  // Nur bei fehlenden Ortsfeldern wird auf Titel/Ortstext zurückgegriffen.
+  return cityFields.length?cityFields.some(matchesAlias):rule.fallback.some(term=>matchesAlias(locationText));
  });
 }
 async function searchGlobalCity(city){
@@ -1714,7 +1718,7 @@ async function searchGlobalQueryBatch(queries,label,button){
    }));
    results.forEach((result,index)=>{
     if(result.status!=='fulfilled'){failed.push(batch[index]);return;}
-    filterGlobalCityRows(normalizeGlobalCameraRows(result.value.data),result.value.query).forEach(row=>collected.set(row.id,row));
+    normalizeGlobalCameraRows(result.value.data).forEach(row=>collected.set(row.id,row));
    });
    $('globalCamStatus').textContent=(Math.min(i+4,queries.length))+'/'+queries.length+' Suchabfragen geprüft · '+collected.size+' unterschiedliche Kameras gefunden …';
   }
