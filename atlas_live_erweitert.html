@@ -196,6 +196,26 @@ footer{padding:10px 16px;border-top:1px solid var(--line);font-size:10px;color:v
 
 @media(max-width:760px){.country-picker-list{grid-template-columns:1fr 1fr}}
 
+
+/* ATLAS COMMAND CENTER */
+.command-launch{background:linear-gradient(110deg,#164d68,#19365b)!important;border-color:#4bc7e7!important}
+.command-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px}
+.command-card{background:#0b1422;border:1px solid #30465e;border-radius:12px;padding:13px;display:flex;flex-direction:column;gap:7px;min-width:0}
+.command-card h3{margin:0;font-size:13px;color:#d9f3ff}
+.command-card p{margin:0;color:#9fb2c8;font-size:11px;line-height:1.5;flex:1}
+.command-card button,.command-card a{display:inline-block;width:auto;text-align:center;padding:8px 10px;font-size:11px;text-decoration:none}
+.command-card a{border:1px solid #315c77;border-radius:8px;color:#80ddf5;background:#10283a}
+.command-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px;margin:12px 0}
+.command-stat{padding:11px;border:1px solid #2b435d;border-radius:10px;background:#0a1524}
+.command-stat b{display:block;font-size:20px;color:#8de2ff}.command-stat span{font-size:9px;color:#9aafc5;letter-spacing:.7px}
+.command-feed{display:grid;gap:7px;margin-top:10px}
+.command-event{padding:9px 11px;border:1px solid #293e55;border-radius:9px;background:#0a1524;font-size:11px;color:#c5d5e5}
+.command-event small{display:block;color:#8fa6bf;margin-top:3px}
+.command-headline{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:12px}
+.command-headline button{width:auto;padding:8px 11px}
+.command-weather{font-size:12px;color:#a8c1d8;padding:10px;border:1px solid #29445d;border-radius:9px;background:#0a1524}
+@media(max-width:600px){.command-stats{grid-template-columns:1fr 1fr}}
+
 </style>
 </head>
 <body>
@@ -245,6 +265,7 @@ footer{padding:10px 16px;border-top:1px solid var(--line);font-size:10px;color:v
       <button id="shareAtlas" type="button">↗ ATLAS LIVE teilen</button>
       <button id="openRadio" type="button">🌍 Weltweites Radio</button>
       <button id="openSpace" type="button">🚀 SPACE EXPLORER</button>
+      <button id="openCommand" class="command-launch" type="button">🛰️ COMMAND CENTER · ALLES</button>
       
       
     </div>
@@ -327,6 +348,42 @@ footer{padding:10px 16px;border-top:1px solid var(--line);font-size:10px;color:v
       </div>
     </section>
   </div>
+
+  <div class="atlas-overlay" id="commandOverlay" role="dialog" aria-modal="true" aria-label="ATLAS Live Command Center">
+    <section class="atlas-panel">
+      <div class="atlas-panel-head"><h2>ATLAS LIVE · COMMAND CENTER</h2><button id="closeCommand" type="button">Schließen ✕</button></div>
+      <div class="atlas-panel-body">
+        <p class="hub-note">Alle Explorer an einem Ort: aktuelle öffentliche Daten, Kartenebenen und externe Live-Dienste. Externe Anbieter können eigene Konten, regionale Abdeckung oder Einbettungsbeschränkungen haben.</p>
+        <div class="command-headline"><button id="commandRefresh" type="button">↻ Daten aktualisieren</button><button id="commandNight" type="button">🌃 Nachtkarte umschalten</button><button id="commandRandom" type="button">🎲 Zufallskamera</button><button id="commandFavorites" type="button">☆ Favoriten anzeigen</button></div>
+        <div class="command-stats">
+          <div class="command-stat"><b id="commandQuakes">—</b><span>ERDBEBEN · LETZTE STUNDE</span></div>
+          <div class="command-stat"><b id="commandSignificant">—</b><span>STÄRKERE BEBEN · M4+</span></div>
+          <div class="command-stat"><b id="commandWeather">—</b><span>WETTER · KARTENMITTE</span></div>
+          <div class="command-stat"><b id="commandUpdated">—</b><span>LETZTES UPDATE</span></div>
+        </div>
+        <div id="commandWeatherText" class="command-weather">Wetterdaten werden für die aktuelle Kartenmitte geladen …</div>
+        <h3 style="font-size:13px;color:#8edcf0;margin:18px 0 9px">LIVE-EXPLORER</h3>
+        <div class="command-grid">
+          <article class="command-card"><h3>✈️ Flug-Radar</h3><p>Öffentliche ADS-B-Flugkarte. Sichtbarkeit hängt von Empfängern, Abdeckung und Datenanbieter ab.</p><button id="commandFlights" type="button">Flugradar öffnen</button><a href="https://globe.adsbexchange.com/" target="_blank" rel="noopener">ADS-B Exchange ↗</a></article>
+          <article class="command-card"><h3>🚢 Schiffe & Ozeane</h3><p>Schiffsverkehr und nautische Karten bei externen Anbietern. Manche Live-Positionen sind eingeschränkt oder kostenpflichtig.</p><a href="https://www.marinetraffic.com/" target="_blank" rel="noopener">MarineTraffic ↗</a><a href="https://www.openseamap.org/" target="_blank" rel="noopener">OpenSeaMap ↗</a></article>
+          <article class="command-card"><h3>🌃 Erde bei Nacht</h3><p>Dunkle Kartenansicht für Städte, Straßen und Kontinente. Keine aktuelle Nacht-Satellitenaufnahme.</p><button id="commandDark" type="button">Dunkle Weltkarte aktivieren</button></article>
+          <article class="command-card"><h3>🌪️ Sturm- & Wetterradar</h3><p>Wetterkarten und Windfelder. Prognosen sind Modellprodukte und können sich ändern.</p><a href="https://www.windy.com/" target="_blank" rel="noopener">Windy öffnen ↗</a><button id="commandWeatherRefresh" type="button">Wetter für Kartenmitte laden</button></article>
+          <article class="command-card"><h3>🌋 Vulkan-Watch</h3><p>Vulkanstatus, Beobachtungsberichte und Warnmeldungen aus wissenschaftlichen Quellen.</p><a href="https://www.volcano.si.edu/" target="_blank" rel="noopener">Smithsonian Global Volcanism ↗</a><a href="https://www.usgs.gov/programs/VHP" target="_blank" rel="noopener">USGS Volcano Hazards ↗</a></article>
+          <article class="command-card"><h3>🚆 Zug-Radar</h3><p>Öffentliche Bahn- und Streckenkarten. Kein globales Live-Zugtracking in dieser App verfügbar.</p><a href="https://www.openrailwaymap.org/" target="_blank" rel="noopener">OpenRailwayMap ↗</a><a href="https://www.bahn.de/" target="_blank" rel="noopener">DB Fahrplanauskunft ↗</a></article>
+          <article class="command-card"><h3>🌍 Erdbeben- & Ereignisradar</h3><p>USGS-Ereignisdaten der letzten Stunde mit Magnitude und Ort. Aktualisierung manuell oder beim Öffnen.</p><button id="commandQuakeRefresh" type="button">Erdbeben aktualisieren</button></article>
+          <article class="command-card"><h3>🛰️ Weltraum & ISS</h3><p>ISS-Position, NASA-Bildarchiv und wissenschaftliche 3D-Missionsexplorer.</p><button id="commandSpace" type="button">SPACE EXPLORER öffnen</button></article>
+          <article class="command-card"><h3>📷 Weltweite Kameras</h3><p>Öffentliche Webcams und Betreiberseiten aus den verfügbaren Quellen.</p><button id="commandCameras" type="button">Webcam-Ebene laden</button><button id="commandWall" type="button">Live-Wall öffnen</button></article>
+          <article class="command-card"><h3>🌿 Natur & Sehenswürdigkeiten</h3><p>Orte, Parks, Aussichtspunkte, Wasserfälle und weitere OpenStreetMap-Entdeckungen.</p><button id="commandNature" type="button">Natur-Ebene laden</button><button id="commandSights" type="button">Sehenswürdigkeiten laden</button></article>
+          <article class="command-card"><h3>🌐 Länder-Explorer</h3><p>Länder auswählen, lokale Kameras und POIs entdecken und die Karte filtern.</p><button id="commandCountries" type="button">Länder-Auswahl öffnen</button></article>
+          <article class="command-card"><h3>📻 Welt-Radio</h3><p>Öffentliche HTTPS-Radiostreams suchen und direkt anhören.</p><button id="commandRadio" type="button">Radio öffnen</button></article>
+        </div>
+        <h3 style="font-size:13px;color:#8edcf0;margin:20px 0 8px">LIVE-EVENT-TICKER · USGS</h3>
+        <div id="commandFeed" class="command-feed"><div class="command-event">Ereignisdaten werden geladen …</div></div>
+        <p class="hub-note" style="margin-top:12px">Datenquellen: USGS Earthquake Hazards Program, Open-Meteo, ADS-B Exchange, MarineTraffic, OpenSeaMap, OpenRailwayMap, Windy, Smithsonian Global Volcanism Program und NASA. Externe Links öffnen Anbieter-Websites. Kein globaler Echtzeit-Feed für Schiffe, Züge oder Vulkane wird vorgetäuscht.</p>
+      </div>
+    </section>
+  </div>
+
 </main>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
@@ -1148,6 +1205,71 @@ $('search').addEventListener('keydown',async e=>{
   setMessage((isRoad?'Straße':'Ort')+' gefunden: '+(hit.display_name||hit.name||q)+'. '+(isRoad?'Wenn Kartendaten vorliegen, ist der Straßenverlauf gelb markiert.':'Du kannst jetzt Kameraquellen laden.'));
  }catch(err){setMessage('Suche gerade nicht verfügbar: '+err.message);}
 });
+
+/* COMMAND CENTER: public data feeds + shortcuts to all existing explorers */
+let commandDarkActive=false;
+function commandOpen(){ $('commandOverlay').classList.add('open'); refreshCommandCenter(); }
+function commandClose(){ $('commandOverlay').classList.remove('open'); }
+$('openCommand').addEventListener('click',commandOpen);
+$('closeCommand').addEventListener('click',commandClose);
+$('commandOverlay').addEventListener('click',e=>{if(e.target===$('commandOverlay'))commandClose();});
+async function refreshCommandCenter(){
+ await Promise.allSettled([refreshCommandQuakes(),refreshCommandWeather()]);
+ $('commandUpdated').textContent=new Date().toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'});
+}
+async function refreshCommandQuakes(){
+ const feed=$('commandFeed');feed.innerHTML='<div class="command-event">USGS-Ereignisse werden geladen …</div>';
+ try{
+  const r=await fetch('https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_hour.geojson',{cache:'no-store'});
+  if(!r.ok)throw new Error('HTTP '+r.status);
+  const d=await r.json(),events=Array.isArray(d.features)?d.features:[];
+  const significant=events.filter(x=>Number(x.properties?.mag)>=4);
+  $('commandQuakes').textContent=String(events.length);
+  $('commandSignificant').textContent=String(significant.length);
+  feed.innerHTML='';
+  if(!events.length){feed.innerHTML='<div class="command-event">Keine Erdbebenmeldungen in diesem Feed-Zeitraum.</div>';return;}
+  events.slice(0,8).forEach(x=>{
+   const p=x.properties||{},coords=x.geometry?.coordinates||[],item=document.createElement('div');item.className='command-event';
+   const mag=Number(p.mag),place=String(p.place||'Ort unbekannt');
+   item.textContent='M'+(Number.isFinite(mag)?mag.toFixed(1):'—')+' · '+place;
+   const meta=document.createElement('small');meta.textContent=new Date(Number(p.time)||Date.now()).toLocaleString('de-DE')+' · USGS';
+   item.appendChild(meta);
+   if(coords.length>=2&&Number.isFinite(Number(coords[0]))&&Number.isFinite(Number(coords[1]))){
+    item.style.cursor='pointer';item.title='Auf Karte zeigen';
+    item.addEventListener('click',()=>{map.setView([Number(coords[1]),Number(coords[0])],7);L.circleMarker([Number(coords[1]),Number(coords[0])],{radius:8,color:'#ffbd69',weight:2,fillOpacity:.25}).addTo(map).bindPopup('Erdbeben M'+(Number.isFinite(mag)?mag.toFixed(1):'—')+'<br>'+esc(place)).openPopup();commandClose();});
+   }
+   feed.appendChild(item);
+  });
+ }catch(e){$('commandQuakes').textContent='—';$('commandSignificant').textContent='—';feed.innerHTML='<div class="command-event">USGS-Feed gerade nicht erreichbar: '+esc(e.message)+'</div>';}
+}
+async function refreshCommandWeather(){
+ const center=map.getCenter(),box=$('commandWeatherText');
+ $('commandWeather').textContent='…';box.textContent='Wetterdaten werden geladen …';
+ try{
+  const url='https://api.open-meteo.com/v1/forecast?latitude='+encodeURIComponent(center.lat)+'&longitude='+encodeURIComponent(center.lng)+'&current=temperature_2m,relative_humidity_2m,apparent_temperature,wind_speed_10m,weather_code&timezone=auto';
+  const r=await fetch(url,{cache:'no-store'});if(!r.ok)throw new Error('HTTP '+r.status);
+  const d=await r.json(),c=d.current||{};
+  if(!Number.isFinite(Number(c.temperature_2m)))throw new Error('Keine aktuellen Wetterwerte');
+  $('commandWeather').textContent=Math.round(Number(c.temperature_2m))+' °C';
+  box.textContent='Kartenmitte '+center.lat.toFixed(2)+'°, '+center.lng.toFixed(2)+'° · '+Math.round(Number(c.temperature_2m))+' °C · gefühlt '+Math.round(Number(c.apparent_temperature))+' °C · Wind '+Math.round(Number(c.wind_speed_10m))+' km/h · Luftfeuchte '+Math.round(Number(c.relative_humidity_2m))+' % · '+(c.time||'Zeit unbekannt')+' · Open-Meteo';
+ }catch(e){$('commandWeather').textContent='—';box.textContent='Wetterdienst nicht erreichbar: '+e.message;}
+}
+$('commandRefresh').onclick=refreshCommandCenter;
+$('commandQuakeRefresh').onclick=refreshCommandQuakes;
+$('commandWeatherRefresh').onclick=refreshCommandWeather;
+$('commandNight').onclick=()=>{commandDarkActive=!commandDarkActive;$('mapStyle').value=commandDarkActive?'dark':'street';map.removeLayer(mapLayers[activeMapStyle]);activeMapStyle=commandDarkActive?'dark':'street';mapLayers[activeMapStyle].addTo(map);$('commandNight').textContent=commandDarkActive?'☀️ Standardkarte':'🌃 Nachtkarte umschalten';};
+$('commandDark').onclick=()=>{commandDarkActive=true;$('mapStyle').value='dark';map.removeLayer(mapLayers[activeMapStyle]);activeMapStyle='dark';mapLayers.dark.addTo(map);};
+$('commandRandom').onclick=()=>{$('randomCamera').click();commandClose();};
+$('commandFavorites').onclick=()=>{$('favoritesOnly').click();commandClose();};
+$('commandFlights').onclick=()=>{commandClose();openFlightRadar();};
+$('commandSpace').onclick=()=>{$('openSpace').click();commandClose();};
+$('commandCameras').onclick=()=>{commandClose();setMapLayerVisible('webcams',true);};
+$('commandWall').onclick=()=>{$('openWall').click();commandClose();};
+$('commandNature').onclick=()=>{commandClose();setMapLayerVisible('nature',true);};
+$('commandSights').onclick=()=>{commandClose();setMapLayerVisible('sights',true);};
+$('commandCountries').onclick=()=>{commandClose();document.querySelector('.country-picker')?.scrollIntoView({behavior:'smooth',block:'center'});document.querySelector('.country-picker')?.setAttribute('open','');};
+$('commandRadio').onclick=()=>{$('openRadio').click();commandClose();};
+
 </script>
 </body>
 </html>
