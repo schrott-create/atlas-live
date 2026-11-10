@@ -631,22 +631,47 @@ footer{padding:10px 16px;border-top:1px solid var(--line);font-size:10px;color:v
 .folder-manage .foldertools{padding:0 9px 9px}
 .folder-manage .folderhint{padding:0 10px 9px}
 .folderbar{padding-top:0}
-#commandRandom,#commandFavorites,#commandNight{display:none!important}
-#commandDark{display:none!important}
+
+
+/* Neues Hauptmenü-Overlay: Karte bleibt darunter dauerhaft gemountet */
+main{display:block;height:calc(100vh - 64px);min-height:0}
+.mapwrap{position:fixed;inset:64px 0 0;z-index:1}
+#map{height:100%;width:100%}
+aside#mainMenu{display:none;position:fixed;z-index:2501;top:64px;left:0;bottom:0;width:min(490px,100vw);max-width:100%;min-height:0;overflow-y:auto;overscroll-behavior:contain;background:linear-gradient(160deg,#111e30,#0b1422 70%);border-right:1px solid #35516c;box-shadow:22px 0 70px #0009}
+body.menu-open:after{content:"";position:fixed;z-index:2500;inset:64px 0 0;background:#020711b8;backdrop-filter:blur(3px)}
+body.menu-open aside#mainMenu{display:flex}
+.main-menu-head{position:sticky;top:0;z-index:5;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:13px 16px;background:#101c2cf2;border-bottom:1px solid #2b415a;backdrop-filter:blur(12px)}
+.main-menu-head strong,.main-menu-head span{display:block}.main-menu-head strong{font-size:14px;letter-spacing:1.4px}.main-menu-head span{font-size:10px;color:#91a8c0;margin-top:2px}
+.main-menu-head button{width:auto;white-space:nowrap;padding:8px 10px;font-size:10px}
+#homeMenuButton{flex:0 0 34px;padding:0;background:#10283a;cursor:pointer;position:relative;z-index:2701}
+header{position:relative;z-index:2701}
+.tools{padding:14px;border-bottom:1px solid var(--line)}
+.menu-group{margin:12px 0 0;border:1px solid #2b4058;border-radius:12px;background:#0b1422;overflow:hidden}
+.menu-section-title{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:11px 12px;font-size:12px;font-weight:800;color:#e4f3ff}
+.menu-section-title span{font-size:10px;color:#8fa2bb;font-weight:500}
+.menu-group-content{padding:0 10px 10px}
+.country-picker{margin-top:12px}
+.folder-manage{margin:8px 10px 10px;padding:9px;border:1px solid var(--line);border-radius:10px;background:#0b1422}
+.folder-manage-title{font-size:11px;font-weight:800;color:#dceaf7;margin:0 0 7px}
+#cameraList{max-height:34vh;overflow:auto}
+#mainMenu .listhead{padding-top:12px}
+@media(max-width:760px){main{display:block;height:calc(100dvh - 64px);min-height:0}.mapwrap{inset:64px 0 0}aside#mainMenu{width:100%;border-right:0}#cameraList{max-height:28vh}.maptools{top:10px;right:10px;max-width:calc(100vw - 20px)}}
+
 </style>
 </head>
 <body>
-<header><div class="logo">◎</div><div><h1>ATLAS LIVE</h1><div class="sub">PUBLIC CAMERA EXPLORER · KEY-FREE</div></div><div class="status">● PUBLIC SOURCES ONLY</div></header>
+<header><button class="logo" id="homeMenuButton" type="button" aria-label="Hauptmenü öffnen" title="Hauptmenü">◎</button><div><h1>ATLAS LIVE</h1><div class="sub">PUBLIC CAMERA EXPLORER · KEY-FREE</div></div><div class="status">● PUBLIC SOURCES ONLY</div></header>
 <main>
-<aside>
+<aside id="mainMenu" aria-label="ATLAS LIVE Hauptmenü">
+  <div class="main-menu-head"><div><strong>ATLAS LIVE</strong><span>Hauptmenü · Entdecken & steuern</span></div><button id="closeMainMenu" type="button" aria-label="Hauptmenü schließen">Karte anzeigen ✕</button></div>
   <section class="tools">
     <label class="label" for="search">Ort oder Straße suchen</label>
     <input id="search" placeholder="z. B. Main Street, La Fargeville oder Berlin">
     <p class="note">Suche Orte und Straßen weltweit. Erkannte Straßen werden – wenn Kartendaten vorhanden sind – auf der Karte hervorgehoben.</p>
     <div class="row"><button id="locate" type="button">Weltkarte</button><button id="regionHome" type="button">La Fargeville & Umgebung</button></div>
     <p class="note" id="message">ATLAS LIVE startet in der Thousand-Islands-Region rund um La Fargeville. Wähle öffentliche Livekameras oder regionale Betreiber- und Verkehrsportale.</p>
-    <details class="menu-group" id="mapMenuGroup" open>
-      <summary>🗺️ Karten & Regionen <span>Layer und Länder</span></summary>
+    <section class="menu-group" id="mapMenuGroup">
+      <div class="menu-section-title">🗺️ Karten & Regionen <span>Einfach auswählen</span></div>
       <div class="menu-group-content">
     <div class="layer-picker">
       <div class="layer-picker-head"><strong>AUF DER KARTE ANZEIGEN</strong><span>Mehrfachauswahl</span></div>
@@ -674,17 +699,17 @@ footer{padding:10px 16px;border-top:1px solid var(--line);font-size:10px;color:v
       <div id="countryExplore" class="country-explore"><div class="country-status">Noch keine Länder ausgewählt. Sobald du ein Land anklickst, erscheinen die verfügbaren Punkte auf der Karte.</div></div>
     </section>
       </div>
-    </details>
+    </section>
     <p class="note" id="abmessage" hidden></p><p class="note" id="citymessage" hidden></p><p class="note" id="flightmessage" hidden></p>
-    <details class="menu-group">
-      <summary>🌦️ Windy-Webcams <span>Optionaler API-Key</span></summary>
+    <section class="menu-group windy-menu">
+      <div class="menu-section-title">🌦️ Windy-Webcams <span>Optional</span></div>
       <div class="menu-group-content">
       <label class="label" for="windyKey">Windy-Webcams direkt auf der Karte</label>
     <input id="windyKey" type="password" autocomplete="off" placeholder="Optionaler persönlicher Windy-API-Key">
     <div class="row"><button id="windyLoad" type="button">Windy-Kameras im Kartenausschnitt laden</button><button id="windyOpen" type="button">Windy-Karte öffnen ↗</button></div>
     <p class="note" id="windyMessage">Mit einem eigenen Windy-Webcams-API-Key erscheinen echte Windy-Kameras als Marker mit Vorschaubild. Der Schlüssel wird nicht gespeichert und bleibt nur bis zum Neuladen in diesem Tab.</p>
       </div>
-    </details>
+    </section>
     <div class="hub-actions">
       <button id="openCommand" class="command-launch" type="button">🛰️ COMMAND CENTER</button>
       <button id="openWall" type="button">▦ Live-Wall</button>
@@ -700,7 +725,7 @@ footer{padding:10px 16px;border-top:1px solid var(--line);font-size:10px;color:v
   <div class="listhead"><span>Quellen & Kameras</span><span id="count">0</span></div>
   <div class="listupdated" id="listUpdated">Noch nicht geladen</div>
   <div class="filterbox"><input id="cameraFilter" type="search" placeholder="Kamera, Ort oder Quelle filtern …" aria-label="Kameraeinträge filtern"><select id="categoryFilter" aria-label="Kategorie filtern"><option value="all">Alle Kategorien</option><option value="video">Videostreams / Player</option><option value="still">Standbild / Wetterkamera</option><option value="traffic">Verkehr / Straßen</option><option value="portal">Kamera-Portale / Betreiberseiten</option><option value="resort">Resort / Landschaft</option></select><div class="filteractions"><button id="favoritesOnly" type="button" aria-pressed="false">☆ Nur Favoriten</button><button id="resetFilters" type="button">Filter zurücksetzen</button></div></div>
-  <details class="folder-manage"><summary>Eigene Kamera-Ordner verwalten</summary><div class="foldertools"><button id="newFolder" type="button">＋ Erstellen</button><button id="renameFolder" type="button">Umbenennen</button><button id="deleteFolder" type="button">Löschen</button></div><div class="folderhint" id="folderHint">Eigene Ordner bleiben auf diesem Gerät gespeichert.</div></details><div class="folderbar" id="folderBar"></div><div id="cameraList">
+  <section class="folder-manage"><div class="folder-manage-title">Eigene Ordner</div><div class="foldertools"><button id="newFolder" type="button">＋ Neu</button><button id="renameFolder" type="button">Umbenennen</button><button id="deleteFolder" type="button">Löschen</button></div><div class="folderhint" id="folderHint">Ordner bleiben auf diesem Gerät gespeichert.</div></section><div class="folderbar" id="folderBar"></div><div id="cameraList">
    <div id="autobahnList"></div>
   </div>
   <footer>Quellen: Autobahn GmbH · Berlin.de · NYSDOT / 511NY · Flughäfen · Kartendaten © OpenStreetMap-Mitwirkende</footer>
@@ -786,9 +811,6 @@ footer{padding:10px 16px;border-top:1px solid var(--line);font-size:10px;color:v
           <div><span class="command-eyebrow">LIVE DASHBOARD</span><h3>Alles Wichtige. Ein Ort.</h3><p>Kameras, Wetter, Ereignisse und Verkehr direkt öffnen – ohne dich durch Untermenüs zu klicken.</p></div>
           <div class="command-toolbar">
             <button id="commandRefresh" type="button">↻ Aktualisieren</button>
-            <button id="commandRandom" type="button">🎲 Zufallskamera</button>
-            <button id="commandFavorites" type="button">☆ Favoriten</button>
-            <button id="commandNight" type="button">🌃 Nachtkarte</button>
           </div>
         </section>
         <section class="command-live-strip" aria-label="Aktuelle Kennzahlen">
@@ -1272,6 +1294,17 @@ async function loadWindyCams(){
 $('windyLoad').onclick=loadWindyCams;
 $('windyOpen').onclick=()=>openCameraView({name:'Windy · weltweite Webcam-Karte',url:'https://www.windy.com/webcams',embedUrl:'https://www.windy.com/webcams',source:'Windy · offizielle Webcam-Karte'});
 function openOverlay(id){$(id).classList.add('open')}
+function openMainMenu(){document.body.classList.add('menu-open');}
+function closeMainMenu(){document.body.classList.remove('menu-open');}
+$('homeMenuButton').addEventListener('click',()=>{
+ closeMainMenu();
+ ['radioOverlay','wallOverlay','spaceOverlay','commandOverlay'].forEach(id=>$(id)?.classList.remove('open'));
+ $('camviewer')?.classList.remove('open');
+ openMainMenu();
+});
+$('closeMainMenu').addEventListener('click',closeMainMenu);
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeMainMenu();});
+
 function closeOverlay(id){$(id).classList.remove('open')}
 $('openWall').onclick=()=>{buildWall();openOverlay('wallOverlay')};
 $('closeWall').onclick=()=>closeOverlay('wallOverlay');
@@ -1726,7 +1759,6 @@ $('search').addEventListener('keydown',async e=>{
 });
 
 /* COMMAND CENTER: public data feeds + shortcuts to all existing explorers */
-let commandDarkActive=false;
 function commandOpen(){ $('commandOverlay').classList.add('open'); refreshCommandCenter(); }
 function commandClose(){ $('commandOverlay').classList.remove('open'); }
 $('openCommand').addEventListener('click',commandOpen);
@@ -1785,10 +1817,6 @@ function setCommandMapStyle(style){
  $('commandDark').textContent=commandDarkActive?'☀️ Standardkarte aktivieren':'🌙 Dunkle Karte aktivieren';
  setMessage('Kartenstil geändert: '+(style==='dark'?'Dunkel':'Standard')+'.');
 }
-$('commandNight').onclick=()=>setCommandMapStyle(commandDarkActive?'street':'dark');
-$('commandDark').onclick=()=>setCommandMapStyle(commandDarkActive?'street':'dark');
-$('commandRandom').onclick=()=>{$('randomCamera').click();commandClose();};
-$('commandFavorites').onclick=()=>{$('favoritesOnly').click();commandClose();};
 $('commandFlights').onclick=()=>{commandClose();openFlightRadar();};
 $('commandSpace').onclick=()=>{$('openSpace').click();commandClose();};
 $('commandCameras').onclick=()=>{commandClose();setMapLayerVisible('webcams',true);};
