@@ -1586,11 +1586,14 @@ function renderGlobalCameraResults(rows,query){
 }
 function globalCameraCoordinates(row){
  const candidates=[
-  [row?.lat,row?.lon],[row?.latitude,row?.longitude],[row?.latitude,row?.long],
-  [row?.position?.lat,row?.position?.lon],[row?.location?.lat,row?.location?.lon],
+  [row?.lat,row?.lon],[row?.lat,row?.lng],[row?.latitude,row?.longitude],
+  [row?.latitude,row?.long],[row?.latitude,row?.lng],[row?.position?.lat,row?.position?.lon],
+  [row?.position?.latitude,row?.position?.longitude],[row?.location?.lat,row?.location?.lon],
+  [row?.location?.latitude,row?.location?.longitude],[row?.geo?.lat,row?.geo?.lon],
   [row?.geometry?.coordinates?.[1],row?.geometry?.coordinates?.[0]],
   [row?.coordinates?.[1],row?.coordinates?.[0]],
-  [row?.location?.coordinates?.[1],row?.location?.coordinates?.[0]]
+  [row?.location?.coordinates?.[1],row?.location?.coordinates?.[0]],
+  [row?.geo_point?.lat,row?.geo_point?.lon],[row?.point?.lat,row?.point?.lon]
  ];
  for(const pair of candidates){
   if(pair[0]==null||pair[1]==null||pair[0]===''||pair[1]==='')continue;
