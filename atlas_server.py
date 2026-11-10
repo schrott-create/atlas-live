@@ -3,6 +3,7 @@ import re
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from threading import Lock
+from urllib.parse import urlsplit
 
 import requests
 from flask import Flask, jsonify, send_from_directory, abort, Response, request
@@ -11,6 +12,16 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 AUTOBAHN_BASE = "https://verkehr.autobahn.de/o/autobahn"
 
 app = Flask(__name__)
+
+@app.after_request
+def security_headers(response):
+    """Basic browser protections without blocking external webcam embeds."""
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+    response.headers["X-Frame-Options"] = "SAMEORIGIN"
+    response.headers["Permissions-Policy"] = "camera=(), microphone=(), payment=()"
+    return response
+
 
 @app.route("/")
 def home():
@@ -23,7 +34,7 @@ def health():
 @app.route("/robots.txt")
 def robots_txt():
     # Dynamic host keeps this correct for the Render URL or a later custom domain.
-    body = "User-agent: *\nAllow: /\nSitemap: " + request.host_url.rstrip("/") + "/sitemap.xml\n"
+    body = "User-agent: *\nAllow: /\nSitemap: " + request.url_root.rstrip("/") + "/sitemap.xml\n"
     return Response(body, content_type="text/plain; charset=utf-8")
 
 
@@ -159,6 +170,11 @@ def autobahn_data(road=None):
     )
 
 
+_radio_cache = {}
+_radio_cache_lock = Lock()
+RADIO_CACHE_SECONDS = 120
+
+
 @app.route("/api/radio/stations")
 def radio_stations():
     """Search the public Radio Browser directory; only return secure HTTPS streams."""
@@ -167,7 +183,7 @@ def radio_stations():
     tag = request.args.get("tag", "").strip()[:50]
     try:
         limit = max(1, min(int(request.args.get("limit", "24")), 200))
-    except ValueError:
+    except (ValueError, TypeError):
         return jsonify({"error": "Ungültiges Ergebnislimit."}), 400
 
     params = {"limit": limit, "hidebroken": "true", "order": "votes", "reverse": "true"}
@@ -177,6 +193,11 @@ def radio_stations():
         params["country"] = country
     if tag:
         params["tag"] = tag
+    cache_key = (name, country, tag, limit)
+    with _radio_cache_lock:
+        cached = _radio_cache.get(cache_key)
+        if cached and time.monotonic() - cached[0] < RADIO_CACHE_SECONDS:
+            return jsonify(cached[1])
     try:
         response = requests.get(
             "https://de1.api.radio-browser.info/json/stations/search",
@@ -196,7 +217,15 @@ def radio_stations():
         if not isinstance(station, dict) or station.get("lastcheckok") != 1:
             continue
         stream = station.get("url_resolved") or station.get("url") or ""
-        if not isinstance(stream, str) or not stream.lower().startswith("https://"):
+        if not isinstance(stream, str):
+            continue
+        try:
+            parsed = urlsplit(stream)
+            if parsed.scheme.lower() != "https" or not parsed.hostname or parsed.username or parsed.password:
+                continue
+            # Accessing .port validates malformed ports, including out-of-range values.
+            _ = parsed.port
+        except ValueError:
             continue
         stations.append({
             "stationuuid": station.get("stationuuid", ""),
@@ -212,7 +241,13 @@ def radio_stations():
             "homepage": station.get("homepage") if str(station.get("homepage") or "").startswith("https://") else "",
             "stream": stream,
         })
-    return jsonify({"stations": stations, "count": len(stations), "source": "Radio Browser"})
+    result = {"stations": stations, "count": len(stations), "source": "Radio Browser"}
+    with _radio_cache_lock:
+        # Bound memory usage even when clients search many different queries.
+        if len(_radio_cache) >= 128:
+            _radio_cache.clear()
+        _radio_cache[cache_key] = (time.monotonic(), result)
+    return jsonify(result)
 
 
 @app.route("/api/radio/click/<station_uuid>")

@@ -29,11 +29,18 @@ class AtlasServerTests(unittest.TestCase):
         atlas_server.app.config.update(TESTING=True)
         self.client = atlas_server.app.test_client()
         atlas_server._webcam_cache.update({"created": 0.0, "data": {}})
+        atlas_server._radio_cache.clear()
 
     def test_home_serves_application(self):
         response = self.client.get("/")
         self.assertEqual(response.status_code, 200)
         self.assertIn(b"ATLAS LIVE", response.data)
+
+    def test_security_headers(self):
+        response = self.client.get("/")
+        self.assertEqual(response.headers["X-Content-Type-Options"], "nosniff")
+        self.assertEqual(response.headers["X-Frame-Options"], "SAMEORIGIN")
+        self.assertIn("microphone=()", response.headers["Permissions-Policy"])
 
     def test_health_endpoint(self):
         response = self.client.get("/health")
@@ -111,6 +118,27 @@ class AtlasServerTests(unittest.TestCase):
         self.assertEqual(data["stations"][0]["name"], "Secure Radio")
         self.assertEqual(data["stations"][0]["geo_lat"], 52.52)
         self.assertEqual(data["stations"][0]["geo_long"], 13.405)
+
+    def test_radio_search_uses_short_cache(self):
+        payload = [{"name": "Cached", "lastcheckok": 1, "url_resolved": "https://radio.example/live"}]
+        with patch.object(atlas_server.requests, "get", return_value=FakeResponse(payload)) as mocked:
+            first = self.client.get("/api/radio/stations?country=Germany")
+            second = self.client.get("/api/radio/stations?country=Germany")
+            third = self.client.get("/api/radio/stations?country=France")
+        self.assertEqual(first.get_json()["count"], 1)
+        self.assertEqual(second.get_json()["count"], 1)
+        self.assertEqual(third.get_json()["count"], 1)
+        self.assertEqual(mocked.call_count, 2)
+
+    def test_radio_rejects_malformed_https_urls(self):
+        payload = [{"lastcheckok": 1, "url_resolved": "https://"},
+                   {"lastcheckok": 1, "url_resolved": "https://user:pass@radio.example/live"},
+                   {"lastcheckok": 1, "url_resolved": "https://[invalid/live"},
+                   {"lastcheckok": 1, "url_resolved": "https://radio.example:99999/live"},
+                   {"lastcheckok": 1, "url_resolved": "https://radio.example/live"}]
+        with patch.object(atlas_server.requests, "get", return_value=FakeResponse(payload)):
+            response = self.client.get("/api/radio/stations")
+        self.assertEqual(response.get_json()["count"], 1)
 
     def test_radio_click_rejects_invalid_station_uuid(self):
         response = self.client.get("/api/radio/click/not-a-uuid")

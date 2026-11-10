@@ -171,6 +171,24 @@ footer{padding:10px 16px;border-top:1px solid var(--line);font-size:10px;color:v
 .space-search{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}.space-search input{flex:1;min-width:160px}
 @media(max-width:600px){.space-stats{grid-template-columns:1fr 1fr}.space-hero h3{font-size:19px}}
 
+/* Region-first webcam discovery */
+.global-cam-region-picker{display:grid;gap:10px;margin:10px 0}
+.global-cam-region{padding:9px;border:1px solid #263e57;border-radius:10px;background:#0a1523}
+.global-cam-region>strong{display:block;margin:0 0 7px;color:#8edcf0;font-size:10px;letter-spacing:.7px}
+.global-cam-region .global-cam-citychips{display:flex;flex-wrap:wrap;gap:6px}
+.global-cam-region .global-cam-citychips button,.global-cam-categorychips button{width:auto;flex:0 0 auto;padding:7px 9px;font-size:10px}
+.global-cam-region .global-cam-citychips button:hover{border-color:#58c7e8;background:#17465e}
+.global-cam-categorychips{display:flex;flex-wrap:wrap;gap:6px}
+
+/* Structured continent / country navigation (keyboard and mobile friendly). */
+.global-cam-continent>summary{cursor:pointer;color:#9ee6f5;font-size:12px;font-weight:800;padding:5px 2px;list-style-position:inside}
+.global-cam-country{border:1px solid #26415c;border-radius:9px;margin:7px 0;padding:7px;background:#101e30}
+.global-cam-country>summary{cursor:pointer;color:#dceaf7;font-weight:700;font-size:11px;padding:4px;list-style-position:inside}
+.global-cam-country .global-cam-citychips{padding:7px 3px 2px}
+.global-cam-country .global-cam-citychips button[aria-pressed="true"]{background:#126281;border-color:#63dff6;color:#fff}
+.global-cam-citychips button:focus-visible,.global-cam-country summary:focus-visible,.global-cam-continent summary:focus-visible{outline:2px solid #82e4fc;outline-offset:2px}
+@media(max-width:760px){.global-cam-country .global-cam-citychips button{min-height:38px;font-size:11px}.global-cam-region-picker{gap:7px}}
+
 /* Weltweite Länder-Auswahl */
 .country-picker{margin-top:10px;padding:11px;border:1px solid var(--line);border-radius:12px;background:#0b1422}
 .country-picker summary{cursor:pointer;list-style:none;display:flex;justify-content:space-between;gap:8px;font-size:11px;font-weight:800;color:#dceaf7}
@@ -717,27 +735,22 @@ header{position:relative;z-index:2701}
         <button id="globalCamRandomButton" type="button">🎲 Zufällige Livecam</button>
         <button id="globalCamCitiesButton" type="button">🌍 Weltstädte durchsuchen</button>
       </div>
-      <div class="global-cam-citychips" aria-label="Beliebte Städte">
-        <button type="button" data-global-city="New York City">NYC · 5 Boroughs</button>
-        <button type="button" data-global-city="Miami Florida">Florida / Miami</button>
-        <button type="button" data-global-city="Los Angeles">Los Angeles</button>
-        <button type="button" data-global-city="Dubai">Dubai</button>
-        <button type="button" data-global-city="Shibuya Crossing Tokyo">Tokyo · Shibuya</button>
-        <button type="button" data-global-city="Bangkok Thailand">Bangkok</button>
-        <button type="button" data-global-city="Singapore">Singapur</button>
-        <button type="button" data-global-city="Hong Kong">Hongkong</button>
-        <button type="button" data-global-city="Shanghai China">Shanghai</button>
-        <button type="button" data-global-city="London">London</button>
-        <button type="button" data-global-city="Paris">Paris</button>
-        <button type="button" data-global-city="Sydney">Sydney</button>
-        <button type="button" data-global-city="Rio de Janeiro">Rio</button>
-        <button type="button" data-global-category="wildlife">🦒 Tiere</button>
-        <button type="button" data-global-category="surf">🏄 Surfen</button>
-        <button type="button" data-global-category="ski">⛷️ Ski & Berge</button>
-        <button type="button" data-global-category="port">🚢 Häfen & Schiffe</button>
-        <button type="button" data-global-category="volcano">🌋 Vulkane</button>
+      <div class="global-cam-region-picker" aria-label="Kamerastandorte nach Weltregion">
+        <div class="global-cam-region"><strong>🇺🇸 Nordamerika</strong><div class="global-cam-citychips">
+          <button type="button" data-global-city="New York City">New York</button><button type="button" data-global-city="Florida">Florida · alle Regionen</button><button type="button" data-global-city="Miami Florida">Miami</button><button type="button" data-global-city="Orlando Florida">Orlando</button><button type="button" data-global-city="Tampa Florida">Tampa</button><button type="button" data-global-city="Key West Florida">Key West</button><button type="button" data-global-city="Los Angeles">Los Angeles</button><button type="button" data-global-city="San Francisco">San Francisco</button><button type="button" data-global-city="San Diego">San Diego</button><button type="button" data-global-city="Las Vegas">Las Vegas</button><button type="button" data-global-city="Chicago">Chicago</button><button type="button" data-global-city="Toronto">Toronto</button><button type="button" data-global-city="Vancouver">Vancouver</button><button type="button" data-global-city="Mexico City">Mexico City</button><button type="button" data-global-city="Honolulu">Hawaii</button>
+        </div></div>
+        <div class="global-cam-region"><strong>🇪🇺 Europa</strong><div class="global-cam-citychips">
+          <button type="button" data-global-city="London">London</button><button type="button" data-global-city="Paris">Paris</button><button type="button" data-global-city="Amsterdam">Amsterdam</button><button type="button" data-global-city="Rome">Rom</button><button type="button" data-global-city="Barcelona">Barcelona</button><button type="button" data-global-city="Venice">Venedig</button><button type="button" data-global-city="Istanbul">Istanbul</button><button type="button" data-global-city="Reykjavik">Reykjavik</button>
+        </div></div>
+        <div class="global-cam-region"><strong>🌏 Asien & Nahost</strong><div class="global-cam-citychips">
+          <button type="button" data-global-city="Dubai">Dubai</button><button type="button" data-global-city="Abu Dhabi">Abu Dhabi</button><button type="button" data-global-city="Shibuya Crossing Tokyo">Tokyo</button><button type="button" data-global-city="Osaka">Osaka</button><button type="button" data-global-city="Seoul">Seoul</button><button type="button" data-global-city="Shanghai China">Shanghai</button><button type="button" data-global-city="Hong Kong">Hongkong</button><button type="button" data-global-city="Bangkok Thailand">Bangkok</button><button type="button" data-global-city="Singapore">Singapur</button><button type="button" data-global-city="Bali">Bali</button><button type="button" data-global-city="Phuket">Phuket</button>
+        </div></div>
+        <div class="global-cam-region"><strong>🌍 Südamerika, Afrika & Ozeanien</strong><div class="global-cam-citychips">
+          <button type="button" data-global-city="Rio de Janeiro">Rio de Janeiro</button><button type="button" data-global-city="Cape Town">Kapstadt</button><button type="button" data-global-city="Sydney">Sydney</button><button type="button" data-global-city="Auckland">Auckland</button><button type="button" data-global-city="Queenstown">Queenstown</button><button type="button" data-global-city="Vail Colorado">Vail</button>
+        </div></div>
+        <div class="global-cam-citychips global-cam-categorychips"><button type="button" data-global-category="wildlife">🦒 Tiere</button><button type="button" data-global-category="surf">🏄 Surfen</button><button type="button" data-global-category="ski">⛷️ Ski & Berge</button><button type="button" data-global-category="port">🚢 Häfen & Schiffe</button><button type="button" data-global-category="volcano">🌋 Vulkane</button></div>
       </div>
-      <div class="country-status" id="globalCamStatus">NYC · nur fünf Boroughs: Manhattan, Brooklyn, Queens, Bronx und Staten Island. Die NYC-Schaltfläche zeigt ausschließlich Kameras mit NYC-Standortdaten.</div>
+      <div class="country-status" id="globalCamStatus">Wähle zuerst eine Stadt oder Region. Erst danach werden die dazugehörigen Kameras geladen und auf Karte und Liste angezeigt.</div>
       <div class="global-cam-coverage" id="globalCamCoverage" aria-live="polite">Prüfe die weltweite Katalog-Abdeckung …</div>
       <a class="global-cam-attribution" href="https://openeye.cam/" target="_blank" rel="noopener noreferrer">Zusätzlicher öffentlicher Webcam-Katalog: OpenEye ↗</a>
     </section>
@@ -1367,6 +1380,9 @@ async function loadCityCams(){
 
 const OPEN_EYE_API='https://api.openeye.cam/v1';
 let globalCamRequest=0,globalCamTimer=null;
+let selectedGlobalCity=null;
+let globalCityRequestId=0;
+const globalCityCache=new Map();
 let globalCamCatalogStats=null,globalCamStatsPromise=null;
 function globalCamCoverageText(){
  if(!globalCamCatalogStats)return 'Gesamtabdeckung wird vom öffentlichen Katalog abgefragt.';
@@ -1415,6 +1431,7 @@ function addGlobalCamMarker(row,cluster=false){
 }
 async function loadGlobalCameraMap(options={}){
  const request=++globalCamRequest;
+ if(selectedGlobalCity)return;
  const bounds=map.getBounds();
  const west=Math.max(-180,bounds.getWest()),east=Math.min(180,bounds.getEast());
  const south=Math.max(-85,bounds.getSouth()),north=Math.min(85,bounds.getNorth());
@@ -1615,6 +1632,8 @@ function normalizeGlobalCameraRows(data){
  });
 }
 function showGlobalCameraRows(rows,label){
+ // A selected city is an invariant: never render markers or cards from another region.
+ if(selectedGlobalCity)rows=filterGlobalCityRows(rows,selectedGlobalCity);
  renderGlobalCameraResults(rows,label);
  clearGlobalCamMarkers();
  const mapped=rows.filter(row=>Number.isFinite(Number(row.lat))&&Number.isFinite(Number(row.lon))&&Math.abs(Number(row.lat))<=85&&Math.abs(Number(row.lon))<=180);
@@ -1622,7 +1641,7 @@ function showGlobalCameraRows(rows,label){
  if(!map.hasLayer(pointLayers.webcams))pointLayers.webcams.addTo(map);
  if(mapped.length){
   const bounds=L.latLngBounds(mapped.map(row=>[Number(row.lat),Number(row.lon)]));
-  if(bounds.isValid()){const cityZoom=String(label).includes('New York City')?10:(mapped.length===1?11:6);map.fitBounds(bounds.pad(.08),{maxZoom:cityZoom});}
+  if(bounds.isValid()&&!selectedGlobalCity){const cityZoom=String(label).includes('New York City')?12:(mapped.length===1?12:11);map.fitBounds(bounds.pad(.08),{maxZoom:cityZoom});}
  }
  loadedPointLayers.add('webcams');
  document.querySelector('.map-layer-toggle[data-layer="webcams"]')?.classList.add('active');
@@ -1683,6 +1702,7 @@ async function openGlobalCamera(row){
  }catch(error){setMessage('Kamera konnte nicht geöffnet werden: '+error.message);}
 }
 async function loadGlobalCameraFeatured(){
+ selectedGlobalCity=null;++globalCityRequestId;
  const button=$('globalCamFeaturedButton');button.disabled=true;
  $('globalCamStatus').textContent='Suche im öffentlichen Kamerakatalog nach Video-, Bild- und Betreiberkameras …';
  try{
@@ -1695,6 +1715,7 @@ async function loadGlobalCameraFeatured(){
  finally{button.disabled=false;}
 }
 async function loadGlobalCameraRandom(){
+ selectedGlobalCity=null;++globalCityRequestId;
  const button=$('globalCamRandomButton');button.disabled=true;
  $('globalCamStatus').textContent='Suche eine zufällige öffentliche Kamera …';
  try{
@@ -1710,6 +1731,7 @@ async function loadGlobalCameraRandom(){
  finally{button.disabled=false;}
 }
 async function searchGlobalCameras(){
+ selectedGlobalCity=null;++globalCityRequestId;
  const input=$('globalCamQuery'),query=input.value.trim(),button=$('globalCamSearchButton');
  if(!query){$('globalCamStatus').textContent='Gib einen Ort, eine Stadt oder einen Kamerabegriff ein.';input.focus();return;}
  button.disabled=true;$('globalCamStatus').textContent='Suche weltweit nach öffentlichen Kameras …';
@@ -1726,6 +1748,25 @@ $('globalCamQuery').addEventListener('keydown',event=>{if(event.key==='Enter')se
 $('globalCamFeaturedButton').addEventListener('click',loadGlobalCameraFeatured);
 $('globalCamRandomButton').addEventListener('click',loadGlobalCameraRandom);
 const GLOBAL_CITY_MATCH={
+ 'Florida':{aliases:['florida'],fallback:['florida'],queries:["Florida webcams","Florida traffic cameras","Florida beaches webcam","Florida state parks webcam"],bbox:[24.35,31.02,-87.65,-80]},
+ 'Tampa Florida':{aliases:['tampa'],fallback:['tampa'],queries:["Tampa Florida webcams","Tampa Bay traffic cameras","Tampa waterfront webcam","Clearwater Tampa Bay webcam"],bbox:[27.72,28.2,-82.8,-82.28]},
+ 'Key West Florida':{aliases:['key west'],fallback:['key west'],queries:["Key West Florida webcams","Key West harbor webcam","Mallory Square live camera","Key West Duval Street webcam"],bbox:[24.45,24.65,-81.88,-81.65]},
+ 'Berlin':{aliases:['berlin'],fallback:['berlin'],queries:["Berlin Germany webcams","Berlin traffic cameras","Berlin Alexanderplatz webcam"],bbox:[52.35,52.68,13.05,13.75]},
+ 'Hamburg':{aliases:['hamburg'],fallback:['hamburg'],queries:["Hamburg Germany webcams","Hamburg harbor webcam","Elbe Hamburg webcam"],bbox:[53.39,53.75,9.7,10.35]},
+ 'Munich':{aliases:['munich'],fallback:['munich'],queries:["Munich Germany webcams","München webcam","Munich city webcam"],bbox:[48.05,48.25,11.4,11.75]},
+ 'Vienna':{aliases:['vienna'],fallback:['vienna'],queries:["Vienna Austria webcams","Wien Österreich webcams","Vienna city webcam"],bbox:[48.12,48.34,16.2,16.58]},
+ 'Prague':{aliases:['prague'],fallback:['prague'],queries:["Prague Czechia webcams","Praha city webcam","Prague traffic cameras"],bbox:[49.98,50.17,14.24,14.68]},
+ 'Zurich':{aliases:['zurich'],fallback:['zurich'],queries:["Zurich Switzerland webcams","Zürich city webcam","Zürich lake webcam"],bbox:[47.3,47.48,8.4,8.68]},
+ 'Buenos Aires':{aliases:['buenos aires'],fallback:['buenos aires'],queries:["Buenos Aires Argentina webcams","Buenos Aires traffic cameras","Buenos Aires city webcam"],bbox:[-34.78,-34.48,-58.7,-58.25]},
+ 'Santiago Chile':{aliases:['santiago'],fallback:['santiago'],queries:["Santiago Chile webcams","Santiago traffic cameras","Santiago city webcam"],bbox:[-33.65,-33.28,-70.88,-70.42]},
+ 'Cairo':{aliases:['cairo'],fallback:['cairo'],queries:["Cairo Egypt webcams","Cairo Egypt traffic cameras","Cairo city webcam"],bbox:[29.85,30.2,31.05,31.53]},
+ 'Nairobi':{aliases:['nairobi'],fallback:['nairobi'],queries:["Nairobi Kenya webcams","Nairobi traffic cameras","Nairobi city webcam"],bbox:[-1.43,-1.16,36.6,37.05]},
+ 'Johannesburg':{aliases:['johannesburg'],fallback:['johannesburg'],queries:["Johannesburg South Africa webcams","Johannesburg traffic cameras","Johannesburg city webcam"],bbox:[-26.38,-26.05,27.79,28.3]},
+ 'Delhi':{aliases:['delhi'],fallback:['delhi'],queries:["Delhi India webcams","New Delhi traffic cameras","Connaught Place webcam"],bbox:[28.38,28.86,76.8,77.46]},
+ 'Mumbai':{aliases:['mumbai'],fallback:['mumbai'],queries:["Mumbai India webcams","Mumbai traffic cameras","Mumbai Marine Drive webcam"],bbox:[18.83,19.35,72.7,73.15]},
+ 'Melbourne':{aliases:['melbourne'],fallback:['melbourne'],queries:["Melbourne Australia webcams","Melbourne traffic cameras","Melbourne city webcam"],bbox:[-38.08,-37.6,144.7,145.35]},
+ 'Brisbane':{aliases:['brisbane'],fallback:['brisbane'],queries:["Brisbane Australia webcams","Brisbane traffic cameras","Brisbane river webcam"],bbox:[-27.7,-27.22,152.85,153.3]},
+ 'Wellington':{aliases:['wellington'],fallback:['wellington'],queries:["Wellington New Zealand webcams","Wellington harbor webcam","Wellington traffic cameras"],bbox:[-41.39,-41.16,174.6,175]},
  // Einheitliche Ortsregeln für jede Stadtschaltfläche. Koordinaten begrenzen Treffer auf die jeweilige Stadt/Region.
  'New York City':{aliases:['new york city','nyc','manhattan','brooklyn','queens','the bronx','bronx','staten island'],fallback:['new york city','nyc','manhattan','brooklyn','queens','the bronx','bronx','staten island'],queries:['New York City webcams','NYC traffic cameras','Manhattan traffic cameras','Brooklyn traffic cameras','Queens traffic cameras','Bronx traffic cameras','Staten Island traffic cameras'],bbox:[40.49,40.92,-74.27,-73.68]},
  'Miami Florida':{aliases:['miami','miami beach'],fallback:['miami','miami beach'],queries:['Miami Florida webcams','Miami traffic cameras','Miami Beach webcams','Downtown Miami camera','PortMiami webcam'],bbox:[25.55,26.05,-80.55,-80.05]},
@@ -1767,6 +1808,47 @@ const GLOBAL_CITY_MATCH={
  'Queenstown':{aliases:['queenstown'],fallback:['queenstown'],queries:['Queenstown New Zealand webcams','Queenstown lake webcam','Remarkables ski webcam'],bbox:[-45.10,-44.90,168.50,168.80]},
  'Vail Colorado':{aliases:['vail'],fallback:['vail'],queries:['Vail Colorado webcams','Vail ski resort webcam','Vail mountain camera'],bbox:[39.55,39.75,-106.50,-106.25]}
 };
+
+// Country-based camera directory reuses the original city buttons and adds more locations.
+// Each city must have an explicit coordinate bounding box in GLOBAL_CITY_MATCH.
+const GLOBAL_CITY_DIRECTORY=[["Nordamerika","🇺🇸","USA",["New York City","Florida","Miami Florida","Orlando Florida","Tampa Florida","Key West Florida","Los Angeles","San Francisco","San Diego","Las Vegas","Chicago","Honolulu","Seattle","Vail Colorado"]],["Nordamerika","🇨🇦","Kanada",["Toronto","Vancouver","Vancouver Island"]],["Nordamerika","🇲🇽","Mexiko",["Mexico City"]],["Südamerika","🇧🇷","Brasilien",["Rio de Janeiro"]],["Südamerika","🇦🇷","Argentinien",["Buenos Aires"]],["Südamerika","🇨🇱","Chile",["Santiago Chile"]],["Europa","🇩🇪","Deutschland",["Berlin","Hamburg","Munich"]],["Europa","🇬🇧","Großbritannien",["London"]],["Europa","🇫🇷","Frankreich",["Paris"]],["Europa","🇳🇱","Niederlande",["Amsterdam"]],["Europa","🇮🇹","Italien",["Rome","Venice"]],["Europa","🇪🇸","Spanien",["Barcelona"]],["Europa","🇹🇷","Türkei",["Istanbul"]],["Europa","🇮🇸","Island",["Reykjavik"]],["Europa","🇦🇹","Österreich",["Vienna"]],["Europa","🇨🇿","Tschechien",["Prague"]],["Europa","🇨🇭","Schweiz",["Zurich"]],["Asien","🇦🇪","Vereinigte Arabische Emirate",["Dubai","Abu Dhabi"]],["Asien","🇯🇵","Japan",["Shibuya Crossing Tokyo","Osaka"]],["Asien","🇰🇷","Südkorea",["Seoul"]],["Asien","🇨🇳","China",["Shanghai China","Hong Kong"]],["Asien","🇹🇭","Thailand",["Bangkok Thailand","Phuket"]],["Asien","🇸🇬","Singapur",["Singapore"]],["Asien","🇮🇩","Indonesien",["Bali"]],["Asien","🇮🇳","Indien",["Delhi","Mumbai"]],["Afrika","🇿🇦","Südafrika",["Cape Town","Johannesburg"]],["Afrika","🇰🇪","Kenia",["Nairobi"]],["Afrika","🇪🇬","Ägypten",["Cairo"]],["Ozeanien","🇦🇺","Australien",["Sydney","Melbourne","Brisbane"]],["Ozeanien","🇳🇿","Neuseeland",["Auckland","Queenstown","Wellington"]]];
+function organizeGlobalCityPicker(){
+ const picker=document.querySelector('.global-cam-region-picker');
+ if(!picker)return;
+ const existing=new Map([...picker.querySelectorAll('[data-global-city]')].map(button=>[button.dataset.globalCity,button]));
+ const categoryPicker=picker.querySelector('.global-cam-categorychips');
+ picker.replaceChildren();
+ const continents=new Map();
+ const order=['Nordamerika','Südamerika','Europa','Asien','Afrika','Ozeanien'];
+ for(const continent of order){
+  const details=document.createElement('details');details.className='global-cam-region global-cam-continent';
+  details.open=continent==='Nordamerika'||continent==='Europa';
+  const summary=document.createElement('summary');summary.textContent=continent;
+  details.appendChild(summary);picker.appendChild(details);continents.set(continent,details);
+ }
+ for(const [continent,flag,country,cities] of GLOBAL_CITY_DIRECTORY){
+  const parent=continents.get(continent);if(!parent)continue;
+  const details=document.createElement('details');details.className='global-cam-country';
+  details.open=country==='USA'||country==='Deutschland';
+  const summary=document.createElement('summary');summary.textContent=flag+' '+country+' · '+cities.length+' Orte';
+  const chips=document.createElement('div');chips.className='global-cam-citychips';
+  for(const city of cities.slice().sort((a,b)=>a.localeCompare(b,'de'))){
+   if(!GLOBAL_CITY_MATCH[city])continue;
+   const button=existing.get(city)||document.createElement('button');
+   button.type='button';button.dataset.globalCity=city;
+   if(!existing.has(city))button.textContent=city;
+   chips.appendChild(button);existing.delete(city);
+  }
+  details.append(summary,chips);parent.appendChild(details);
+ }
+ // Never discard an existing location when a new menu entry is added.
+ if(existing.size){
+  const extra=document.createElement('div');extra.className='global-cam-citychips';
+  for(const button of existing.values())extra.appendChild(button);
+  picker.appendChild(extra);
+ }
+ if(categoryPicker)picker.appendChild(categoryPicker);
+}
 function globalCityText(value){return String(value||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,' ').trim();}
 function filterGlobalCityRows(rows,city){
  const rule=GLOBAL_CITY_MATCH[city];
@@ -1778,6 +1860,51 @@ function filterGlobalCityRows(rows,city){
   const {lat,lon}=coords;
   return lat>=south&&lat<=north&&lon>=west&&lon<=east;
  });
+}
+
+// Reuse the application's existing attributed camera sources without inventing feeds.
+// Directory landing pages are deliberately excluded: they are not individual webcams.
+
+// Public, location-specific live-camera operator pages (not video URLs).
+// These are labelled as external live pages until playback is verified in-browser.
+function getCuratedGlobalCityRows(city){
+ const rule=GLOBAL_CITY_MATCH[city];
+ if(!rule)return [];
+ const aliases=(rule.aliases||[]).filter(alias=>alias.length>=4);
+ const knownSources=[...citySources,...regionalSources,...worldSources];
+ const results=[];
+ const seen=new Set();
+ for(const source of knownSources){
+  if(!source||!/^https:\/\//i.test(source.url||''))continue;
+  if(/portal|übersicht|verzeichnis|directory|katalog|webcam-karte|webcam portal/i.test(source.name||''))continue;
+  if(!Number.isFinite(Number(source.lat))||!Number.isFinite(Number(source.lon)))continue;
+  const title=globalCityText(source.name+' '+(source.place||''));
+  if(!aliases.some(alias=>title.includes(globalCityText(alias))))continue;
+  const [south,north,west,east]=rule.bbox;
+  if(source.lat<south||source.lat>north||source.lon<west||source.lon>east)continue;
+  const url=String(source.url);
+  if(seen.has(url))continue;
+  seen.add(url);
+  results.push({
+   id:'atlas-curated-'+city.replace(/[^a-z0-9]/gi,'-')+'-'+results.length,
+   title:source.name,city,lat:Number(source.lat),lon:Number(source.lon),
+   country:source.place||'',category:'Kuratiert · Betreiberseite',is_free:true,
+   live:false,publisher:source.source||'Öffentlicher Kamerabetreiber',
+   view:{render:'link',url,url_type:'page'}
+  });
+ }
+ return results;
+}
+function mergeGlobalCityCameraRows(catalogRows,curatedRows,city){
+ const combined=new Map();
+ for(const row of [...catalogRows,...curatedRows]){
+  const coords=globalCameraCoordinates(row);
+  if(!coords)continue;
+  const key=String(row.view?.url||row.preview_url||row.id);
+  if(!combined.has(key))combined.set(key,row);
+ }
+ return filterGlobalCityRows([...combined.values()],city)
+  .sort((a,b)=>Number(isPlayableLiveVideo(b))-Number(isPlayableLiveVideo(a)));
 }
 function getNYCCuratedCameraRows(){
  // Ausschließlich verifizierte Koordinaten innerhalb der fünf NYC-Boroughs.
@@ -1816,9 +1943,27 @@ function getNYCCuratedCameraRows(){
  );
  return rows;
 }
+function focusGlobalCity(city){
+ const rule=GLOBAL_CITY_MATCH[city];
+ if(!rule||!Array.isArray(rule.bbox))return;
+ const [south,north,west,east]=rule.bbox;
+ const bounds=L.latLngBounds([[south,west],[north,east]]);
+ if(bounds.isValid()){
+  map.stop();
+  map.fitBounds(bounds,{padding:[24,24],maxZoom:city==='Florida'?7:12,animate:true});
+ }
+}
 async function searchGlobalCity(city){
+ const requestId=++globalCityRequestId;
+ selectedGlobalCity=city;
+ ++globalCamRequest;
+ if(globalCamTimer){clearTimeout(globalCamTimer);globalCamTimer=null;}
+ clearGlobalCamMarkers();
+ document.querySelectorAll('[data-global-city]').forEach(item=>item.setAttribute('aria-pressed',String(item.dataset.globalCity===city)));
  const button=[...document.querySelectorAll('[data-global-city]')].find(item=>item.dataset.globalCity===city);
  $('globalCamQuery').value=city;
+ // Zoom immediately on click, even if the camera API is slow or unavailable.
+ focusGlobalCity(city);
  if(city==='New York City'){
   // NYC-Schaltfläche darf niemals un-gefilterte Weltkatalog-Treffer übernehmen.
   const rows=getNYCCuratedCameraRows();
@@ -1827,33 +1972,51 @@ async function searchGlobalCity(city){
   if(button)button.disabled=false;
   return;
  }
- const rule=GLOBAL_CITY_MATCH[city]||{queries:[city]};
+ const rule=GLOBAL_CITY_MATCH[city];
+ if(!rule){$('globalCamStatus').textContent='Für diesen Ort fehlen geprüfte Kartenkoordinaten.';return;}
+ const [south,north,west,east]=rule.bbox;
+ const bbox=[west,south,east,north].join(',');
  const queries=rule.queries||[city];
- $('globalCamStatus').textContent='Suche Kameras und öffentliche Webcam-Quellen für '+city+' …';
+ $('globalCamStatus').textContent='Lade Kameras innerhalb von '+city+' …';
  if(button)button.disabled=true;
  try{
-  const results=await Promise.allSettled(queries.map(async query=>{
-   const params=new URLSearchParams({q:query,limit:'200',sort:'fresh'});
-   return fetchJsonSafe(OPEN_EYE_API+'/catalog?'+params.toString(),25000);
-  }));
-  const collected=new Map(),failed=[];
-  results.forEach((result,index)=>{
-   if(result.status!=='fulfilled'){failed.push(queries[index]);return;}
-   normalizeGlobalCameraRows(result.value).forEach(row=>collected.set(row.id,row));
-  });
-  const rows=filterGlobalCityRows([...collected.values()],city);
+  const cache=globalCityCache.get(city);
+  let rows,failed=[];
+  if(cache&&Date.now()-cache.time<120000){
+   rows=cache.rows;
+  }else{
+   // Spatial query is authoritative; text queries are supplemental only.
+   const params=new URLSearchParams({bbox,limit:'500',sort:'fresh'});
+   const collected=new Map();
+   let spatialError=null;
+   try{
+    const spatial=await fetchJsonSafe(OPEN_EYE_API+'/catalog?'+params,25000);
+    normalizeGlobalCameraRows(spatial).forEach(row=>collected.set(String(row.id),row));
+   }catch(error){spatialError=error;}
+   if(spatialError||filterGlobalCityRows([...collected.values()],city).length+getCuratedGlobalCityRows(city).length<5){
+    const batches=queries.slice(0,5);
+    const results=await Promise.allSettled(batches.map(query=>{
+     const searchParams=new URLSearchParams({q:query,limit:'100',sort:'fresh'});
+     return fetchJsonSafe(OPEN_EYE_API+'/catalog?'+searchParams,20000);
+    }));
+    results.forEach((result,index)=>{
+     if(result.status==='fulfilled')normalizeGlobalCameraRows(result.value).forEach(row=>collected.set(String(row.id),row));
+     else failed.push(batches[index]);
+    });
+   }
+   rows=mergeGlobalCityCameraRows([...collected.values()].filter(row=>row.view?.render!=='none'),getCuratedGlobalCityRows(city),city);
+   if(spatialError&&failed.length===queries.slice(0,5).length&&!rows.length)throw spatialError;
+   if(globalCityCache.size>80)globalCityCache.clear();
+   globalCityCache.set(city,{time:Date.now(),rows});
+  }
+  if(requestId!==globalCityRequestId)return;
   showGlobalCameraRows(rows,city);
-  $('globalCamStatus').textContent=rows.length+' passende Kameras für '+city+' gefunden · '+rows.filter(isPlayableLiveVideo).length+' echte Live-Videos · '+rows.filter(row=>row.view?.render==='image'||row.preview_url).length+' Bildkameras · '+rows.filter(row=>row.view?.render==='link').length+' Betreiberseiten.'+(failed.length?' Fehlgeschlagene Suchbegriffe: '+failed.join(', '):'');
- }catch(error){$('globalCamStatus').textContent='Stadtsuche für '+city+' fehlgeschlagen: '+error.message;}
- finally{if(button)button.disabled=false;}
+  $('globalCamStatus').textContent=rows.length+' echte Kameraeinträge für '+city+' · '+rows.filter(isPlayableLiveVideo).length+' Live-Videos · '+rows.filter(row=>row.view?.render==='image').length+' Bilder · '+rows.filter(row=>row.view?.render==='link').length+' Betreiberseiten.'+(rows.length<5?' Weniger als fünf verfügbare Einträge; es werden keine Kameras erfunden.':'')+(failed.length?' Nicht erreichbare Suchabfragen: '+failed.length+'.':'');
+ }catch(error){
+  if(requestId===globalCityRequestId)$('globalCamStatus').textContent='Kamerasuche für '+city+' fehlgeschlagen: '+error.message;
+ }finally{if(button)button.disabled=false;}
 }
-const GLOBAL_CAM_CITIES=[
- 'New York City','Miami Florida','Orlando Florida','Los Angeles','San Francisco','Las Vegas','Chicago',
- 'Toronto','Vancouver','Mexico City','Rio de Janeiro','London','Paris','Amsterdam','Rome','Dubai',
- 'Abu Dhabi','Shibuya Crossing Tokyo','Osaka','Seoul','Shanghai China','Hong Kong','Bangkok Thailand',
- 'Singapore','Sydney','Auckland','Cape Town','Honolulu','San Diego','Seattle','Vancouver Island',
- 'Barcelona','Venice','Istanbul','Reykjavik','Bali','Phuket','Queenstown','Vail Colorado'
-];
+const GLOBAL_CAM_CITIES=Object.keys(GLOBAL_CITY_MATCH);
 const GLOBAL_CAM_CATEGORIES={
  wildlife:['wildlife','animals','zoo','aquarium','bird camera'],
  surf:['surf','surfing','beach webcam','ocean waves','coastal camera'],
@@ -1862,6 +2025,7 @@ const GLOBAL_CAM_CATEGORIES={
  volcano:['volcano','volcanic','volcano webcam','lava','crater camera']
 };
 async function searchGlobalQueryBatch(queries,label,button){
+ selectedGlobalCity=null;++globalCityRequestId;
  const collected=new Map(),failed=[];
  button.disabled=true;
  $('globalCamStatus').textContent='Durchsuche '+queries.length+' Suchbegriffe für '+label+' …';
@@ -1895,11 +2059,12 @@ async function searchGlobalCategory(category,button){
  await searchGlobalQueryBatch(queries,'Kategorie: '+category,button);
 }
 $('globalCamCitiesButton').addEventListener('click',searchGlobalWorldCities);
+organizeGlobalCityPicker();
 document.querySelectorAll('[data-global-city]').forEach(button=>button.addEventListener('click',()=>searchGlobalCity(button.dataset.globalCity)));
 document.querySelectorAll('[data-global-category]').forEach(button=>button.addEventListener('click',()=>searchGlobalCategory(button.dataset.globalCategory,button)));
 
 map.on('moveend',()=>{
- if(!map.hasLayer(pointLayers.webcams))return;
+ if(selectedGlobalCity||!map.hasLayer(pointLayers.webcams))return;
  if(globalCamTimer)clearTimeout(globalCamTimer);
  globalCamTimer=setTimeout(()=>loadGlobalCameraMap({silent:true}),450);
 });

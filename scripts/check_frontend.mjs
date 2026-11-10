@@ -65,6 +65,37 @@ for (const list of sourceLists) {
 }
 
 
+// Every clickable city must have a geographic rule, and every directory city must be reachable.
+const cityRuleNames = [...html.matchAll(/^\s*'([^']+)':\{aliases:/gm)].map(match => match[1]);
+const cityRuleSet = new Set(cityRuleNames);
+const cityButtons = [...html.matchAll(/data-global-city="([^"]+)"/g)].map(match => match[1]);
+const missingRules = cityButtons.filter(city => !cityRuleSet.has(city));
+if (missingRules.length) throw new Error("Städte ohne geografische Suchregel: " + missingRules.join(", "));
+if (cityRuleSet.size !== cityRuleNames.length) throw new Error("Doppelte Stadtschlüssel gefunden.");
+const directoryStart = html.indexOf("const GLOBAL_CITY_DIRECTORY=");
+const directoryEnd = html.indexOf(";\nfunction organizeGlobalCityPicker", directoryStart);
+if (directoryStart < 0 || directoryEnd < 0) throw new Error("Kontinent-/Länderverzeichnis fehlt.");
+const directory = JSON.parse(html.slice(directoryStart + "const GLOBAL_CITY_DIRECTORY=".length, directoryEnd));
+const directoryCities = directory.flatMap(entry => entry[3]);
+const unknownCities = directoryCities.filter(city => !cityRuleSet.has(city));
+if (unknownCities.length) throw new Error("Orte im Länderverzeichnis ohne Ortsregel: " + unknownCities.join(", "));
+if (new Set(directoryCities).size !== directoryCities.length) throw new Error("Doppelte Orte im Länderverzeichnis.");
+if (!html.includes("if(selectedGlobalCity)rows=filterGlobalCityRows(rows,selectedGlobalCity);")) {
+  throw new Error("Stadtansicht muss alle angezeigten Kameraeinträge geografisch filtern.");
+}
+if (!html.includes("if(bounds.isValid()&&!selectedGlobalCity)")) {
+  throw new Error("Stadtkartenansicht darf nicht durch Kamera-Marker verschoben werden.");
+}
+if (html.includes("GLOBAL_LIVE_OPERATOR_CAMERAS") || html.includes("getAdditionalOperatorRows")) {
+  throw new Error("Unverifizierte Betreiberseiten dürfen nicht als Live-Kameras gezählt werden.");
+}
+if (!html.includes("selectedGlobalCity||!map.hasLayer(pointLayers.webcams)")) {
+  throw new Error("Kartenschwenken darf aktive Stadtsuchen nicht überschreiben.");
+}
+if (!html.includes("bbox,limit:'500'") || !html.includes("filterGlobalCityRows([...collected.values()],city)")) {
+  throw new Error("Geografische Stadtsuche oder Koordinatenfilter fehlt.");
+}
+
 for (const id of ["map", "search", "windyLoad", "openWall", "randomCamera", "shareAtlas", "camviewer", "radioSearch"]) {
   if (!idSet.has(id)) throw new Error("Wichtige UI-Komponente fehlt: " + id);
 }
