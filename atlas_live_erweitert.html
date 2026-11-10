@@ -1625,7 +1625,7 @@ function showGlobalCameraRows(rows,label){
  if(!map.hasLayer(pointLayers.webcams))pointLayers.webcams.addTo(map);
  if(mapped.length){
   const bounds=L.latLngBounds(mapped.map(row=>[Number(row.lat),Number(row.lon)]));
-  if(bounds.isValid()){const cityZoom=String(label).includes('New York City')?10:(mapped.length===1?11:6);map.fitBounds(bounds.pad(.08),{maxZoom:cityZoom});}
+  if(bounds.isValid()){const cityZoom=String(label).includes('New York City')?12:(mapped.length===1?12:11);map.fitBounds(bounds.pad(.08),{maxZoom:cityZoom});}
  }
  loadedPointLayers.add('webcams');
  document.querySelector('.map-layer-toggle[data-layer="webcams"]')?.classList.add('active');
@@ -1819,9 +1819,23 @@ function getNYCCuratedCameraRows(){
  );
  return rows;
 }
+let globalCityRequestId=0;
+function focusGlobalCity(city){
+ const rule=GLOBAL_CITY_MATCH[city];
+ if(!rule||!Array.isArray(rule.bbox))return;
+ const [south,north,west,east]=rule.bbox;
+ const bounds=L.latLngBounds([[south,west],[north,east]]);
+ if(bounds.isValid()){
+  map.stop();
+  map.fitBounds(bounds,{padding:[24,24],maxZoom:city==='Florida'?7:12,animate:true});
+ }
+}
 async function searchGlobalCity(city){
+ const requestId=++globalCityRequestId;
  const button=[...document.querySelectorAll('[data-global-city]')].find(item=>item.dataset.globalCity===city);
  $('globalCamQuery').value=city;
+ // Zoom immediately on click, even if the camera API is slow or unavailable.
+ focusGlobalCity(city);
  if(city==='New York City'){
   // NYC-Schaltfläche darf niemals un-gefilterte Weltkatalog-Treffer übernehmen.
   const rows=getNYCCuratedCameraRows();
@@ -1844,10 +1858,12 @@ async function searchGlobalCity(city){
    if(result.status!=='fulfilled'){failed.push(queries[index]);return;}
    normalizeGlobalCameraRows(result.value).forEach(row=>collected.set(row.id,row));
   });
+  if(requestId!==globalCityRequestId)return;
   const rows=filterGlobalCityRows([...collected.values()],city);
   showGlobalCameraRows(rows,city);
+  if(rows.length<5)$('globalCamStatus').textContent+=' Hinweis: Für diesen Ort sind derzeit weniger als fünf passende öffentliche Kameras im Katalog auffindbar.';
   $('globalCamStatus').textContent=rows.length+' passende Kameras für '+city+' gefunden · '+rows.filter(isPlayableLiveVideo).length+' echte Live-Videos · '+rows.filter(row=>row.view?.render==='image'||row.preview_url).length+' Bildkameras · '+rows.filter(row=>row.view?.render==='link').length+' Betreiberseiten.'+(failed.length?' Fehlgeschlagene Suchbegriffe: '+failed.join(', '):'');
- }catch(error){$('globalCamStatus').textContent='Stadtsuche für '+city+' fehlgeschlagen: '+error.message;}
+ }catch(error){if(requestId===globalCityRequestId)$('globalCamStatus').textContent='Stadtsuche für '+city+' fehlgeschlagen: '+error.message;}
  finally{if(button)button.disabled=false;}
 }
 const GLOBAL_CAM_CITIES=[
