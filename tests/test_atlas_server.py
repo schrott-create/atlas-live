@@ -133,6 +133,8 @@ class AtlasServerTests(unittest.TestCase):
     def test_radio_rejects_malformed_https_urls(self):
         payload = [{"lastcheckok": 1, "url_resolved": "https://"},
                    {"lastcheckok": 1, "url_resolved": "https://user:pass@radio.example/live"},
+                   {"lastcheckok": 1, "url_resolved": "https://[invalid/live"},
+                   {"lastcheckok": 1, "url_resolved": "https://radio.example:99999/live"},
                    {"lastcheckok": 1, "url_resolved": "https://radio.example/live"}]
         with patch.object(atlas_server.requests, "get", return_value=FakeResponse(payload)):
             response = self.client.get("/api/radio/stations")
