@@ -731,13 +731,13 @@ header{position:relative;z-index:2701}
         <button type="button" data-global-city="Paris">Paris</button>
         <button type="button" data-global-city="Sydney">Sydney</button>
         <button type="button" data-global-city="Rio de Janeiro">Rio</button>
-        <button type="button" data-global-city="wildlife animals">🦒 Tiere</button>
-        <button type="button" data-global-city="surf ocean waves">🏄 Surfen</button>
-        <button type="button" data-global-city="ski mountain">⛷️ Ski & Berge</button>
-        <button type="button" data-global-city="harbor port ships">🚢 Häfen & Schiffe</button>
-        <button type="button" data-global-city="volcano lava">🌋 Vulkane</button>
+        <button type="button" data-global-category="wildlife">🦒 Tiere</button>
+        <button type="button" data-global-category="surf">🏄 Surfen</button>
+        <button type="button" data-global-category="ski">⛷️ Ski & Berge</button>
+        <button type="button" data-global-category="port">🚢 Häfen & Schiffe</button>
+        <button type="button" data-global-category="volcano">🌋 Vulkane</button>
       </div>
-      <div class="country-status" id="globalCamStatus">Es werden nur bestätigte, direkt abspielbare Live-Videostreams angezeigt – keine Standbilder oder bloßen Betreiberlinks.</div>
+      <div class="country-status" id="globalCamStatus">Suche öffentliche Live-Videos, aktualisierte Kamerabilder und offizielle Kameraseiten. Der Typ wird bei jedem Treffer gekennzeichnet.</div>
       <div class="global-cam-coverage" id="globalCamCoverage" aria-live="polite">Prüfe die weltweite Katalog-Abdeckung …</div>
       <a class="global-cam-attribution" href="https://openeye.cam/" target="_blank" rel="noopener noreferrer">Zusätzlicher öffentlicher Webcam-Katalog: OpenEye ↗</a>
     </section>
@@ -1641,33 +1641,56 @@ async function searchGlobalCity(city){
  $('globalCamQuery').value=city;
  await searchGlobalCameras();
 }
-async function searchGlobalWorldCities(){
- const button=$('globalCamCitiesButton');
- const cities=['New York','Miami Florida','Orlando Florida','Los Angeles','San Francisco','Las Vegas','Chicago','Toronto','Vancouver','Mexico City','Rio de Janeiro','London','Paris','Amsterdam','Rome','Dubai','Abu Dhabi','Tokyo Shibuya Crossing','Osaka','Seoul','Shanghai China','Hong Kong','Bangkok Thailand','Singapore','Sydney','Auckland','Cape Town'];
- button.disabled=true;
- $('globalCamStatus').textContent='Durchsuche '+cities.length+' Städte nach öffentlichen Kameras …';
+const GLOBAL_CAM_CITIES=[
+ 'New York','Miami Florida','Orlando Florida','Los Angeles','San Francisco','Las Vegas','Chicago',
+ 'Toronto','Vancouver','Mexico City','Rio de Janeiro','London','Paris','Amsterdam','Rome','Dubai',
+ 'Abu Dhabi','Tokyo Shibuya Crossing','Osaka','Seoul','Shanghai China','Hong Kong','Bangkok Thailand',
+ 'Singapore','Sydney','Auckland','Cape Town','Honolulu','San Diego','Seattle','Vancouver Island',
+ 'Barcelona','Venice','Istanbul','Reykjavik','Honolulu','Bali','Phuket','Queenstown','Vail Colorado'
+];
+const GLOBAL_CAM_CATEGORIES={
+ wildlife:['wildlife','animals','zoo','aquarium','bird camera'],
+ surf:['surf','surfing','beach webcam','ocean waves','coastal camera'],
+ ski:['ski','ski resort','mountain webcam','snow camera','alpine webcam'],
+ port:['port','harbor','harbour','ships','marina'],
+ volcano:['volcano','volcanic','volcano webcam','lava','crater camera']
+};
+async function searchGlobalQueryBatch(queries,label,button){
  const collected=new Map(),failed=[];
+ button.disabled=true;
+ $('globalCamStatus').textContent='Durchsuche '+queries.length+' Suchbegriffe für '+label+' …';
  try{
-  for(let i=0;i<cities.length;i+=4){
-   const batch=cities.slice(i,i+4);
-   const results=await Promise.allSettled(batch.map(async city=>{
-    const params=new URLSearchParams({q:city,limit:'100',sort:'fresh'});
-    return {city,data:await fetchJsonSafe(OPEN_EYE_API+'/catalog?'+params.toString(),25000)};
+  for(let i=0;i<queries.length;i+=4){
+   const batch=queries.slice(i,i+4);
+   const results=await Promise.allSettled(batch.map(async query=>{
+    const params=new URLSearchParams({q:query,limit:'100',sort:'fresh'});
+    return {query,data:await fetchJsonSafe(OPEN_EYE_API+'/catalog?'+params.toString(),25000)};
    }));
    results.forEach((result,index)=>{
     if(result.status!=='fulfilled'){failed.push(batch[index]);return;}
     normalizeGlobalCameraRows(result.value.data).forEach(row=>collected.set(row.id,row));
    });
-   $('globalCamStatus').textContent=(Math.min(i+4,cities.length))+'/'+cities.length+' Städte geprüft · '+collected.size+' Kamera-Einträge gefunden …';
+   $('globalCamStatus').textContent=(Math.min(i+4,queries.length))+'/'+queries.length+' Suchabfragen geprüft · '+collected.size+' unterschiedliche Kameras gefunden …';
   }
   const rows=[...collected.values()];
-  showGlobalCameraRows(rows,'Weltstädte weltweit');
-  $('globalCamStatus').textContent=rows.length+' Kamera-Einträge aus '+cities.length+' Städten geladen · '+rows.filter(isPlayableLiveVideo).length+' Live-Video.'+(failed.length?' Nicht erreichbar: '+failed.join(', '):'')+'. Bilder und offizielle Betreiberseiten werden ebenfalls angezeigt.';
- }catch(error){$('globalCamStatus').textContent='Weltweite Stadtsuche fehlgeschlagen: '+error.message;}
+  showGlobalCameraRows(rows,label);
+  $('globalCamStatus').textContent=rows.length+' unterschiedliche öffentliche Kameras aus '+queries.length+' Suchabfragen · '+rows.filter(isPlayableLiveVideo).length+' echte Live-Videos · '+rows.filter(row=>row.view?.render==='image'||row.preview_url).length+' Bildkameras · '+rows.filter(row=>row.view?.render==='link').length+' Betreiberseiten.'+(failed.length?' Fehlgeschlagene Abfragen: '+failed.join(', '):'');
+ }catch(error){$('globalCamStatus').textContent='Suche fehlgeschlagen: '+error.message;}
  finally{button.disabled=false;}
+}
+async function searchGlobalWorldCities(){
+ const queries=[...new Set(GLOBAL_CAM_CITIES)];
+ await searchGlobalQueryBatch(queries,'Weltstädte weltweit',$('globalCamCitiesButton'));
+}
+async function searchGlobalCategory(category){
+ const terms=GLOBAL_CAM_CATEGORIES[category];
+ if(!terms)return;
+ const queries=[...new Set(terms)];
+ await searchGlobalQueryBatch(queries,'Kategorie: '+category,$('globalCamCitiesButton'));
 }
 $('globalCamCitiesButton').addEventListener('click',searchGlobalWorldCities);
 document.querySelectorAll('[data-global-city]').forEach(button=>button.addEventListener('click',()=>searchGlobalCity(button.dataset.globalCity)));
+document.querySelectorAll('[data-global-category]').forEach(button=>button.addEventListener('click',()=>searchGlobalCategory(button.dataset.globalCategory)));
 
 map.on('moveend',()=>{
  if(!map.hasLayer(pointLayers.webcams))return;
