@@ -1703,20 +1703,46 @@ $('globalCamQuery').addEventListener('keydown',event=>{if(event.key==='Enter')se
 $('globalCamFeaturedButton').addEventListener('click',loadGlobalCameraFeatured);
 $('globalCamRandomButton').addEventListener('click',loadGlobalCameraRandom);
 const GLOBAL_CITY_MATCH={
- // bbox = harte Stadt-/Metropolgrenze; Treffer ohne Koordinaten werden bewusst verworfen.
+ // Einheitliche Ortsregeln für jede Stadtschaltfläche. Koordinaten begrenzen Treffer auf die jeweilige Stadt/Region.
  'New York City':{aliases:['new york city','nyc','manhattan','brooklyn','queens','the bronx','bronx','staten island'],fallback:['new york city','nyc','manhattan','brooklyn','queens','the bronx','bronx','staten island'],queries:['New York City webcams','NYC traffic cameras','Manhattan traffic cameras','Brooklyn traffic cameras','Queens traffic cameras','Bronx traffic cameras','Staten Island traffic cameras'],bbox:[40.49,40.92,-74.27,-73.68]},
- 'Miami Florida':{aliases:['miami'],fallback:['miami'],queries:['Miami Florida webcams','Miami traffic cameras','Miami Beach webcams','Downtown Miami camera','PortMiami webcam'],bbox:[25.68,25.95,-80.32,-80.10]},
- 'Los Angeles':{aliases:['los angeles','hollywood','santa monica','venice beach'],fallback:['los angeles','hollywood','santa monica','venice beach'],queries:['Los Angeles California webcams','Los Angeles traffic cameras','Hollywood webcam','Santa Monica Pier webcam','Venice Beach webcam'],bbox:[33.70,34.34,-118.67,-117.65]},
- 'Dubai':{aliases:['dubai'],fallback:['dubai'],queries:['Dubai UAE webcams','Dubai traffic cameras','Downtown Dubai webcam','Dubai Marina webcam','Palm Jumeirah webcam'],bbox:[24.90,25.35,54.90,55.55]},
- 'Shibuya Crossing Tokyo':{aliases:['tokyo','shibuya'],fallback:['tokyo','shibuya'],queries:['Tokyo Japan webcams','Tokyo traffic cameras','Shibuya Crossing webcam','Tokyo Station live camera','Tokyo city webcam'],bbox:[35.50,35.90,139.40,139.95]},
- 'Bangkok Thailand':{aliases:['bangkok'],fallback:['bangkok'],queries:['Bangkok Thailand webcams','Bangkok traffic cameras','Bangkok city webcam','Chao Phraya river webcam'],bbox:[13.55,13.95,100.30,100.95]},
- 'Singapore':{aliases:['singapore'],fallback:['singapore'],queries:['Singapore webcams','Singapore traffic cameras','Marina Bay webcam','Singapore harbour camera','Sentosa webcam'],bbox:[1.16,1.48,103.60,104.10]},
- 'Hong Kong':{aliases:['hong kong'],fallback:['hong kong'],queries:['Hong Kong webcams','Hong Kong traffic cameras','Victoria Harbour webcam','Hong Kong skyline camera','Kowloon webcam'],bbox:[22.15,22.58,113.80,114.45]},
- 'Shanghai China':{aliases:['shanghai'],fallback:['shanghai'],queries:['Shanghai China webcams','Shanghai traffic cameras','The Bund Shanghai webcam','Pudong skyline webcam'],bbox:[30.90,31.55,120.85,122.00]},
+ 'Miami Florida':{aliases:['miami','miami beach'],fallback:['miami','miami beach'],queries:['Miami Florida webcams','Miami traffic cameras','Miami Beach webcams','Downtown Miami camera','PortMiami webcam'],bbox:[25.55,26.05,-80.55,-80.05]},
+ 'Orlando Florida':{aliases:['orlando'],fallback:['orlando'],queries:['Orlando Florida webcams','Orlando traffic cameras','Orlando city webcam','Lake Eola webcam','Orlando theme park webcam'],bbox:[28.30,28.70,-81.60,-81.15]},
+ 'Los Angeles':{aliases:['los angeles','hollywood','santa monica','venice beach'],fallback:['los angeles','hollywood','santa monica','venice beach'],queries:['Los Angeles California webcams','Los Angeles traffic cameras','Hollywood webcam','Santa Monica Pier webcam','Venice Beach webcam'],bbox:[33.65,34.35,-118.70,-117.60]},
+ 'San Francisco':{aliases:['san francisco','sf','golden gate'],fallback:['san francisco','golden gate'],queries:['San Francisco webcams','San Francisco traffic cameras','Golden Gate Bridge webcam','Fishermans Wharf webcam','Ocean Beach webcam'],bbox:[37.65,37.85,-122.55,-122.33]},
+ 'Las Vegas':{aliases:['las vegas'],fallback:['las vegas'],queries:['Las Vegas Nevada webcams','Las Vegas traffic cameras','Las Vegas Strip webcam','Fremont Street webcam'],bbox:[35.95,36.35,-115.45,-114.95]},
+ 'Chicago':{aliases:['chicago'],fallback:['chicago'],queries:['Chicago Illinois webcams','Chicago traffic cameras','Chicago lakefront webcam','Navy Pier webcam'],bbox:[41.60,42.10,-87.95,-87.50]},
+ 'Toronto':{aliases:['toronto'],fallback:['toronto'],queries:['Toronto Canada webcams','Toronto traffic cameras','CN Tower webcam','Toronto Harbour webcam'],bbox:[43.55,43.90,-79.65,-79.10]},
+ 'Vancouver':{aliases:['vancouver'],fallback:['vancouver'],queries:['Vancouver BC webcams','Vancouver traffic cameras','Vancouver Harbour webcam','English Bay webcam'],bbox:[49.15,49.35,-123.30,-123.00]},
+ 'Mexico City':{aliases:['mexico city','ciudad de mexico','cdmx'],fallback:['mexico city','ciudad de mexico','cdmx'],queries:['Mexico City webcams','Mexico City traffic cameras','Zocalo webcam','Mexico City skyline webcam'],bbox:[19.20,19.60,-99.35,-98.95]},
+ 'Rio de Janeiro':{aliases:['rio de janeiro','rio'],fallback:['rio de janeiro','rio'],queries:['Rio de Janeiro Brazil webcams','Rio traffic cameras','Copacabana beach webcam','Sugarloaf Mountain webcam','Ipanema beach webcam'],bbox:[-23.10,-22.70,-43.90,-43.00]},
  'London':{aliases:['london'],fallback:['london'],queries:['London UK webcams','London traffic cameras','Tower Bridge webcam','London city skyline webcam','Westminster webcam'],bbox:[51.28,51.70,-0.55,0.35]},
  'Paris':{aliases:['paris'],fallback:['paris'],queries:['Paris France webcams','Paris traffic cameras','Eiffel Tower webcam','Paris city camera','Seine Paris webcam'],bbox:[48.68,49.00,2.10,2.60]},
+ 'Amsterdam':{aliases:['amsterdam'],fallback:['amsterdam'],queries:['Amsterdam Netherlands webcams','Amsterdam traffic cameras','Amsterdam canals webcam','Dam Square webcam'],bbox:[52.25,52.45,4.70,5.05]},
+ 'Rome':{aliases:['rome','roma'],fallback:['rome','roma'],queries:['Rome Italy webcams','Rome traffic cameras','Colosseum webcam','Rome city webcam'],bbox:[41.75,42.05,12.35,12.65]},
+ 'Dubai':{aliases:['dubai'],fallback:['dubai'],queries:['Dubai UAE webcams','Dubai traffic cameras','Downtown Dubai webcam','Dubai Marina webcam','Palm Jumeirah webcam'],bbox:[24.90,25.35,54.90,55.55]},
+ 'Abu Dhabi':{aliases:['abu dhabi'],fallback:['abu dhabi'],queries:['Abu Dhabi UAE webcams','Abu Dhabi traffic cameras','Abu Dhabi Corniche webcam','Yas Island webcam'],bbox:[24.30,24.60,54.25,54.75]},
+ 'Tokyo Shibuya Crossing':{aliases:['tokyo','shibuya'],fallback:['tokyo','shibuya'],queries:['Tokyo Japan webcams','Tokyo traffic cameras','Shibuya Crossing webcam','Tokyo Station live camera','Tokyo city webcam'],bbox:[35.50,35.90,139.40,139.95]},
+ 'Osaka':{aliases:['osaka'],fallback:['osaka'],queries:['Osaka Japan webcams','Osaka traffic cameras','Dotonbori webcam','Osaka city webcam'],bbox:[34.55,34.80,135.35,135.65]},
+ 'Seoul':{aliases:['seoul'],fallback:['seoul'],queries:['Seoul South Korea webcams','Seoul traffic cameras','Seoul city webcam','Han River webcam'],bbox:[37.40,37.70,126.75,127.20]},
+ 'Shanghai China':{aliases:['shanghai'],fallback:['shanghai'],queries:['Shanghai China webcams','Shanghai traffic cameras','The Bund Shanghai webcam','Pudong skyline webcam'],bbox:[30.90,31.55,120.85,122.00]},
+ 'Hong Kong':{aliases:['hong kong','kowloon','hongkong'],fallback:['hong kong','kowloon','hongkong'],queries:['Hong Kong webcams','Hong Kong traffic cameras','Victoria Harbour webcam','Hong Kong skyline camera','Kowloon webcam','Hong Kong Island webcam'],bbox:[22.15,22.58,113.80,114.45]},
+ 'Bangkok Thailand':{aliases:['bangkok'],fallback:['bangkok'],queries:['Bangkok Thailand webcams','Bangkok traffic cameras','Bangkok city webcam','Chao Phraya river webcam'],bbox:[13.55,13.95,100.30,100.95]},
+ 'Singapore':{aliases:['singapore'],fallback:['singapore'],queries:['Singapore webcams','Singapore traffic cameras','Marina Bay webcam','Singapore harbour camera','Sentosa webcam'],bbox:[1.16,1.48,103.60,104.10]},
  'Sydney':{aliases:['sydney'],fallback:['sydney'],queries:['Sydney Australia webcams','Sydney traffic cameras','Sydney Harbour webcam','Bondi Beach webcam','Circular Quay webcam'],bbox:[-34.15,-33.55,150.50,151.40]},
- 'Rio de Janeiro':{aliases:['rio de janeiro','rio'],fallback:['rio de janeiro','rio'],queries:['Rio de Janeiro Brazil webcams','Rio traffic cameras','Copacabana beach webcam','Sugarloaf Mountain webcam','Ipanema beach webcam'],bbox:[-23.10,-22.70,-43.90,-43.00]}
+ 'Auckland':{aliases:['auckland'],fallback:['auckland'],queries:['Auckland New Zealand webcams','Auckland traffic cameras','Auckland Harbour webcam','Viaduct Harbour webcam'],bbox:[-36.98,-36.70,174.55,174.95]},
+ 'Cape Town':{aliases:['cape town'],fallback:['cape town'],queries:['Cape Town South Africa webcams','Cape Town traffic cameras','Table Mountain webcam','Cape Town harbour webcam'],bbox:[-34.15,-33.80,18.30,18.65]},
+ 'Honolulu':{aliases:['honolulu','waikiki'],fallback:['honolulu','waikiki'],queries:['Honolulu Hawaii webcams','Waikiki beach webcam','Honolulu traffic cameras','Diamond Head webcam'],bbox:[21.20,21.40,-158.00,-157.70]},
+ 'San Diego':{aliases:['san diego'],fallback:['san diego'],queries:['San Diego California webcams','San Diego traffic cameras','San Diego harbour webcam','La Jolla webcam'],bbox:[32.55,33.10,-117.35,-116.90]},
+ 'Seattle':{aliases:['seattle'],fallback:['seattle'],queries:['Seattle Washington webcams','Seattle traffic cameras','Seattle waterfront webcam','Space Needle webcam'],bbox:[47.45,47.75,-122.45,-122.20]},
+ 'Vancouver Island':{aliases:['vancouver island','victoria','tofino','nanaimo'],fallback:['vancouver island','victoria','tofino','nanaimo'],queries:['Vancouver Island webcams','Victoria BC webcam','Tofino surf webcam','Nanaimo harbour webcam'],bbox:[48.20,50.90,-128.50,-123.20]},
+ 'Barcelona':{aliases:['barcelona'],fallback:['barcelona'],queries:['Barcelona Spain webcams','Barcelona traffic cameras','Sagrada Familia webcam','Barcelona beach webcam'],bbox:[41.30,41.48,2.05,2.25]},
+ 'Venice':{aliases:['venice','venezia'],fallback:['venice','venezia'],queries:['Venice Italy webcams','Venice Grand Canal webcam','Piazza San Marco webcam'],bbox:[45.35,45.55,12.20,12.45]},
+ 'Istanbul':{aliases:['istanbul'],fallback:['istanbul'],queries:['Istanbul Turkey webcams','Istanbul traffic cameras','Bosphorus webcam','Istanbul skyline webcam'],bbox:[40.80,41.25,28.50,29.45]},
+ 'Reykjavik':{aliases:['reykjavik','reykjavik'],fallback:['reykjavik'],queries:['Reykjavik Iceland webcams','Reykjavik city webcam','Reykjavik harbour webcam'],bbox:[64.05,64.20,-22.10,-21.70]},
+ 'Bali':{aliases:['bali','denpasar','kuta','seminyak','ubud'],fallback:['bali','denpasar','kuta','seminyak','ubud'],queries:['Bali Indonesia webcams','Bali beach webcam','Kuta Bali webcam','Ubud Bali webcam'],bbox:[-8.90,-8.05,114.40,115.75]},
+ 'Phuket':{aliases:['phuket','patong'],fallback:['phuket','patong'],queries:['Phuket Thailand webcams','Patong beach webcam','Phuket traffic camera','Phuket harbour webcam'],bbox:[7.70,8.25,98.15,98.55]},
+ 'Queenstown':{aliases:['queenstown'],fallback:['queenstown'],queries:['Queenstown New Zealand webcams','Queenstown lake webcam','Remarkables ski webcam'],bbox:[-45.10,-44.90,168.50,168.80]},
+ 'Vail Colorado':{aliases:['vail'],fallback:['vail'],queries:['Vail Colorado webcams','Vail ski resort webcam','Vail mountain camera'],bbox:[39.55,39.75,-106.50,-106.25]}
 };
 function globalCityText(value){return String(value||'').normalize('NFD').replace(/[\\u0300-\\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,' ').trim();}
 function filterGlobalCityRows(rows,city){
@@ -1724,7 +1750,6 @@ function filterGlobalCityRows(rows,city){
  if(!rule||!Array.isArray(rule.bbox))return [];
  const [south,north,west,east]=rule.bbox;
  return rows.filter(row=>{
-  // Ohne echte Koordinaten keine Zuordnung: so rutschen Suchtreffer aus anderen Städten nicht durch.
   const lat=Number(row.lat),lon=Number(row.lon);
   if(!Number.isFinite(lat)||!Number.isFinite(lon)||lat<south||lat>north||lon<west||lon>east)return false;
   const cityFields=[row.city,row.locality,row.town,row.municipality,row.city_name].filter(value=>typeof value==='string'&&value.trim()).map(globalCityText);
@@ -1733,9 +1758,9 @@ function filterGlobalCityRows(rows,city){
    const normalized=globalCityText(alias);
    return value===normalized||value.startsWith(normalized+' ')||(' '+value+' ').includes(' '+normalized+' ');
   });
-  // Widersprüchliche Ortsmetadaten verwerfen; ansonsten Titel/Ortstext zusätzlich prüfen.
+  // Koordinaten sind die harte Grenze. Ortsfelder mit eindeutig fremdem Stadtnamen werden verworfen.
   if(cityFields.length&&!cityFields.some(matchesAlias))return false;
-  return cityFields.length>0||rule.fallback.some(term=>matchesAlias(locationText));
+  return true;
  });
 }
 function getNYCCuratedCameraRows(){
