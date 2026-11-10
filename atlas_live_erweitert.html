@@ -1544,7 +1544,7 @@ function showGlobalCameraRows(rows,label){
  if(!map.hasLayer(pointLayers.webcams))pointLayers.webcams.addTo(map);
  if(mapped.length){
   const bounds=L.latLngBounds(mapped.map(row=>[Number(row.lat),Number(row.lon)]));
-  if(bounds.isValid())map.fitBounds(bounds.pad(.08),{maxZoom:mapped.length===1?11:6});
+  if(bounds.isValid()){const cityZoom=String(label).includes('New York City')?10:(mapped.length===1?11:6);map.fitBounds(bounds.pad(.08),{maxZoom:cityZoom});}
  }
  loadedPointLayers.add('webcams');
  document.querySelector('.map-layer-toggle[data-layer="webcams"]')?.classList.add('active');
