@@ -447,8 +447,9 @@ footer{padding:10px 16px;border-top:1px solid var(--line);font-size:10px;color:v
 #commandOverlay .cc-live-module .command-event{font-size:10px;padding:11px}
 #commandOverlay .cc-right .command-footnote{margin-top:22px;font-size:9px;line-height:1.6}
 @media(max-width:1100px){
- #commandOverlay .cc-shell{grid-template-columns:70px minmax(0,1fr)}
- #commandOverlay .cc-right{display:none}
+ #commandOverlay .cc-shell{grid-template-columns:70px minmax(0,1fr);grid-template-rows:minmax(0,1fr) minmax(150px,28vh)}
+ #commandOverlay .cc-workspace{grid-column:2;grid-row:1}
+ #commandOverlay .cc-right{display:block;grid-column:2;grid-row:2;max-height:none;min-height:0;border-left:0;border-top:1px solid rgba(127,198,226,.2);padding:14px 16px;}
  #commandOverlay .command-data-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
 }
 @media(max-width:700px){
@@ -595,6 +596,17 @@ footer{padding:10px 16px;border-top:1px solid var(--line);font-size:10px;color:v
 #commandOverlay #closeCommand{background:rgba(255,255,255,.045)!important;border:1px solid rgba(146,205,228,.25)!important;color:#d5eaf5!important}
 #commandOverlay #closeCommand:hover{background:rgba(49,133,164,.25)!important;border-color:rgba(110,220,247,.5)!important}
 
+/* FUNCTIONAL POLISH: consistent map controls, responsive event stream and keyboard navigation */
+#commandOverlay .cc-right{overscroll-behavior:contain}
+#commandOverlay .cc-rail button:focus-visible,#commandOverlay button:focus-visible{outline:2px solid #7fe6ff;outline-offset:3px}
+#commandOverlay .cc-rail button{cursor:pointer;transition:background .18s,border-color .18s,color .18s,transform .18s}
+#commandOverlay .cc-rail button:active{transform:scale(.96)}
+#commandOverlay button:disabled{opacity:.55;cursor:wait}
+@media(max-width:700px){
+ #commandOverlay .cc-shell{grid-template-columns:56px minmax(0,1fr);grid-template-rows:minmax(0,1fr) minmax(140px,25vh)}
+ #commandOverlay .cc-workspace{grid-column:2;grid-row:1}
+ #commandOverlay .cc-right{grid-column:2;grid-row:2;display:block;padding:10px;max-height:none}
+}
 </style>
 </head>
 <body>
@@ -824,10 +836,23 @@ footer{padding:10px 16px;border-top:1px solid var(--line);font-size:10px;color:v
     workspace.append(top,main);
     shell.append(nav,workspace,right);
     body.replaceChildren(shell);
-    nav.querySelectorAll('button[data-target]').forEach(btn=>btn.addEventListener('click',()=>{
-      nav.querySelectorAll('button').forEach(b=>b.classList.toggle('active',b===btn));
-      document.getElementById(btn.dataset.target)?.scrollIntoView({behavior:'smooth',block:'start'});
+    const navButtons=[...nav.querySelectorAll('button[data-target]')];
+    navButtons.forEach(btn=>btn.addEventListener('click',()=>{
+      navButtons.forEach(b=>b.classList.toggle('active',b===btn));
+      const target=document.getElementById(btn.dataset.target);
+      if(target)target.scrollIntoView({behavior:'smooth',block:'start'});
     }));
+    const sectionTargets=['cc-overview','cc-discover','cc-weather','cc-traffic','cc-feed'].map(id=>document.getElementById(id)).filter(Boolean);
+    if('IntersectionObserver' in window){
+      const sectionObserver=new IntersectionObserver(entries=>{
+        const visible=entries.filter(entry=>entry.isIntersecting).sort((a,b)=>b.intersectionRatio-a.intersectionRatio)[0];
+        if(visible)navButtons.forEach(btn=>btn.classList.toggle('active',btn.dataset.target===visible.target.id));
+      },{root:main,rootMargin:'-12% 0px -65% 0px',threshold:[0,.15,.35,.6]});
+      sectionTargets.forEach(section=>sectionObserver.observe(section));
+    }
+    document.addEventListener('keydown',e=>{
+      if(e.key==='Escape'&&overlay.classList.contains('open'))commandClose();
+    });
     const heading=head?.querySelector('.command-brand');
     if(heading){const sub=heading.querySelector('small');if(sub)sub.textContent='GLOBAL MONITORING · LIVE OPERATIONS';}
   })();
@@ -1707,8 +1732,17 @@ async function refreshCommandWeather(){
 $('commandRefresh').onclick=refreshCommandCenter;
 $('commandQuakeRefresh').onclick=refreshCommandQuakes;
 $('commandWeatherRefresh').onclick=refreshCommandWeather;
-$('commandNight').onclick=()=>{commandDarkActive=!commandDarkActive;$('mapStyle').value=commandDarkActive?'dark':'street';map.removeLayer(mapLayers[activeMapStyle]);activeMapStyle=commandDarkActive?'dark':'street';mapLayers[activeMapStyle].addTo(map);$('commandNight').textContent=commandDarkActive?'☀️ Standardkarte':'🌃 Nachtkarte umschalten';};
-$('commandDark').onclick=()=>{commandDarkActive=true;$('mapStyle').value='dark';map.removeLayer(mapLayers[activeMapStyle]);activeMapStyle='dark';mapLayers.dark.addTo(map);};
+function setCommandMapStyle(style){
+ if(!mapLayers[style])return;
+ if(map.hasLayer(mapLayers[activeMapStyle]))map.removeLayer(mapLayers[activeMapStyle]);
+ activeMapStyle=style;mapLayers[style].addTo(map);
+ $('mapStyle').value=style;commandDarkActive=style==='dark';
+ $('commandNight').textContent=commandDarkActive?'☀️ Standardkarte':'🌃 Nachtkarte';
+ $('commandDark').textContent=commandDarkActive?'☀️ Standardkarte aktivieren':'🌙 Dunkle Karte aktivieren';
+ setMessage('Kartenstil geändert: '+(style==='dark'?'Dunkel':'Standard')+'.');
+}
+$('commandNight').onclick=()=>setCommandMapStyle(commandDarkActive?'street':'dark');
+$('commandDark').onclick=()=>setCommandMapStyle(commandDarkActive?'street':'dark');
 $('commandRandom').onclick=()=>{$('randomCamera').click();commandClose();};
 $('commandFavorites').onclick=()=>{$('favoritesOnly').click();commandClose();};
 $('commandFlights').onclick=()=>{commandClose();openFlightRadar();};
