@@ -1445,8 +1445,9 @@ function isPlayableLiveVideo(row){
  return live&&free&&explicitVideo;
 }
 function globalCameraState(){return 'AKTIVER LIVE-VIDEOSTREAM';}
-let globalCamPeer=null,globalCamWhepDeleteUrl=null;
+let globalCamPeer=null,globalCamWhepDeleteUrl=null,globalCamTrackTimer=null;
 async function stopGlobalCamWhep(){
+ if(globalCamTrackTimer){clearTimeout(globalCamTrackTimer);globalCamTrackTimer=null;}
  if(globalCamPeer){globalCamPeer.getSenders().forEach(sender=>sender.track?.stop());globalCamPeer.close();globalCamPeer=null;}
  const video=$('camvideo');if(video){video.pause();video.srcObject=null;video.style.display='none';}
  if(globalCamWhepDeleteUrl){const url=globalCamWhepDeleteUrl;globalCamWhepDeleteUrl=null;try{await fetch(url,{method:'DELETE',keepalive:true});}catch(_){}}
@@ -1455,16 +1456,37 @@ async function startGlobalCamWhep(streamId){
  await stopGlobalCamWhep();
  const video=$('camvideo'),frame=$('camframe'),note=$('camviewnote');
  frame.style.display='none';video.style.display='block';
+ video.muted=true;video.playsInline=true;video.controls=true;video.srcObject=null;
  note.textContent='Verbinde den echten Live-Videostream …';
  const pc=new RTCPeerConnection({iceServers:[{urls:'stun:stun.l.google.com:19302'}]});
  globalCamPeer=pc;
  pc.addTransceiver('video',{direction:'recvonly'});
  pc.addTransceiver('audio',{direction:'recvonly'});
- pc.ontrack=event=>{if(video.srcObject!==event.streams[0])video.srcObject=event.streams[0];};
+ const videoTrackReady=new Promise((resolve,reject)=>{
+  globalCamTrackTimer=setTimeout(()=>{globalCamTrackTimer=null;reject(new Error('Der Stream hat innerhalb von 18 Sekunden kein Videosignal geliefert.'));},18000);
+  pc.addEventListener('track',async event=>{
+   if(event.track.kind!=='video')return;
+   video.srcObject=event.streams?.[0]||new MediaStream([event.track]);
+   try{
+    await video.play();
+    if(globalCamTrackTimer){clearTimeout(globalCamTrackTimer);globalCamTrackTimer=null;}
+    resolve(true);
+   }catch(error){
+    if(globalCamTrackTimer){clearTimeout(globalCamTrackTimer);globalCamTrackTimer=null;}
+    reject(new Error('Videosignal empfangen, aber Wiedergabe blockiert: '+error.message));
+   }
+  });
+  pc.addEventListener('connectionstatechange',()=>{
+   if(pc.connectionState==='failed'){
+    if(globalCamTrackTimer){clearTimeout(globalCamTrackTimer);globalCamTrackTimer=null;}
+    reject(new Error('Die WebRTC-Verbindung ist fehlgeschlagen.'));
+   }
+  });
+ });
  const offer=await pc.createOffer();
  await pc.setLocalDescription(offer);
  if(pc.iceGatheringState!=='complete')await new Promise(resolve=>{
-  const timer=setTimeout(resolve,5000);
+  const timer=setTimeout(resolve,7000);
   pc.addEventListener('icegatheringstatechange',()=>{if(pc.iceGatheringState==='complete'){clearTimeout(timer);resolve();}},{once:false});
  });
  const response=await fetch(OPEN_EYE_API+'/streams/'+encodeURIComponent(streamId)+'/whep/offer',{
@@ -1477,7 +1499,8 @@ async function startGlobalCamWhep(streamId){
  const location=response.headers.get('Location');
  if(location)globalCamWhepDeleteUrl=new URL(location,OPEN_EYE_API).toString();
  await pc.setRemoteDescription({type:'answer',sdp:answer});
- note.textContent='Echter Live-Videostream · Verbindung hergestellt. Die Wiedergabe endet beim Schließen.';
+ await videoTrackReady;
+ note.textContent='Live-Video läuft · Videosignal empfangen. Die Wiedergabe endet beim Schließen.';
 }
 function renderGlobalCameraResults(rows,query){
  const container=$('autobahnList');
