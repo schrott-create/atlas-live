@@ -718,7 +718,7 @@ header{position:relative;z-index:2701}
         <button id="globalCamCitiesButton" type="button">🌍 Weltstädte durchsuchen</button>
       </div>
       <div class="global-cam-citychips" aria-label="Beliebte Städte">
-        <button type="button" data-global-city="New York">New York</button>
+        <button type="button" data-global-city="New York City">New York City (NYC)</button>
         <button type="button" data-global-city="Miami Florida">Florida / Miami</button>
         <button type="button" data-global-city="Los Angeles">Los Angeles</button>
         <button type="button" data-global-city="Dubai">Dubai</button>
@@ -1637,9 +1637,46 @@ $('globalCamSearchButton').addEventListener('click',searchGlobalCameras);
 $('globalCamQuery').addEventListener('keydown',event=>{if(event.key==='Enter')searchGlobalCameras();});
 $('globalCamFeaturedButton').addEventListener('click',loadGlobalCameraFeatured);
 $('globalCamRandomButton').addEventListener('click',loadGlobalCameraRandom);
+const GLOBAL_CITY_MATCH={
+ 'New York City':{aliases:['new york','new york city','nyc'],fallback:['new york city','nyc','manhattan','brooklyn','queens','the bronx','staten island']},
+ 'Miami Florida':{aliases:['miami'],fallback:['miami']},
+ 'Los Angeles':{aliases:['los angeles'],fallback:['los angeles']},
+ 'Dubai':{aliases:['dubai'],fallback:['dubai']},
+ 'Shibuya Crossing Tokyo':{aliases:['shibuya'],fallback:['shibuya']},
+ 'Bangkok Thailand':{aliases:['bangkok'],fallback:['bangkok']},
+ 'Singapore':{aliases:['singapore'],fallback:['singapore']},
+ 'Hong Kong':{aliases:['hong kong'],fallback:['hong kong']},
+ 'Shanghai China':{aliases:['shanghai'],fallback:['shanghai']},
+ 'London':{aliases:['london'],fallback:['london']},
+ 'Paris':{aliases:['paris'],fallback:['paris']},
+ 'Sydney':{aliases:['sydney'],fallback:['sydney']},
+ 'Rio de Janeiro':{aliases:['rio de janeiro'],fallback:['rio de janeiro']}
+};
+function globalCityText(value){return String(value||'').normalize('NFD').replace(/[\\u0300-\\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,' ').trim();}
+function filterGlobalCityRows(rows,city){
+ const rule=GLOBAL_CITY_MATCH[city];
+ if(!rule)return rows;
+ return rows.filter(row=>{
+  const cityFields=[row.city,row.locality,row.town,row.municipality,row.city_name].filter(Boolean).map(globalCityText);
+  if(cityFields.length)return cityFields.some(value=>rule.aliases.some(alias=>value===globalCityText(alias)||value.startsWith(globalCityText(alias)+' ')));
+  const fallback=[row.title,row.handle,row.place,row.location,row.address].filter(Boolean).map(globalCityText).join(' ');
+  return rule.fallback.some(term=>fallback.includes(globalCityText(term)));
+ });
+}
 async function searchGlobalCity(city){
- $('globalCamQuery').value=city;
- await searchGlobalCameras();
+ const button=document.querySelector('[data-global-city="'+CSS.escape(city)+'"]');
+ const query=city==='New York City'?'New York City':city;
+ $('globalCamQuery').value=query;
+ $('globalCamStatus').textContent='Suche ausschließlich Kameras aus '+city+' …';
+ if(button)button.disabled=true;
+ try{
+  const params=new URLSearchParams({q:query,limit:'200',sort:'fresh'});
+  const data=await fetchJsonSafe(OPEN_EYE_API+'/catalog?'+params.toString(),25000);
+  const rows=filterGlobalCityRows(normalizeGlobalCameraRows(data),city);
+  showGlobalCameraRows(rows,city);
+  $('globalCamStatus').textContent=rows.length+' Kameras für '+city+' gefunden · '+rows.filter(isPlayableLiveVideo).length+' echte Live-Videos. Andere Städte/Regionen werden herausgefiltert.';
+ }catch(error){$('globalCamStatus').textContent='Stadtsuche für '+city+' fehlgeschlagen: '+error.message;}
+ finally{if(button)button.disabled=false;}
 }
 const GLOBAL_CAM_CITIES=[
  'New York','Miami Florida','Orlando Florida','Los Angeles','San Francisco','Las Vegas','Chicago',
